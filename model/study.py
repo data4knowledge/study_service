@@ -1,6 +1,20 @@
 from typing import List
 from pydantic import BaseModel
 from typing import List, Union
+from model.code import *
+from model.study_identifier import *
+from model.study_protocol_version import *
+from model.study_design import *
+
+class Study(BaseModel):
+  uuid: Union[UUID, None]
+  studyTitle: str
+  studyVersion: str
+  studyType: Union[Code, UUID, None]
+  studyPhase: Union[Code, UUID, None]
+  studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None] = []
+  studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None] = []
+  studyDesigns: Union[List[StudyDesign], List[UUID], None] = []
 
 class StudyPartial(BaseModel):
   uri: str
