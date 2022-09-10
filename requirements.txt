@@ -1,0 +1,7 @@
+fastapi
+pydantic
+python-dotenv
+pytest
+requests
+uvicorn
+neo4j
