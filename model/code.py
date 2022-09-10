@@ -9,7 +9,7 @@ class Code(ApiBaseModel):
   codeSystemVersion: str
   decode: str
   
-  @classmethod
-  def global_reuse(cls):
-    return True
+  # @classmethod
+  # def global_reuse(cls):
+  #   return True
 

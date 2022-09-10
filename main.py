@@ -1,30 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
+from model.study import Study, StudyIn
 from utility.service_environment import ServiceEnvironment
 from pydantic import UUID4
-
-tags_metadata = [
-    {
-       "name": "System Info",
-       "description": "Provides information of the version of the BC micro service version."
-        },
-    {
-        "name": "BC List",
-        "description": "The listing of all BCs in the data base.",
-    },
-    {
-        "name": "Specific Instance of a BC",
-        "description": "Returns the BC that in the name of the BC contains the string specified in the <b>name</b> parameter."
-        }
-    
-]
 
 VERSION = "0.1"
 SYSTEM_NAME = "d4k Study Build Microservice"
 
 app = FastAPI(
   title = SYSTEM_NAME,
-  description = "A microservice to handle Biomedical Concepts in a Neo4j database.",
+  description = "A microservice to handle Study Builds in a Neo4j database.",
   version = VERSION
  # ,openapi_tags=tags_metadata
 )
@@ -33,8 +18,20 @@ app = FastAPI(
   summary="Get system and version",
   description="Returns the microservice system details and the version running.", 
   response_model=SystemOut)
+@app.get("/v1", 
+  summary="Get system and version",
+  description="Returns the microservice system details and the version running.", 
+  response_model=SystemOut)
 async def read_root():
   return SystemOut(**{ 'system_name': SYSTEM_NAME, 'version': VERSION, 'environment': ServiceEnvironment().environment() })
+
+@app.post("/v1/studies", 
+  summary="Create a new study",
+  description="creates a study.", 
+  response_model=UUID4)
+async def create_study(study: StudyIn):
+  print("C")
+  return Study.create(study.identifier, study.title)
 
 # @app.get("/v1/studies",
 #   summary="BC Listing",
