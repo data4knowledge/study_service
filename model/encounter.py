@@ -1,11 +1,11 @@
 from typing import List, Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 from .transition_rule import TransitionRule
 from .activity import Activity
 from uuid import UUID
 
-class Encounter(ApiBaseModel):
+class Encounter(BaseModel):
   uuid: Union[UUID, None] = None
   encounterName: str
   encounterDesc: str

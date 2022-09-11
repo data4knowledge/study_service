@@ -1,10 +1,10 @@
 from typing import Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .activity import Activity
 from .encounter import Encounter
 from uuid import UUID
 
-class WorkflowItem(ApiBaseModel):
+class WorkflowItem(BaseModel):
   uuid: Union[UUID, None] = None
   workflowItemDesc: str
   previousWorkflowItemId: Union[UUID, None] = None

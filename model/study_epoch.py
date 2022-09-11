@@ -1,11 +1,11 @@
 from typing import List, Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 from .encounter import Encounter
 
 from uuid import UUID
 
-class StudyEpoch(ApiBaseModel):
+class StudyEpoch(BaseModel):
   uuid: Union[UUID, None] = None
   studyEpochName: str
   studyEpochDesc: str

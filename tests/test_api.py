@@ -25,7 +25,18 @@ def test_add_study_ok():
     "identifier": "NZ123",
   }
   response = client.post("/v1/studies", json=body)
-  print(response.json())
   assert response.status_code == 200
   store.close()
   
+def test_add_study_exists():
+  store = Neo4jHelper()
+  store.clear()
+  body = {
+    "title": "123",
+    "identifier": "NZ123",
+  }
+  response = client.post("/v1/studies", json=body)
+  assert response.status_code == 200
+  response = client.post("/v1/studies", json=body)
+  assert response.status_code == 409
+  store.close()

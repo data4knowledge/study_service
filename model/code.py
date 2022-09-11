@@ -1,8 +1,8 @@
 from typing import Union
 from uuid import UUID
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 
-class Code(ApiBaseModel):
+class Code(BaseModel):
   uuid: Union[UUID, None]
   code: str
   codeSystem: str

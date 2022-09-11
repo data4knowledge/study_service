@@ -31,8 +31,12 @@ async def read_root():
   response_model=str)
 async def create_study(study: StudyIn):
   print("C")
-  return str(Study.create(study.identifier, study.title))
-
+  result = Study.create(study.identifier, study.title)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate study")
+  else:
+    return result
+    
 # @app.get("/v1/studies",
 #   summary="BC Listing",
 #   description="The listing of all BCs in the data base.", 

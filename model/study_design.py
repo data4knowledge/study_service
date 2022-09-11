@@ -1,5 +1,5 @@
 from typing import List, Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 from .study_cell import StudyCell
 from .indication import Indication
@@ -12,7 +12,7 @@ from .estimand import Estimand
 from uuid import UUID
 #import pandas as pd
 
-class StudyDesign(ApiBaseModel):
+class StudyDesign(BaseModel):
   uuid: Union[UUID, None] = None
   trialIntentTypes: Union[List[Code], List[UUID]]
   trialType: Union[Code, UUID]

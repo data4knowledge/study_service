@@ -2,25 +2,30 @@ from pydantic import BaseModel
 from typing import List, Union
 from model.code import *
 from model.study_identifier import *
+from model.scoped_identifier import *
 from model.study_protocol_version import *
 from model.study_design import *
 from model.neo4j_connection import Neo4jConnection
-import uuid
+from model.semantic_version import SemanticVersion
+from uuid import UUID, uuid4
 
-class StudyIn(ApiBaseModel):
+class StudyIn(BaseModel):
   title: str
   identifier: str
 
 class Study(BaseModel):
-  uuid: Union[UUID, None]
+  uuid = str
+  uri = str
   studyTitle: str
   studyVersion: str
   studyType: Union[Code, UUID, None]
   studyPhase: Union[Code, UUID, None]
-  studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None] = []
-  studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None] = []
-  studyDesigns: Union[List[StudyDesign], List[UUID], None] = []
+  studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None]
+  studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None]
+  studyDesigns: Union[List[StudyDesign], List[UUID], None]
 
+  #identified_by = Union[ScopedIdentifier, UUID, None]
+  
 # class StudyPartial(BaseModel):
 #   uri: str
 #   uuid: str
@@ -62,15 +67,29 @@ class Study(BaseModel):
   def create(cls, identifier, title):
     db = Neo4jConnection()
     with db.session() as session:
-      result = session.execute_write(cls._create_study, identifier, title)
+      if not session.execute_read(cls._exists, identifier):
+        result = session.execute_write(cls._create_study, identifier, title)
+        return result
+      else:
+        return None
+
+  @classmethod
+  def exists(cls, identifier):
+    db = Neo4jConnection()
+    with db.session() as session:
+      result = session.execute_read(cls._exists, identifier)
       return result
 
   @staticmethod
   def _create_study(tx, identifier, title):
+      semantic_version = SemanticVersion().draft()
       query = (
-        "CREATE (s:Study { studyTitle: $title, studyVersion: '0.1', uuid: $uuid }) RETURN s.uuid as uuid"
+        "CREATE (s:Study { studyTitle: $title, uuid: $uuid1 })"
+        "CREATE (si:ScopedIdentifier { identifier: $id, version: 1, semantic_version: $sv, uuid: $uuid2 })"
+        "CREATE (s)-[:IDENTIFIED_BY]->(si)"
+        "RETURN s.uuid as uuid"
       )
-      result = tx.run(query, title=title, uuid=str(uuid.uuid4()))
+      result = tx.run(query, title=title, id=identifier, uuid1=str(uuid4()), uuid2=str(uuid4()), sv=semantic_version)
 #      try:
       for row in result:
         return row["uuid"]
@@ -79,6 +98,19 @@ class Study(BaseModel):
 #        logging.error("{query} raised an error: \n {exception}".format(
 #          query=query, exception=exception))
 #        raise
+
+  @staticmethod
+  def _exists(tx, identifier):
+      query = (
+        "MATCH (s:Study)-[:IDENTIFIED_BY]->(si:ScopedIdentifier { identifier: $id } )"
+        "RETURN s.uuid as uuid"
+      )
+      result = tx.run(query, id=identifier)
+      if result.peek() == None:
+        return False
+      else:
+        return True
+#      try:
 
     # def find_person(self, person_name):
     #     with self.driver.session() as session:

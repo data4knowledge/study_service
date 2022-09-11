@@ -1,10 +1,10 @@
 from typing import List, Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 from .endpoint import Endpoint
 from uuid import UUID
 
-class Objective(ApiBaseModel):
+class Objective(BaseModel):
   uuid: Union[UUID, None] = None
   objectiveDesc: str
   objectiveLevel: Union[Code, UUID, None]

@@ -1,7 +1,7 @@
 from typing import List, Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from uuid import UUID
 
-class StudyDesignPopulation(ApiBaseModel):
+class StudyDesignPopulation(BaseModel):
   uuid: Union[UUID, None] = None
   populationDesc: str

@@ -1,9 +1,14 @@
-class SemanticVersion():
+from pydantic import BaseModel
 
-  def __init__(self, major, minor=0, patch=0):
-    self.major = major
-    self.minor = minor
-    self.patch = patch
+class SemanticVersion(BaseModel):
+  major = str
+  minor = str
+  patch = str
+
+  def draft(self):
+    major = 0
+    minor = 1
+    patch = 0
 
   def __str__(self):
     return "%s.%s.%s" % (self.major, self.minor, self.patch)

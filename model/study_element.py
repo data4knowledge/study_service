@@ -1,12 +1,12 @@
 from typing import List, Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .transition_rule import TransitionRule
 from .encounter import Encounter
 from .activity import Activity
 
 from uuid import UUID
 
-class StudyElement(ApiBaseModel):
+class StudyElement(BaseModel):
   uuid: Union[UUID, None] = None
   studyElementName: str
   studyElementDesc: str

@@ -1,9 +1,9 @@
 from typing import Union
 from uuid import UUID
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 
-class Organisation(ApiBaseModel):
+class Organisation(BaseModel):
   uuid: Union[UUID, None]
   organisationIdentifierScheme: str
   organisationIdentifier: str

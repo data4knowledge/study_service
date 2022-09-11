@@ -1,8 +1,8 @@
 import yaml
-from .api_base_model import ApiBaseModel
+
 from fastapi import HTTPException
 
-class CT(ApiBaseModel):
+class CT(BaseModel):
 
   def search(self, klass_name, attribute_name):
     with open("data/ct.yaml") as file:

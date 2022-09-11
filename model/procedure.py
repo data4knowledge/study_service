@@ -1,13 +1,13 @@
 from typing import Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 from uuid import UUID
 
-class PreviousProcedure(ApiBaseModel):
+class PreviousProcedure(BaseModel):
   procedureName: str
   procedureCode: Union[Code, UUID]
 
-class Procedure(ApiBaseModel):
+class Procedure(BaseModel):
   uuid: Union[UUID, None] = None
   procedureType: str
   procedureCode: Union[Code, UUID]

@@ -1,9 +1,9 @@
 from typing import List, Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 from uuid import UUID
 
-class IntercurrentEvent(ApiBaseModel):
+class IntercurrentEvent(BaseModel):
   uuid: Union[UUID, None] = None
   intercurrentEventName: str
   intercurrentEventDesc: str

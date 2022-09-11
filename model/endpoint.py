@@ -1,9 +1,9 @@
 from typing import List, Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 from uuid import UUID
 
-class Endpoint(ApiBaseModel):
+class Endpoint(BaseModel):
   uuid: Union[UUID, None] = None
   endpointDesc: str
   endpointPurposeDesc: str

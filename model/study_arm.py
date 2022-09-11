@@ -1,9 +1,9 @@
 from typing import Union
-from .api_base_model import ApiBaseModel
+from pydantic import BaseModel
 from .code import Code
 from uuid import UUID
 
-class StudyArm(ApiBaseModel):
+class StudyArm(BaseModel):
   uuid: Union[UUID, None] = None
   studyArmName: str
   studyArmDesc: str
