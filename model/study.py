@@ -1,4 +1,3 @@
-from typing import List
 from pydantic import BaseModel
 from typing import List, Union
 from model.code import *
@@ -6,7 +5,7 @@ from model.study_identifier import *
 from model.study_protocol_version import *
 from model.study_design import *
 from model.neo4j_connection import Neo4jConnection
-from uuid import uuid4
+import uuid
 
 class StudyIn(ApiBaseModel):
   title: str
@@ -63,27 +62,23 @@ class Study(BaseModel):
   def create(cls, identifier, title):
     db = Neo4jConnection()
     with db.session() as session:
-      result = session.write_transaction(cls._create_study, identifier, title)
-      #return result
-      return uuid4()
+      result = session.execute_write(cls._create_study, identifier, title)
+      return result
 
   @staticmethod
   def _create_study(tx, identifier, title):
-      print("CREATE")
       query = (
-        "CREATE (s:Study { studyTitle: $title, studyVersion: '0.1' }) RETURN s"
+        "CREATE (s:Study { studyTitle: $title, studyVersion: '0.1', uuid: $uuid }) RETURN s.uuid as uuid"
       )
-      result = tx.run(query, title=title)
+      result = tx.run(query, title=title, uuid=str(uuid.uuid4()))
 #      try:
       for row in result:
-        print(row)
-        return row["s"]
+        return row["uuid"]
       return None
-      # Capture any errors along with the query and data for traceability
-      # except ServiceUnavailable as exception:
-      #   logging.error("{query} raised an error: \n {exception}".format(
-      #     query=query, exception=exception))
-      #   raise
+#      except ServiceUnavailable as exception:
+#        logging.error("{query} raised an error: \n {exception}".format(
+#          query=query, exception=exception))
+#        raise
 
     # def find_person(self, person_name):
     #     with self.driver.session() as session:

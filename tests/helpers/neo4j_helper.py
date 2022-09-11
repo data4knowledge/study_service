@@ -11,9 +11,12 @@ class Neo4jHelper():
     self.__driver = GraphDatabase.driver(self.__uri, auth=(self.__usr, self.__pwd))
 
   def clear(self):
-    session = self.__driver.session(database=self.__db_name)
-    query = """
-      CALL apoc.periodic.iterate('MATCH (n) RETURN n', 'DETACH DELETE n', {batchSize:1000})
-    """
-    session.run(query)
-    session.close()
+    with self.__driver.session(database=self.__db_name) as session:
+      query = """
+        CALL apoc.periodic.iterate('MATCH (n) RETURN n', 'DETACH DELETE n', {batchSize:1000})
+      """
+      session.run(query)
+      session.close()
+
+  def close(self):
+    self.__driver.close()

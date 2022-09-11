@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
 from model.study import Study, StudyIn
 from utility.service_environment import ServiceEnvironment
-from pydantic import UUID4
+import uuid
 
 VERSION = "0.1"
 SYSTEM_NAME = "d4k Study Build Microservice"
@@ -28,10 +28,10 @@ async def read_root():
 @app.post("/v1/studies", 
   summary="Create a new study",
   description="creates a study.", 
-  response_model=UUID4)
+  response_model=str)
 async def create_study(study: StudyIn):
   print("C")
-  return Study.create(study.identifier, study.title)
+  return str(Study.create(study.identifier, study.title))
 
 # @app.get("/v1/studies",
 #   summary="BC Listing",

@@ -27,4 +27,5 @@ def test_add_study_ok():
   response = client.post("/v1/studies", json=body)
   print(response.json())
   assert response.status_code == 200
+  store.close()
   
