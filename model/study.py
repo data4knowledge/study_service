@@ -80,13 +80,29 @@ class Study(BaseModel):
       result = session.execute_read(cls._exists, identifier)
       return result
 
+  @classmethod
+  def delete(cls, uuid):
+    db = Neo4jConnection()
+    with db.session() as session:
+      session.execute_write(cls._delete_study, uuid)
+
   @staticmethod
   def _create_study(tx, identifier, title):
       semantic_version = SemanticVersion().draft()
       query = (
         "CREATE (s:Study { studyTitle: $title, uuid: $uuid1 })"
         "CREATE (si:ScopedIdentifier { identifier: $id, version: 1, semantic_version: $sv, uuid: $uuid2 })"
+        "CREATE (sd:StudyDesign)"
+        "CREATE (sc:StudyCell)"
+        "CREATE (sa:StudyArm)"
+        "CREATE (se:StudyEpoch)"
+        "CREATE (wf:Workflow)"
         "CREATE (s)-[:IDENTIFIED_BY]->(si)"
+        "CREATE (s)-[:STUDY_DESIGN]->(sd)"
+        "CREATE (sd)-[:STUDY_CELL]->(sc)"
+        "CREATE (sd)-[:STUDY_WORKFLOW]->(wf)"
+        "CREATE (sc)-[:STUDY_ARM]->(sa)"
+        "CREATE (sc)-[:STUDY_EPOCH]->(se)"
         "RETURN s.uuid as uuid"
       )
       result = tx.run(query, title=title, id=identifier, uuid1=str(uuid4()), uuid2=str(uuid4()), sv=semantic_version)
@@ -94,6 +110,20 @@ class Study(BaseModel):
       for row in result:
         return row["uuid"]
       return None
+#      except ServiceUnavailable as exception:
+#        logging.error("{query} raised an error: \n {exception}".format(
+#          query=query, exception=exception))
+#        raise
+
+  @staticmethod
+  def _delete_study(tx, the_uuid):
+      query = (
+        "MATCH (s:Study { uuid: $uuid1 })-[:STUDY_DESIGN|IDENTIFIED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|STUDY_WORKFLOW  *1..]->(n)"
+        "DETACH DELETE (n)"
+        "DETACH DELETE (s)"
+      )
+#      try:
+      result = tx.run(query, uuid1=the_uuid)
 #      except ServiceUnavailable as exception:
 #        logging.error("{query} raised an error: \n {exception}".format(
 #          query=query, exception=exception))

@@ -18,5 +18,15 @@ class Neo4jHelper():
       session.run(query)
       session.close()
 
+  def count(self):
+    with self.__driver.session(database=self.__db_name) as session:
+      query = """
+        MATCH (n) RETURN COUNT(n) as count
+      """
+      result = session.run(query)
+      record = result.single()
+      session.close()
+      return record['count']
+
   def close(self):
     self.__driver.close()

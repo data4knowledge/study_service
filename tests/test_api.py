@@ -25,7 +25,7 @@ def test_add_study_ok():
     "identifier": "NZ123",
   }
   response = client.post("/v1/studies", json=body)
-  assert response.status_code == 200
+  assert response.status_code == 201
   store.close()
   
 def test_add_study_exists():
@@ -36,7 +36,23 @@ def test_add_study_exists():
     "identifier": "NZ123",
   }
   response = client.post("/v1/studies", json=body)
-  assert response.status_code == 200
+  assert response.status_code == 201
   response = client.post("/v1/studies", json=body)
   assert response.status_code == 409
+  store.close()
+
+def test_delete_study():
+  store = Neo4jHelper()
+  store.clear()
+  assert store.count() == 0
+  body = {
+    "title": "123",
+    "identifier": "NZ123",
+  }
+  response = client.post("/v1/studies", json=body)
+  assert response.status_code == 201
+  assert store.count() == 7
+  response = client.delete("/v1/studies/%s" % (response.json()))
+  assert response.status_code == 204
+  assert store.count() == 0
   store.close()

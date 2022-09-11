@@ -27,16 +27,23 @@ async def read_root():
 
 @app.post("/v1/studies", 
   summary="Create a new study",
-  description="creates a study.", 
+  description="Creates a study. If succesful the uuid of the created resource is returned.",
+  status_code=201,
   response_model=str)
 async def create_study(study: StudyIn):
-  print("C")
   result = Study.create(study.identifier, study.title)
   if result == None:
     raise HTTPException(status_code=409, detail="Trying to create a duplicate study")
   else:
     return result
-    
+
+@app.delete("/v1/studies/{uuid}", 
+  summary="Delete a study",
+  description="Deletes the specified study.",
+  status_code=204)
+async def delete_study(uuid: str):
+  result = Study.delete(uuid)
+
 # @app.get("/v1/studies",
 #   summary="BC Listing",
 #   description="The listing of all BCs in the data base.", 
