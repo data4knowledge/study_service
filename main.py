@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
 from model.study import Study, StudyIn
+from model.activity import Activity, ActivityIn
 from utility.service_environment import ServiceEnvironment
 import uuid
 
@@ -43,6 +44,18 @@ async def create_study(study: StudyIn):
   status_code=204)
 async def delete_study(uuid: str):
   result = Study.delete(uuid)
+
+@app.post("/v1/studies/{uuid}/activities", 
+  summary="Create a new activity within a study",
+  description="Creates an activity. The activity is added to the end of the list of activities for the specified study.",
+  status_code=201,
+  response_model=str)
+async def create_activity(study: uuid, activity: ActivityIn):
+  result = Activity.create(uuid, activity.name, activity.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate study")
+  else:
+    return result
 
 # @app.get("/v1/studies",
 #   summary="BC Listing",

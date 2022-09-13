@@ -13,7 +13,7 @@ class StudyIn(BaseModel):
   title: str
   identifier: str
 
-class Study(BaseModel):
+class StudyOut(BaseModel):
   uuid = str
   uri = str
   studyTitle: str
@@ -24,45 +24,38 @@ class Study(BaseModel):
   studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None]
   studyDesigns: Union[List[StudyDesign], List[UUID], None]
 
-  #identified_by = Union[ScopedIdentifier, UUID, None]
+class StudyList(BaseModel):
+  items: List[StudyOut]
+  page: int
+  size: int
+  filter: str
+  count: int
+
+class Study():
   
-# class StudyPartial(BaseModel):
-#   uri: str
-#   uuid: str
-#   name: str
-#   identified_by: dict
-#   has_status: dict
-
-# class StudyList(BaseModel):
-#   items: List[StudyPartial]
-#   page: int
-#   size: int
-#   filter: str
-#   count: int
-
-#   @classmethod
-#   def list(cls, page, size, filter):
-#     if filter == "":
-#       count = bci.full_count()
-#     else:
-#       count = bci.filter_count(filter)
-#     results = {'items': [], 'page': page, 'size': size, 'filter': filter, 'count': count }
-#     results['items'] = bci.list(page, size, filter)
-#     return results
-
-# class Study(BaseModel):
-#   uri: str
-#   uuid: str
-#   name: str
-#   identified_by: dict
-#   has_status: dict
-#   #identifier: dict
-#   items: List[dict]
-
-#   @classmethod
-#   def find(cls, uuid):
-#     return bci.find(uuid)
-
+  def __init__(self):
+    self.uuid = None
+    self.uri = None
+    self.studyTitle = ""  
+    self.studyType = None
+    self.studyPhase = None
+    self.studyIdentifiers = []
+    self.studyProtocolVersions = []
+    self.studyDesigns = []
+    self.identified_by = None
+  
+  @classmethod
+  def find(cls, uuid):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = session.execute_read(cls._find_study, uuid)
+      if len(results) == 1:
+        return results[0]
+      elif len(results) == 0:
+        return None
+      else:
+        return None
+        
   @classmethod
   def create(cls, identifier, title):
     db = Neo4jConnection()
@@ -85,6 +78,17 @@ class Study(BaseModel):
     db = Neo4jConnection()
     with db.session() as session:
       session.execute_write(cls._delete_study, uuid)
+
+#   @classmethod
+#   def list(cls, page, size, filter):
+#     if filter == "":
+#       count = bci.full_count()
+#     else:
+#       count = bci.filter_count(filter)
+#     results = {'items': [], 'page': page, 'size': size, 'filter': filter, 'count': count }
+#     results['items'] = bci.list(page, size, filter)
+#     return results
+
 
   @staticmethod
   def _create_study(tx, identifier, title):
@@ -148,12 +152,12 @@ class Study(BaseModel):
     #         for row in result:
     #             print("Found person: {row}".format(row=row))
 
-    # @staticmethod
-    # def _find_and_return_person(tx, person_name):
-    #     query = (
-    #         "MATCH (p:Person) "
-    #         "WHERE p.name = $person_name "
-    #         "RETURN p.name AS name"
-    #     )
-    #     result = tx.run(query, person_name=person_name)
-    #     return [row["name"] for row in result]
+  @staticmethod
+  def _find_study(tx, the_uuid):
+    query = (
+      "MATCH (s:Study) "
+      "WHERE s.uuid = $the_uuid "
+      "RETURN s"
+    )
+    result = tx.run(query, the_uuid=the_uuid)
+    return [row["s"] for row in result]

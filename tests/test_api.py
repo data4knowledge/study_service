@@ -56,3 +56,22 @@ def test_delete_study():
   assert response.status_code == 204
   assert store.count() == 0
   store.close()
+
+def test_add_study_activity_ok():
+  store = Neo4jHelper()
+  store.clear()
+  # Add study
+  body = {
+    "title": "123",
+    "identifier": "NZ123",
+  }
+  response = client.post("/v1/studies", json=body)
+  uuid = response.json()
+  # Activity
+  body = {
+    "name": "DM",
+    "description": "Demographics",
+  }
+  response = client.post("/v1/studies/%s/activities" % (uuid), json=body)
+  assert response.status_code == 201
+  store.close()
