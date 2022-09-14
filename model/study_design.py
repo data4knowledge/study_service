@@ -27,4 +27,5 @@ class StudyDesign(BaseModel):
     self.studyWorkflows = []
     self.studyEstimands = []
     self.studyActivities = []
+    self.studyEncounters = []
 

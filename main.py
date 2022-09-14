@@ -2,7 +2,9 @@ from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
 from model.study import Study, StudyIn
 from model.activity import Activity, ActivityIn
+from model.study_epoch import StudyEpoch
 from model.study_data import StudyData, StudyDataIn
+from model.encounter import Encounter, EncounterIn
 from utility.service_environment import ServiceEnvironment
 import uuid
 
@@ -54,7 +56,19 @@ async def delete_study(uuid: str):
 async def create_activity(uuid: str, activity: ActivityIn):
   result = Activity.create(uuid, activity.name, activity.description)
   if result == None:
-    raise HTTPException(status_code=409, detail="Trying to create a duplicate study")
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate activity within the study")
+  else:
+    return result
+
+@app.post("/v1/studyDesigns/{uuid}/encounters", 
+  summary="Creates a new encounter within a study design",
+  description="Creates an encounter withn a study design.",
+  status_code=201,
+  response_model=str)
+async def create_encounter(uuid: str, encounter: EncounterIn):
+  result = Encounter.create(uuid, encounter.name, encounter.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate encounter within the study")
   else:
     return result
 
@@ -67,3 +81,5 @@ async def create_study_data(uuid: str, study_data: StudyDataIn):
   activity = Activity.find(uuid)
   result = activity.add_study_data(study_data.name, study_data.description, study_data.link)
   return result
+
+

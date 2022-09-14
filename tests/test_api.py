@@ -7,6 +7,7 @@ from tests.helpers.neo4j_helper import Neo4jHelper
 from tests.helpers.study_helper import StudyHelper
 from tests.helpers.study_design_helper import StudyDesignHelper
 from tests.helpers.activity_helper import ActivityHelper
+from tests.helpers.study_epoch_helper import StudyEpochHelper
 
 client = TestClient(app)
 
@@ -151,5 +152,19 @@ def test_add_study_data_ok():
     "link": "http://www.example.com/a"
   }
   response = client.post("/v1/activities/%s/studyData" % (activity.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
+def test_add_first_study_encounter_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  study_design = StudyDesignHelper(db)
+  study.add_study_design(study_design)
+  body = {
+    "name": "V1",
+    "description": "Visit 1",
+  }
+  response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
   assert response.status_code == 201
   db.close()
