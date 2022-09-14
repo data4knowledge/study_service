@@ -124,7 +124,7 @@ def test_add_third_study_activity_ok():
   assert response.status_code == 201
   db.close()
 
-def test_add_duplicate_study_activity_ok():
+def test_add_duplicate_study_activity_error():
   db = Neo4jHelper()
   db.clear()
   study = StudyHelper(db, "A title")
@@ -167,4 +167,66 @@ def test_add_first_study_encounter_ok():
   }
   response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
   assert response.status_code == 201
+  db.close()
+
+def test_add_second_study_encounter_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  study_design = StudyDesignHelper(db)
+  study.add_study_design(study_design)
+  body = {
+    "name": "V1",
+    "description": "Visit 1",
+  }
+  response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
+  assert response.status_code == 201
+  body = {
+    "name": "V2",
+    "description": "Visit 2",
+  }
+  response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
+def test_add_third_study_encounter_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  study_design = StudyDesignHelper(db)
+  study.add_study_design(study_design)
+  body = {
+    "name": "V1",
+    "description": "Visit 1",
+  }
+  response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
+  assert response.status_code == 201
+  body = {
+    "name": "V2",
+    "description": "Visit 2",
+  }
+  response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
+  assert response.status_code == 201
+  body = {
+    "name": "V3",
+    "description": "Visit 3",
+  }
+  response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
+def test_add_duplicate_encounter_error():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  study_design = StudyDesignHelper(db)
+  study.add_study_design(study_design)
+  body = {
+    "name": "V1",
+    "description": "Visit 1",
+  }
+  response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
+  assert response.status_code == 201
+  response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
+  assert response.status_code == 409
   db.close()

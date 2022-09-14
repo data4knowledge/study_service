@@ -38,7 +38,7 @@ class Encounter(BaseModel):
   @staticmethod
   def _create_encounter(tx, uuid, name, description):
       query = (
-        "MATCH (sd:StudyDesign { uuid: $uuid1 })-[:ENCOUNTER]->(e)"
+        "MATCH (sd:StudyDesign { uuid: $uuid1 })-[:STUDY_ENCOUNTER]->(e)"
         "WHERE NOT (e)-[:NEXT_ENCOUNTER]->()"
         "CREATE (e1:Encounter { encounterName: $name, encounterDesc: $desc, uuid: $uuid2 })"
         "CREATE (e)-[:NEXT_ENCOUNTER]->(e1)"
