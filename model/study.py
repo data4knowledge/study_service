@@ -7,6 +7,8 @@ from model.study_protocol_version import *
 from model.study_design import *
 from model.neo4j_connection import Neo4jConnection
 from model.semantic_version import SemanticVersion
+from model.node import Node
+
 from uuid import UUID, uuid4
 
 class StudyIn(BaseModel):
@@ -25,34 +27,41 @@ class StudyOut(BaseModel):
   studyDesigns: dict
 
 class StudyList(BaseModel):
-  items: List[StudyOut]
+  items: List[str]
   page: int
   size: int
   filter: str
   count: int
 
-class Study():
-  uuid = str
-  uri = str
+class StudyDesignList(BaseModel):
+  items: List[str]
+  page: int
+  size: int
+  filter: str
+  count: int
+
+class Study(Node):
+  uuid: str
+  uri: str = ""
   studyTitle: str
-  studyVersion: str
+  studyVersion: str = ""
   studyType: Union[Code, UUID, None]
   studyPhase: Union[Code, UUID, None]
   studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None]
   studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None]
   studyDesigns: Union[List[StudyDesign], List[UUID], None]
 
-  @classmethod
-  def find(cls, uuid):
-    db = Neo4jConnection()
-    with db.session() as session:
-      results = session.execute_read(cls._find_study, uuid)
-      if len(results) == 1:
-        return results[0]
-      elif len(results) == 0:
-        return None
-      else:
-        return None
+  # @classmethod
+  # def find(cls, uuid):
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     results = session.execute_read(cls._find_study, uuid)
+  #     if len(results) == 1:
+  #       return results[0]
+  #     elif len(results) == 0:
+  #       return None
+  #     else:
+  #       return None
         
   @classmethod
   def create(cls, identifier, title):
@@ -63,6 +72,17 @@ class Study():
         return result
       else:
         return None
+
+  @classmethod
+  def list(cls):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = {'items': [], 'page': 1, 'size': 0, 'filter': "", 'count': 0 }
+      results['items'] = session.execute_read(cls._list)
+      results['count'] = len(results['items'])
+      results['size'] = len(results['items'])
+      return results
+
 
   @classmethod
   def exists(cls, identifier):
@@ -77,16 +97,10 @@ class Study():
     with db.session() as session:
       session.execute_write(cls._delete_study, uuid)
 
-#   @classmethod
-#   def list(cls, page, size, filter):
-#     if filter == "":
-#       count = bci.full_count()
-#     else:
-#       count = bci.filter_count(filter)
-#     results = {'items': [], 'page': page, 'size': size, 'filter': filter, 'count': count }
-#     results['items'] = bci.list(page, size, filter)
-#     return results
-
+  def study_designs(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(self._study_designs, self.uuid)
 
   @staticmethod
   def _create_study(tx, identifier, title):
@@ -94,11 +108,11 @@ class Study():
       query = (
         "CREATE (s:Study { studyTitle: $title, uuid: $uuid1 })"
         "CREATE (si:ScopedIdentifier { identifier: $id, version: 1, semantic_version: $sv, uuid: $uuid2 })"
-        "CREATE (sd:StudyDesign)"
-        "CREATE (sc:StudyCell)"
-        "CREATE (sa:StudyArm)"
-        "CREATE (se:StudyEpoch)"
-        "CREATE (wf:Workflow)"
+        "CREATE (sd:StudyDesign { uuid: $uuid3 })"
+        "CREATE (sc:StudyCell { uuid: $uuid4 })"
+        "CREATE (sa:StudyArm { uuid: $uuid5 })"
+        "CREATE (se:StudyEpoch { uuid: $uuid6 })"
+        "CREATE (wf:Workflow { uuid: $uuid7, name: 'SoA', description: 'The SoA workflow' })"
         "CREATE (s)-[:IDENTIFIED_BY]->(si)"
         "CREATE (s)-[:STUDY_DESIGN]->(sd)"
         "CREATE (sd)-[:STUDY_CELL]->(sc)"
@@ -107,7 +121,18 @@ class Study():
         "CREATE (sc)-[:STUDY_EPOCH]->(se)"
         "RETURN s.uuid as uuid"
       )
-      result = tx.run(query, title=title, id=identifier, uuid1=str(uuid4()), uuid2=str(uuid4()), sv=semantic_version)
+      result = tx.run(query, 
+        title=title, 
+        id=identifier, 
+        sv=semantic_version,
+        uuid1=str(uuid4()), 
+        uuid2=str(uuid4()),
+        uuid3=str(uuid4()),
+        uuid4=str(uuid4()),
+        uuid5=str(uuid4()),
+        uuid6=str(uuid4()),
+        uuid7=str(uuid4()),
+      )
 #      try:
       for row in result:
         return row["uuid"]
@@ -151,11 +176,35 @@ class Study():
     #             print("Found person: {row}".format(row=row))
 
   @staticmethod
-  def _find_study(tx, the_uuid):
+  def _study_designs(tx, uuid):
+    results = []
     query = (
-      "MATCH (s:Study) "
-      "WHERE s.uuid = $the_uuid "
-      "RETURN s"
+      "MATCH (s:Study {uuid: $uuid})-[:STUDY_DESIGN]->(sd:StudyDesign)"
+      "RETURN sd.uuid as uuid"
     )
-    result = tx.run(query, the_uuid=the_uuid)
-    return [row["s"] for row in result]
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      results.append(row['uuid'])
+    return results
+
+  @staticmethod
+  def _list(tx):
+    results = []
+    query = (
+      "MATCH (s:Study)"
+      "RETURN s.uuid as uuid"
+    )
+    result = tx.run(query)
+    for row in result:
+      results.append(row['uuid'])
+    return results
+
+  # @staticmethod
+  # def _find_study(tx, the_uuid):
+  #   query = (
+  #     "MATCH (s:Study) "
+  #     "WHERE s.uuid = $the_uuid "
+  #     "RETURN s"
+  #   )
+  #   result = tx.run(query, the_uuid=the_uuid)
+  #   return [row["s"] for row in result]

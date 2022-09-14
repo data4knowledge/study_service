@@ -46,6 +46,28 @@ def test_add_study_exists():
   assert response.status_code == 409
   store.close()
 
+def test_study_list():
+  store = Neo4jHelper()
+  store.clear()
+  response = client.get("/v1/studies")
+  assert response.status_code == 200
+  store.close()
+
+def test_study_design_list_ok():
+  store = Neo4jHelper()
+  store.clear()
+  body = {
+    "title": "123",
+    "identifier": "NZ123",
+  }
+  response = client.post("/v1/studies", json=body)
+  response = client.get("/v1/studies")
+  study = response.json()['items'][0]
+  response = client.get("/v1/studies/%s/studyDesigns" % (study))
+  assert response.status_code == 200
+  print(response.json())
+  store.close()
+
 def test_delete_study():
   store = Neo4jHelper()
   store.clear()

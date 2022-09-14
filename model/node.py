@@ -1,7 +1,5 @@
-from typing import List, Union
 from pydantic import BaseModel
-from .neo4j_connection import Neo4jConnection
-from uuid import UUID, uuid4
+from model.neo4j_connection import Neo4jConnection
 
 class Node(BaseModel):
 

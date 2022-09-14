@@ -52,7 +52,6 @@ class Activity(BaseModel):
         "CREATE (sd)-[:STUDY_ACTIVITY]->(a1)"
         "RETURN a1.uuid as uuid"
       )
-      print(query)
       result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
 #      try:
       for row in result:
@@ -71,12 +70,9 @@ class Activity(BaseModel):
     )
     result = tx.run(query, uuid1=uuid)
     for row in result:
-      print(row['a'])
-      print(hash(row['a']))
       dict = {}
       for items in row['a'].items():
         dict[items[0]] = items[1]
-      print(dict)
       return Activity(**dict)
     return None
 

@@ -49,7 +49,6 @@ class Encounter(BaseModel):
         "CREATE (sd)-[:STUDY_ENCOUNTER]->(e1)"
         "RETURN e1.uuid as uuid"
       )
-      print(query)
       result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
 #      try:
       for row in result:

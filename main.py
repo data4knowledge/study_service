@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
-from model.study import Study, StudyIn
+from model.study import Study, StudyIn, StudyList
 from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch
 from model.study_data import StudyData, StudyDataIn
@@ -29,6 +29,14 @@ app = FastAPI(
 async def read_root():
   return SystemOut(**{ 'system_name': SYSTEM_NAME, 'version': VERSION, 'environment': ServiceEnvironment().environment() })
 
+@app.get("/v1/studies", 
+  summary="List of studies",
+  description="Provide a list of all studies.",
+  status_code=200,
+  response_model=StudyList)
+async def list_studies():
+  return Study.list()
+
 @app.post("/v1/studies", 
   summary="Create a new study",
   description="Creates a study. If succesful the uuid of the created resource is returned.",
@@ -47,6 +55,17 @@ async def create_study(study: StudyIn):
   status_code=204)
 async def delete_study(uuid: str):
   result = Study.delete(uuid)
+
+@app.get("/v1/studies/{uuid}/studyDesigns", 
+  summary="Get the study designs for a study",
+  description="Provides a list of uuids for te study designs that exisit for a specified study.",
+  status_code=200)
+async def get_study_designs(uuid: str):
+  study = Study.find(uuid)
+  if study == None:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+  else:
+    return study.study_designs()
 
 @app.post("/v1/studyDesigns/{uuid}/activities", 
   summary="Create a new activity within a study",

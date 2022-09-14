@@ -13,6 +13,9 @@ from .encounter import Encounter
 from .neo4j_connection import Neo4jConnection
 from uuid import UUID, uuid4
 
+class StudyDesignOut(BaseModel):
+  uuid: str
+
 class StudyDesign(BaseModel):
   uuid: Union[UUID, None] = None
   trialIntentTypes: Union[List[Code], List[UUID]]
@@ -51,7 +54,6 @@ class StudyDesign(BaseModel):
         "CREATE (sd)-[:STUDY_WORKFLOW]->(e1)"
         "RETURN e1.uuid as uuid"
       )
-      print(query)
       result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
 #      try:
       for row in result:
