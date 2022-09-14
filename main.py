@@ -51,7 +51,6 @@ async def delete_study(uuid: str):
   status_code=201,
   response_model=str)
 async def create_activity(uuid: str, activity: ActivityIn):
-  print("A")
   result = Activity.create(uuid, activity.name, activity.description)
   if result == None:
     raise HTTPException(status_code=409, detail="Trying to create a duplicate study")

@@ -30,20 +30,14 @@ class Activity(BaseModel):
 
   @classmethod
   def create(cls, uuid, name, description):
-    print("B")
     db = Neo4jConnection()
     with db.session() as session:
-      print("C")
       if session.execute_read(cls._any, uuid):
-        print("D")
         if not session.execute_read(cls._exists, uuid, name):
-          print("E")
           return session.execute_write(cls._create_activity, uuid, name, description)
         else:
-          print("F")
           return None
       else:
-        print("G")
         return session.execute_write(cls._create_first_activity, uuid, name, description)
 
   @staticmethod
@@ -61,7 +55,6 @@ class Activity(BaseModel):
       result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
 #      try:
       for row in result:
-        print("CREATE", row["uuid"])
         return row["uuid"]
       return None
 #      except ServiceUnavailable as exception:
@@ -77,11 +70,8 @@ class Activity(BaseModel):
         "CREATE (sd)-[:STUDY_ACTIVITY]->(a)"
         "RETURN a.uuid as uuid"
       )
-      print(query)
       result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
-      print(result.peek())
       for row in result:
-        print("X", row["uuid"])
         return row["uuid"]
       return None
 
@@ -92,7 +82,6 @@ class Activity(BaseModel):
         "RETURN a.uuid as uuid"
       )
       result = tx.run(query, name=name, uuid=uuid)
-      print("EXISTS", result.peek())
       if result.peek() == None:
         return False
       else:
@@ -105,7 +94,6 @@ class Activity(BaseModel):
         "RETURN a.uuid"
       )
       result = tx.run(query, uuid=uuid)
-      print("ANY", result.peek())
       if result.peek() == None:
         return False
       else:
