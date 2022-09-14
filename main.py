@@ -45,7 +45,7 @@ async def create_study(study: StudyIn):
 async def delete_study(uuid: str):
   result = Study.delete(uuid)
 
-@app.post("/v1/studies/{uuid}/activities", 
+@app.post("/v1/studyDesigns/{uuid}/activities", 
   summary="Create a new activity within a study",
   description="Creates an activity. The activity is added to the end of the list of activities for the specified study.",
   status_code=201,

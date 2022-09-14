@@ -36,7 +36,7 @@ class Activity(BaseModel):
       print("C")
       if session.execute_read(cls._any, uuid):
         print("D")
-        if not session.execute_read(cls._exists, name):
+        if not session.execute_read(cls._exists, uuid, name):
           print("E")
           return session.execute_write(cls._create_activity, uuid, name, description)
         else:
@@ -49,18 +49,19 @@ class Activity(BaseModel):
   @staticmethod
   def _create_activity(tx, uuid, name, description):
       query = (
-        "MATCH (n:Study { uuid: $uuid })-[]->(sd:StudyDesign)-[]->(a:StudyActivity)"
+        "MATCH (sd:StudyDesign { uuid: $uuid1 })-[:STUDY_ACTIVITY]->(a)"
         "WHERE NOT (a)-[:NEXT_ACTIVITY]->()"
-        "CREATE (s:Activity { activityName: $name, activityDesc: $desc, uuid: $uuid2 })"
-        "CREATE (a)-[:NEXT_ACTIVIY]->(s)"
-        "CREATE (s)-[:PREVIOUS_ACTIVIY]->(a)"
-        "CREATE (sd)-[:STUDY_ACTIVIY]->(a)"
-        "RETURN s.uuid as uuid"
+        "CREATE (a1:Activity { activityName: $name, activityDesc: $desc, uuid: $uuid2 })"
+        "CREATE (a)-[:NEXT_ACTIVITY]->(a1)"
+        "CREATE (a1)-[:PREVIOUS_ACTIVITY]->(a)"
+        "CREATE (sd)-[:STUDY_ACTIVITY]->(a1)"
+        "RETURN a1.uuid as uuid"
       )
       print(query)
       result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
 #      try:
       for row in result:
+        print("CREATE", row["uuid"])
         return row["uuid"]
       return None
 #      except ServiceUnavailable as exception:
@@ -71,10 +72,10 @@ class Activity(BaseModel):
   @staticmethod
   def _create_first_activity(tx, uuid, name, description):
       query = (
-        "MATCH (n:Study { uuid: $uuid1 })-[]->(sd:StudyDesign)"
-        "CREATE (s:Activity { activityName: $name, activityDesc: $desc, uuid: $uuid2 })"
-        "CREATE (sd)-[:STUDY_ACTIVIY]->(a)"
-        "RETURN s.uuid as uuid"
+        "MATCH (sd:StudyDesign { uuid: $uuid1 })"
+        "CREATE (a:Activity { activityName: $name, activityDesc: $desc, uuid: $uuid2 })"
+        "CREATE (sd)-[:STUDY_ACTIVITY]->(a)"
+        "RETURN a.uuid as uuid"
       )
       print(query)
       result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
@@ -87,10 +88,11 @@ class Activity(BaseModel):
   @staticmethod
   def _exists(tx, uuid, name):
       query = (
-        "MATCH (s:Study { uuid: $uuid })-[]->(sd:StudyDesign)-[]->(a:StudyActivity { name: $name }))"
+        "MATCH (sd:StudyDesign { uuid: $uuid })-[:STUDY_ACTIVITY]->(a:Activity { activityName: $name })"
         "RETURN a.uuid as uuid"
       )
       result = tx.run(query, name=name, uuid=uuid)
+      print("EXISTS", result.peek())
       if result.peek() == None:
         return False
       else:
@@ -99,9 +101,12 @@ class Activity(BaseModel):
   @staticmethod
   def _any(tx, uuid):
       query = (
-        "OPTIONAL MATCH (s:Study { uuid: $uuid })-[]->(sd:StudyDesign)-[]->(a:StudyActivity)"
-        "RETURN a IS NOT NULL AS any"
+        "MATCH (sd:StudyDesign { uuid: $uuid })-[:STUDY_ACTIVITY]->(a:Activity)"
+        "RETURN a.uuid"
       )
       result = tx.run(query, uuid=uuid)
-      print(result.peek()['any'])
-      return result.peek()['any']
+      print("ANY", result.peek())
+      if result.peek() == None:
+        return False
+      else:
+        return True

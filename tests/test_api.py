@@ -59,7 +59,7 @@ def test_delete_study():
   assert store.count() == 0
   store.close()
 
-def test_add_study_activity_ok():
+def test_add_first_study_activity_ok():
   db = Neo4jHelper()
   db.clear()
   study = StudyHelper(db, "A title")
@@ -70,7 +70,49 @@ def test_add_study_activity_ok():
     "name": "DM",
     "description": "Demographics",
   }
-  response = client.post("/v1/studies/%s/activities" % (study.uuid), json=body)
+  response = client.post("/v1/studyDesigns/%s/activities" % (study_design.uuid), json=body)
   print(response.json())
   assert response.status_code == 201
+  db.close()
+
+def test_add_second_study_activity_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  study_design = StudyDesignHelper(db)
+  study.add_study_design(study_design)
+  # Activity
+  body = {
+    "name": "DM",
+    "description": "Demographics",
+  }
+  response = client.post("/v1/studyDesigns/%s/activities" % (study_design.uuid), json=body)
+  print(response.json())
+  assert response.status_code == 201
+  body = {
+    "name": "DM2",
+    "description": "Demographics 2",
+  }
+  response = client.post("/v1/studyDesigns/%s/activities" % (study_design.uuid), json=body)
+  print(response.json())
+  assert response.status_code == 201
+  db.close()
+
+def test_add_duplicate_study_activity_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  study_design = StudyDesignHelper(db)
+  study.add_study_design(study_design)
+  # Activity
+  body = {
+    "name": "DM",
+    "description": "Demographics",
+  }
+  response = client.post("/v1/studyDesigns/%s/activities" % (study_design.uuid), json=body)
+  print(response.json())
+  assert response.status_code == 201
+  response = client.post("/v1/studyDesigns/%s/activities" % (study_design.uuid), json=body)
+  print(response.json())
+  assert response.status_code == 409
   db.close()
