@@ -18,6 +18,11 @@ class Neo4jHelper():
       session.run(query)
       session.close()
 
+  def run(self, query):
+    with self.__driver.session(database=self.__db_name) as session:
+      session.run(query)
+      session.close()
+
   def count(self):
     with self.__driver.session(database=self.__db_name) as session:
       query = """

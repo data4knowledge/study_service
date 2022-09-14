@@ -4,6 +4,8 @@ from main import app, VERSION as app_version
 from uuid import uuid4
 import os
 from tests.helpers.neo4j_helper import Neo4jHelper
+from tests.helpers.study_helper import StudyHelper
+from tests.helpers.study_design_helper import StudyDesignHelper
 
 client = TestClient(app)
 
@@ -58,20 +60,17 @@ def test_delete_study():
   store.close()
 
 def test_add_study_activity_ok():
-  store = Neo4jHelper()
-  store.clear()
-  # Add study
-  body = {
-    "title": "123",
-    "identifier": "NZ123",
-  }
-  response = client.post("/v1/studies", json=body)
-  uuid = response.json()
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  study_design = StudyDesignHelper(db)
+  study.add_study_design(study_design)
   # Activity
   body = {
     "name": "DM",
     "description": "Demographics",
   }
-  response = client.post("/v1/studies/%s/activities" % (uuid), json=body)
+  response = client.post("/v1/studies/%s/activities" % (study.uuid), json=body)
+  print(response.json())
   assert response.status_code == 201
-  store.close()
+  db.close()
