@@ -83,7 +83,6 @@ class Study(Node):
       results['size'] = len(results['items'])
       return results
 
-
   @classmethod
   def exists(cls, identifier):
     db = Neo4jConnection()
@@ -100,7 +99,11 @@ class Study(Node):
   def study_designs(self):
     db = Neo4jConnection()
     with db.session() as session:
-      return session.execute_read(self._study_designs, self.uuid)
+      results = {'items': [], 'page': 1, 'size': 0, 'filter': "", 'count': 0 }
+      results['items'] = session.execute_read(self._study_designs, self.uuid)
+      results['count'] = len(results['items'])
+      results['size'] = len(results['items'])
+      return results
 
   @staticmethod
   def _create_study(tx, identifier, title):

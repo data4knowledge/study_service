@@ -9,6 +9,7 @@ from tests.helpers.study_design_helper import StudyDesignHelper
 from tests.helpers.activity_helper import ActivityHelper
 from tests.helpers.study_epoch_helper import StudyEpochHelper
 from tests.helpers.encounter_helper import EncounterHelper
+from tests.helpers.workflow_helper import WorkflowHelper
 
 client = TestClient(app)
 
@@ -65,7 +66,22 @@ def test_study_design_list_ok():
   study = response.json()['items'][0]
   response = client.get("/v1/studies/%s/studyDesigns" % (study))
   assert response.status_code == 200
-  print(response.json())
+  store.close()
+
+def test_study_design_epoch_list_ok():
+  store = Neo4jHelper()
+  store.clear()
+  body = {
+    "title": "123",
+    "identifier": "NZ123",
+  }
+  response = client.post("/v1/studies", json=body)
+  response = client.get("/v1/studies")
+  study = response.json()['items'][0]
+  response = client.get("/v1/studies/%s/studyDesigns" % (study))
+  study_design = response.json()['items'][0]
+  response = client.get("/v1/studyDesigns/%s/studyEpochs" % (study_design))
+  assert response.status_code == 200
   store.close()
 
 def test_delete_study():
@@ -277,6 +293,21 @@ def test_add_first_study_workflow_ok():
     "description": "The SoA workflow",
   }
   response = client.post("/v1/studyDesigns/%s/workflows" % (study_design.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
+def test_link_workflow_activity_encounter_ok():
+  db = Neo4jHelper()
+  db.clear()
+  wf = WorkflowHelper(db, "Item", "Description")
+  activity = ActivityHelper(db, "Act1", "A Description")
+  encounter = EncounterHelper(db, "E1", "E Description")
+  body = {
+    "description": "Something",
+    "activity_uuid": activity.uuid,
+    "encounter_uuid": encounter.uuid,
+  }
+  response = client.post("/v1/workflows/%s/workflowItems" % (wf.uuid), json=body)
   assert response.status_code == 201
   db.close()
 

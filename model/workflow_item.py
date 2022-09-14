@@ -4,8 +4,13 @@ from .activity import Activity
 from .encounter import Encounter
 from uuid import UUID
 
+class WorkflowItemIn(BaseModel):
+  description: str
+  encounter_uuid: str
+  activity_uuid: str
+
 class WorkflowItem(BaseModel):
-  uuid: Union[UUID, None] = None
+  uuid: str
   workflowItemDesc: str
   previousWorkflowItemId: Union[UUID, None] = None
   nextWorkflowItemId: Union[UUID, None] = None

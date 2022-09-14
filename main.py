@@ -1,11 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
-from model.study import Study, StudyIn, StudyList
+from model.study import Study, StudyIn, StudyList, StudyDesignList
+from model.study_design import ChildList, StudyDesign
 from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch
 from model.study_data import StudyData, StudyDataIn
 from model.encounter import Encounter, EncounterIn, EncounterLink
 from model.workflow import Workflow, WorkflowIn
+from model.workflow_item import WorkflowItem, WorkflowItemIn
 from utility.service_environment import ServiceEnvironment
 
 VERSION = "0.1"
@@ -59,13 +61,35 @@ async def delete_study(uuid: str):
 @app.get("/v1/studies/{uuid}/studyDesigns", 
   summary="Get the study designs for a study",
   description="Provides a list of uuids for te study designs that exisit for a specified study.",
-  status_code=200)
+  response_model=StudyDesignList)
 async def get_study_designs(uuid: str):
   study = Study.find(uuid)
   if study == None:
     raise HTTPException(status_code=404, detail="The requested study cannot be found")
   else:
     return study.study_designs()
+
+@app.get("/v1/studyDesigns/{uuid}/studyEpochs", 
+  summary="Get the epochs for a study design",
+  description="Provides a list of uuids for the epochs that exisit for a specified study.",
+  response_model=ChildList)
+async def get_study_design_epochs(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.epochs()
+
+@app.get("/v1/studyDesigns/{uuid}/workflows", 
+  summary="Get the workflows for a study design",
+  description="Provides a list of uuids for the workflows that exisit for a specified study.",
+  response_model=ChildList)
+async def get_study_design_epochs(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.workflows()
 
 @app.post("/v1/studyDesigns/{uuid}/activities", 
   summary="Create a new activity within a study",
@@ -123,3 +147,13 @@ async def link_epoch_and_encounter(uuid: str, encounter: EncounterLink):
   result = epoch.add_encounter(encounter.uuid)
   return result
 
+@app.post("/v1/workflows/{uuid}/workflowItems", 
+  summary="Creates an encounter and an activity to a workflow",
+  description="Creates an encounter and an activity to a workflow",
+  status_code=201,
+  response_model=str)
+async def create_workflow_item(uuid: str, wfi: WorkflowItemIn):
+  workflow = Workflow.find(uuid)
+  result = workflow.add_workflow_item(wfi.description, wfi.encounter_uuid, wfi.activity_uuid)
+  print(result)
+  return result
