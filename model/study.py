@@ -148,7 +148,7 @@ class Study(Node):
   @staticmethod
   def _delete_study(tx, the_uuid):
       query = (
-        "MATCH (s:Study { uuid: $uuid1 })-[:STUDY_DESIGN|IDENTIFIED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|STUDY_WORKFLOW|STUDY_DATA_COLLECTION|STUDY_ACTIVITY|STUDY_ENCOUNTER  *1..]->(n)"
+        "MATCH (s:Study { uuid: $uuid1 })-[:STUDY_DESIGN|IDENTIFIED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|STUDY_WORKFLOW|STUDY_DATA_COLLECTION|STUDY_ACTIVITY|STUDY_ENCOUNTER|WORKFLOW_ITEM  *1..]->(n)"
         "DETACH DELETE (n)"
         "DETACH DELETE (s)"
       )
