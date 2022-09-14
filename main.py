@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
 from model.study import Study, StudyIn
 from model.activity import Activity, ActivityIn
+from model.study_data import StudyData, StudyDataIn
 from utility.service_environment import ServiceEnvironment
 import uuid
 
@@ -57,20 +58,12 @@ async def create_activity(uuid: str, activity: ActivityIn):
   else:
     return result
 
-# @app.get("/v1/studies",
-#   summary="BC Listing",
-#   description="The listing of all BCs in the data base.", 
-#   response_model=StudyList)
-# async def get_biomedical_concepts(page: int = 0, size: int = 0, filter: str=""):
-#   return StudyList.list(page, size, filter)
-
-# @app.get("/v1/studies/{uuid}",
-#   summary="BC Instance",
-#   description="Specific Instance of a BC.", 
-#   response_model=Study)
-# async def get_bc(uuid: UUID4):
-#   result = Study.find(str(uuid))
-#   if result == None:
-#     raise HTTPException(status_code=404, detail="item not found")
-#   else:
-#     return result
+@app.post("/v1/activities/{uuid}/studyData", 
+  summary="Creates a new study data item within an activity",
+  description="Creates an an item of study data.",
+  status_code=201,
+  response_model=str)
+async def create_study_data(uuid: str, study_data: StudyDataIn):
+  activity = Activity.find(uuid)
+  result = activity.add_study_data(study_data.name, study_data.description, study_data.link)
+  return result

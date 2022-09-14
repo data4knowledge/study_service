@@ -18,15 +18,11 @@ class Activity(BaseModel):
   definedProcedures: Union[List[Procedure], List[UUID]] = []
   studyDataCollection: Union[List[StudyData], List[UUID]] = []
 
-  def __init__(self):
-    self.uuid = None
-    self.uri = None
-    self.activityName = ""  
-    self.activityDesc = None
-    self.previousActivityId = None
-    self.nextActivityId = None
-    self.definedProcedures = []
-    self.studyDataCollection = []
+  @classmethod
+  def find(cls, uuid):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(cls._find, uuid)
 
   @classmethod
   def create(cls, uuid, name, description):
@@ -39,6 +35,11 @@ class Activity(BaseModel):
           return None
       else:
         return session.execute_write(cls._create_first_activity, uuid, name, description)
+
+  def add_study_data(self, name, description, link):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_write(self._create_study_data, str(self.uuid), name, description, link)
 
   @staticmethod
   def _create_activity(tx, uuid, name, description):
@@ -63,38 +64,68 @@ class Activity(BaseModel):
 #        raise
 
   @staticmethod
+  def _find(tx, uuid):
+    query = (
+      "MATCH (a:Activity { uuid: $uuid1 })"
+      "RETURN a"
+    )
+    result = tx.run(query, uuid1=uuid)
+    for row in result:
+      print(row['a'])
+      print(hash(row['a']))
+      dict = {}
+      for items in row['a'].items():
+        dict[items[0]] = items[1]
+      print(dict)
+      return Activity(**dict)
+    return None
+
+  @staticmethod
   def _create_first_activity(tx, uuid, name, description):
-      query = (
-        "MATCH (sd:StudyDesign { uuid: $uuid1 })"
-        "CREATE (a:Activity { activityName: $name, activityDesc: $desc, uuid: $uuid2 })"
-        "CREATE (sd)-[:STUDY_ACTIVITY]->(a)"
-        "RETURN a.uuid as uuid"
-      )
-      result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
-      for row in result:
-        return row["uuid"]
-      return None
+    query = (
+      "MATCH (sd:StudyDesign { uuid: $uuid1 })"
+      "CREATE (a:Activity { activityName: $name, activityDesc: $desc, uuid: $uuid2 })"
+      "CREATE (sd)-[:STUDY_ACTIVITY]->(a)"
+      "RETURN a.uuid as uuid"
+    )
+    result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()))
+    for row in result:
+      return row["uuid"]
+    return None
+
+  @staticmethod
+  def _create_study_data(tx, uuid, name, description, link):
+    query = (
+      "MATCH (a:Activity { uuid: $uuid1 })"
+      "CREATE (sd:StudyData { studyDataName: $name, studyDataDesc: $desc, link: $link, uuid: $uuid2 })"
+      "CREATE (a)-[:STUDY_DATA_COLLECTION]->(sd)"
+      "RETURN sd.uuid as uuid"
+    )
+    result = tx.run(query, name=name, desc=description, link=link, uuid1=uuid, uuid2=str(uuid4()))
+    for row in result:
+      return row["uuid"]
+    return None
 
   @staticmethod
   def _exists(tx, uuid, name):
-      query = (
-        "MATCH (sd:StudyDesign { uuid: $uuid })-[:STUDY_ACTIVITY]->(a:Activity { activityName: $name })"
-        "RETURN a.uuid as uuid"
-      )
-      result = tx.run(query, name=name, uuid=uuid)
-      if result.peek() == None:
-        return False
-      else:
-        return True
+    query = (
+      "MATCH (sd:StudyDesign { uuid: $uuid })-[:STUDY_ACTIVITY]->(a:Activity { activityName: $name })"
+      "RETURN a.uuid as uuid"
+    )
+    result = tx.run(query, name=name, uuid=uuid)
+    if result.peek() == None:
+      return False
+    else:
+      return True
 
   @staticmethod
   def _any(tx, uuid):
-      query = (
-        "MATCH (sd:StudyDesign { uuid: $uuid })-[:STUDY_ACTIVITY]->(a:Activity)"
-        "RETURN a.uuid"
-      )
-      result = tx.run(query, uuid=uuid)
-      if result.peek() == None:
-        return False
-      else:
-        return True
+    query = (
+      "MATCH (sd:StudyDesign { uuid: $uuid })-[:STUDY_ACTIVITY]->(a:Activity)"
+      "RETURN a.uuid"
+    )
+    result = tx.run(query, uuid=uuid)
+    if result.peek() == None:
+      return False
+    else:
+      return True

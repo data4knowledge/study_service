@@ -18,11 +18,11 @@ class StudyOut(BaseModel):
   uri = str
   studyTitle: str
   studyVersion: str
-  studyType: Union[Code, UUID, None]
-  studyPhase: Union[Code, UUID, None]
-  studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None]
-  studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None]
-  studyDesigns: Union[List[StudyDesign], List[UUID], None]
+  studyType: dict
+  studyPhase: dict
+  studyIdentifiers: dict
+  studyProtocolVersions: dict
+  studyDesigns: dict
 
 class StudyList(BaseModel):
   items: List[StudyOut]
@@ -32,18 +32,16 @@ class StudyList(BaseModel):
   count: int
 
 class Study():
-  
-  def __init__(self):
-    self.uuid = None
-    self.uri = None
-    self.studyTitle = ""  
-    self.studyType = None
-    self.studyPhase = None
-    self.studyIdentifiers = []
-    self.studyProtocolVersions = []
-    self.studyDesigns = []
-    self.identified_by = None
-  
+  uuid = str
+  uri = str
+  studyTitle: str
+  studyVersion: str
+  studyType: Union[Code, UUID, None]
+  studyPhase: Union[Code, UUID, None]
+  studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None]
+  studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None]
+  studyDesigns: Union[List[StudyDesign], List[UUID], None]
+
   @classmethod
   def find(cls, uuid):
     db = Neo4jConnection()

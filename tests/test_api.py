@@ -6,6 +6,7 @@ import os
 from tests.helpers.neo4j_helper import Neo4jHelper
 from tests.helpers.study_helper import StudyHelper
 from tests.helpers.study_design_helper import StudyDesignHelper
+from tests.helpers.activity_helper import ActivityHelper
 
 client = TestClient(app)
 
@@ -137,4 +138,18 @@ def test_add_duplicate_study_activity_ok():
   assert response.status_code == 201
   response = client.post("/v1/studyDesigns/%s/activities" % (study_design.uuid), json=body)
   assert response.status_code == 409
+  db.close()
+
+def test_add_study_data_ok():
+  db = Neo4jHelper()
+  db.clear()
+  activity = ActivityHelper(db)
+  # Activity
+  body = {
+    "name": "DM",
+    "description": "Demographics",
+    "link": "http://www.example.com/a"
+  }
+  response = client.post("/v1/activities/%s/studyData" % (activity.uuid), json=body)
+  assert response.status_code == 201
   db.close()
