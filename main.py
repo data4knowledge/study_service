@@ -5,6 +5,7 @@ from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch
 from model.study_data import StudyData, StudyDataIn
 from model.encounter import Encounter, EncounterIn, EncounterLink
+from model.workflow import Workflow, WorkflowIn
 from utility.service_environment import ServiceEnvironment
 
 VERSION = "0.1"
@@ -68,6 +69,18 @@ async def create_encounter(uuid: str, encounter: EncounterIn):
   result = Encounter.create(uuid, encounter.name, encounter.description)
   if result == None:
     raise HTTPException(status_code=409, detail="Trying to create a duplicate encounter within the study")
+  else:
+    return result
+
+@app.post("/v1/studyDesigns/{uuid}/workflows", 
+  summary="Creates a new workflow within a study design",
+  description="Creates an workflow withn a study design.",
+  status_code=201,
+  response_model=str)
+async def create_workflow(uuid: str, wf: WorkflowIn):
+  result = Encounter.create(uuid, wf.name, wf.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate workflow within the study")
   else:
     return result
 

@@ -243,3 +243,18 @@ def test_link_epooch_encounter_ok():
   response = client.put("/v1/studyEpochs/%s/encounters" % (epoch.uuid), json=body)
   assert response.status_code == 201
   db.close()
+
+def test_add_first_study_workflow_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  study_design = StudyDesignHelper(db)
+  study.add_study_design(study_design)
+  body = {
+    "name": "SoA",
+    "description": "The SoA workflow",
+  }
+  response = client.post("/v1/studyDesigns/%s/workflows" % (study_design.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
