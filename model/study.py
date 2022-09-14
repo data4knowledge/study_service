@@ -114,8 +114,8 @@ class Study(Node):
         "CREATE (sd:StudyDesign { uuid: $uuid3 })"
         "CREATE (sc:StudyCell { uuid: $uuid4 })"
         "CREATE (sa:StudyArm { uuid: $uuid5 })"
-        "CREATE (se:StudyEpoch { uuid: $uuid6 })"
-        "CREATE (wf:Workflow { uuid: $uuid7, name: 'SoA', description: 'The SoA workflow' })"
+        "CREATE (se:StudyEpoch { uuid: $uuid6, studyEpochName: 'Single Epoch', studyEpochDesc: 'A single epoch for this study' })"
+        "CREATE (wf:Workflow { uuid: $uuid7, workflowName: 'SoA', workflowDesc: 'The SoA workflow' })"
         "CREATE (s)-[:IDENTIFIED_BY]->(si)"
         "CREATE (s)-[:STUDY_DESIGN]->(sd)"
         "CREATE (sd)-[:STUDY_CELL]->(sc)"
@@ -148,7 +148,7 @@ class Study(Node):
   @staticmethod
   def _delete_study(tx, the_uuid):
       query = (
-        "MATCH (s:Study { uuid: $uuid1 })-[:STUDY_DESIGN|IDENTIFIED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|STUDY_WORKFLOW  *1..]->(n)"
+        "MATCH (s:Study { uuid: $uuid1 })-[:STUDY_DESIGN|IDENTIFIED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|STUDY_WORKFLOW|STUDY_DATA_COLLECTION|STUDY_ACTIVITY|STUDY_ENCOUNTER  *1..]->(n)"
         "DETACH DELETE (n)"
         "DETACH DELETE (s)"
       )
