@@ -10,6 +10,9 @@ class EncounterIn(BaseModel):
   name: str
   description: str
 
+class EncounterLink(BaseModel):
+  uuid: str
+
 class Encounter(BaseModel):
   uuid: Union[UUID, None] = None
   uri: str = ""
@@ -42,7 +45,7 @@ class Encounter(BaseModel):
         "WHERE NOT (e)-[:NEXT_ENCOUNTER]->()"
         "CREATE (e1:Encounter { encounterName: $name, encounterDesc: $desc, uuid: $uuid2 })"
         "CREATE (e)-[:NEXT_ENCOUNTER]->(e1)"
-        "CREATE (e1)-[:PREVIOUS_encounter]->(e)"
+        "CREATE (e1)-[:PREVIOUS_ENCOUNTER]->(e)"
         "CREATE (sd)-[:STUDY_ENCOUNTER]->(e1)"
         "RETURN e1.uuid as uuid"
       )

@@ -23,7 +23,7 @@ class StudyEpoch(Node):
   def _add_encounter(tx, epoch_uuid, encounter_uuid):
     query = (
       "MATCH (ep:StudyEpoch { uuid: $uuid1 }), (e:Encounter { uuid: $uuid2 })"
-      "CREATE (ep)-[:ENCOUNTER]->(e)"
+      "MERGE (ep)-[:ENCOUNTER]->(e)"
     )
     result = tx.run(query, uuid1=epoch_uuid, uuid2=encounter_uuid)
     return encounter_uuid

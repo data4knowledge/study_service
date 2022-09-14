@@ -8,6 +8,7 @@ from tests.helpers.study_helper import StudyHelper
 from tests.helpers.study_design_helper import StudyDesignHelper
 from tests.helpers.activity_helper import ActivityHelper
 from tests.helpers.study_epoch_helper import StudyEpochHelper
+from tests.helpers.encounter_helper import EncounterHelper
 
 client = TestClient(app)
 
@@ -229,4 +230,16 @@ def test_add_duplicate_encounter_error():
   assert response.status_code == 201
   response = client.post("/v1/studyDesigns/%s/encounters" % (study_design.uuid), json=body)
   assert response.status_code == 409
+  db.close()
+
+def test_link_epooch_encounter_ok():
+  db = Neo4jHelper()
+  db.clear()
+  epoch = StudyEpochHelper(db, "Epoch", "Epoch Desc")
+  encounter = EncounterHelper(db, "V1", "Visit 1")
+  body = {
+    "uuid": encounter.uuid
+  }
+  response = client.put("/v1/studyEpochs/%s/encounters" % (epoch.uuid), json=body)
+  assert response.status_code == 201
   db.close()

@@ -4,9 +4,8 @@ from model.study import Study, StudyIn
 from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch
 from model.study_data import StudyData, StudyDataIn
-from model.encounter import Encounter, EncounterIn
+from model.encounter import Encounter, EncounterIn, EncounterLink
 from utility.service_environment import ServiceEnvironment
-import uuid
 
 VERSION = "0.1"
 SYSTEM_NAME = "d4k Study Build Microservice"
@@ -82,4 +81,13 @@ async def create_study_data(uuid: str, study_data: StudyDataIn):
   result = activity.add_study_data(study_data.name, study_data.description, study_data.link)
   return result
 
+@app.put("/v1/studyEpochs/{uuid}/encounters", 
+  summary="Links an encounter with an epoch",
+  description="Creates an link between an epoch and an encounter.",
+  status_code=201,
+  response_model=str)
+async def link_epoch_and_encounter(uuid: str, encounter: EncounterLink):
+  epoch = StudyEpoch.find(uuid)
+  result = epoch.add_encounter(encounter.uuid)
+  return result
 

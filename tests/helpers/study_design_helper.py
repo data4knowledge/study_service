@@ -5,7 +5,7 @@ class StudyDesignHelper():
   
   def __init__(self, db):
     self.db = db
-    self.uuid = uuid4()
+    self.uuid = str(uuid4())
     query = """
       CREATE (n:StudyDesign {uuid: '%s' }) RETURN n
     """ % (self.uuid)

@@ -6,7 +6,7 @@ class StudyHelper():
   
   def __init__(self, db, title):
     self.db = db
-    self.uuid = uuid4()
+    self.uuid = str(uuid4())
     query = """
       CREATE (n:Study {uuid: '%s', title: '%s'}) RETURN n
     """ % (self.uuid, title)
