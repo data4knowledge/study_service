@@ -8,6 +8,8 @@ from model.study_design import *
 from model.neo4j_connection import Neo4jConnection
 from model.semantic_version import SemanticVersion
 from model.node import Node
+from service.ra_service import RAService
+from datetime import datetime
 
 from uuid import UUID, uuid4
 
@@ -26,12 +28,29 @@ class StudyOut(BaseModel):
   studyProtocolVersions: dict
   studyDesigns: dict
 
+class StudySummary(BaseModel):
+  #uri: str
+  uuid: str
+  studyTitle: str
+  identified_by: dict
+  has_status: dict
+
 class StudyList(BaseModel):
-  items: List[str]
+  items: List[StudySummary]
   page: int
   size: int
   filter: str
   count: int
+
+  @classmethod
+  def list(cls, page, size, filter):
+    if filter == "":
+      count = Study.full_count()
+    else:
+      count = Study.filter_count(filter)
+    results = {'items': [], 'page': page, 'size': size, 'filter': filter, 'count': count }
+    results['items'] = Study.list(page, size, filter)
+    return results
 
 class StudyDesignList(BaseModel):
   items: List[str]
@@ -73,15 +92,102 @@ class Study(Node):
       else:
         return None
 
+  # @classmethod
+  # def list(cls):
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     results = {'items': [], 'page': 1, 'size': 0, 'filter': "", 'count': 0 }
+  #     results['items'] = session.execute_read(cls._list)
+  #     results['count'] = len(results['items'])
+  #     results['size'] = len(results['items'])
+  #     return results
+
   @classmethod
-  def list(cls):
+  def list(cls, page=0, size=0, filter=""):
+    ra = {}
     db = Neo4jConnection()
     with db.session() as session:
-      results = {'items': [], 'page': 1, 'size': 0, 'filter': "", 'count': 0 }
-      results['items'] = session.execute_read(cls._list)
-      results['count'] = len(results['items'])
-      results['size'] = len(results['items'])
+      results = []
+      skip_offset_clause = ""
+      if page != 0:
+        offset = (page - 1) * size
+        skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
+      if filter == "":
+        query = """
+          MATCH (n:Study)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier),
+          (n)-[:HAS_STATUS]->(ns:RegistrationStatus)-[:MANAGED_BY]->(ra:RegistrationAuthority) 
+          RETURN n,ni,ns,ra ORDER BY toInteger(ni.version) DESC %s
+        """ % (skip_offset_clause)
+      else:
+        identifier_filter_clause = cls.build_filter_clause(filter, cls.IDENTIFIER_PROPERTIES)
+        status_filter_clause = cls.build_filter_clause(filter, cls.STATUS_PROPERTIES)
+        parent_filter_clause = cls.build_filter_clause(filter, cls.PARENT_PROPERTIES)
+        query = """
+          CALL {
+              MATCH (n:Study)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier) %s
+              RETURN n
+            UNION
+              MATCH(n:Study)-[:HAS_STATUS]->(ns:RegistrationStatus)-[:MANAGED_BY]->(ra:RegistrationAuthority) %s
+              RETURN n
+            UNION
+              MATCH(n:Study) %s
+              RETURN n
+          }
+          WITH n 
+          MATCH (n)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier),
+          (n)-[:HAS_STATUS]->(ns:RegistrationStatus)-[:MANAGED_BY]->(ra:RegistrationAuthority) 
+          RETURN n,ni,ns,ra ORDER BY toInteger(ni.version) DESC %s
+        """ % (identifier_filter_clause, status_filter_clause, parent_filter_clause, skip_offset_clause)
+      query_results = session.run(query)
+      for query_result in query_results:
+        rel = dict(query_result['n'])
+        rel['identified_by'] = dict(query_result['ni'])
+        rel['has_status'] = dict(query_result['ns'])
+        rel['has_status']['managed_by'] = dict(query_result['ra'])
+        results.append(rel)
       return results
+
+  @classmethod
+  def full_count(cls):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (n:Study)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier)
+          RETURN COUNT(n) as count 
+      """
+      query_results = session.run(query)
+      for result in query_results:
+        return result['count']
+      return 0
+
+  @classmethod
+  def filter_count(cls, filter):
+    db = Neo4jConnection()
+    with db.session() as session:
+      identifier_filter_clause = cls.build_filter_clause(filter, cls.IDENTIFIER_PROPERTIES)
+      status_filter_clause = cls.build_filter_clause(filter, cls.STATUS_PROPERTIES)
+      parent_filter_clause = cls.build_filter_clause(filter, cls.PARENT_PROPERTIES)
+      query = """
+          MATCH (n:Study)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier) %s
+          RETURN n
+        UNION
+          MATCH(n:Study)-[:HAS_STATUS]->(ns:RegistrationStatus)-[:MANAGED_BY]->(ra:RegistrationAuthority) %s
+          RETURN n
+        UNION
+          MATCH(n:Study) %s
+          RETURN n
+      """ % (identifier_filter_clause, status_filter_clause, parent_filter_clause)
+      query_results = session.run(query)
+      return len(query_results)
+
+  @classmethod
+  def build_filter_clause(cls, filter, properties):
+    filter_clause_parts = []
+    for property in properties:
+      filter_clause_parts.append("toLower(%s) CONTAINS toLower('%s')" % (property, filter))
+    filter_clause = " OR ".join(filter_clause_parts)
+    filter_clause = "WHERE %s " % (filter_clause)
+    return filter_clause
 
   @classmethod
   def exists(cls, identifier):
@@ -107,39 +213,57 @@ class Study(Node):
 
   @staticmethod
   def _create_study(tx, identifier, title):
-      semantic_version = SemanticVersion().draft()
-      query = (
-        "CREATE (s:Study { studyTitle: $title, uuid: $uuid1 })"
-        "CREATE (si:ScopedIdentifier { identifier: $id, version: 1, semantic_version: $sv, uuid: $uuid2 })"
-        "CREATE (sd:StudyDesign { uuid: $uuid3 })"
-        "CREATE (sc:StudyCell { uuid: $uuid4 })"
-        "CREATE (sa:StudyArm { uuid: $uuid5 })"
-        "CREATE (se:StudyEpoch { uuid: $uuid6, studyEpochName: 'Single Epoch', studyEpochDesc: 'A single epoch for this study' })"
-        "CREATE (wf:Workflow { uuid: $uuid7, workflowName: 'SoA', workflowDesc: 'The SoA workflow' })"
-        "CREATE (s)-[:IDENTIFIED_BY]->(si)"
-        "CREATE (s)-[:STUDY_DESIGN]->(sd)"
-        "CREATE (sd)-[:STUDY_CELL]->(sc)"
-        "CREATE (sd)-[:STUDY_WORKFLOW]->(wf)"
-        "CREATE (sc)-[:STUDY_ARM]->(sa)"
-        "CREATE (sc)-[:STUDY_EPOCH]->(se)"
-        "RETURN s.uuid as uuid"
-      )
-      result = tx.run(query, 
-        title=title, 
-        id=identifier, 
-        sv=semantic_version,
-        uuid1=str(uuid4()), 
-        uuid2=str(uuid4()),
-        uuid3=str(uuid4()),
-        uuid4=str(uuid4()),
-        uuid5=str(uuid4()),
-        uuid6=str(uuid4()),
-        uuid7=str(uuid4()),
-      )
+    ra_service = RAService()
+    ns = ra_service.namespace_by_name("d4k Study namespace")
+    ra = ra_service.registration_authority_by_namespace_uuid(ns['uuid'])
+    sv = SemanticVersion()
+    sv.draft()
+    query = (
+      "CREATE (s:Study { studyTitle: $title, uuid: $uuid1 })"
+      "CREATE (si:ScopedIdentifier { identifier: $id, version: 1, semantic_version: $sv, uuid: $uuid2 })"
+      "CREATE (ns:Namespace { uuid: $uuid8, namespace_uri: $ns_uri, namespace_value: $ns_value })"
+      "CREATE (rs:RegistrationStatus { effective_date: $date, registration_status: 'Draft', until_date: '', uuid: $uuid9 })"
+      "CREATE (ra:RegistrationAuthority { uuid: $uuid10, registration_authority_uri: $ra_uri, owner: $ra_owner })"
+      "CREATE (sd:StudyDesign { uuid: $uuid3 })"
+      "CREATE (sc:StudyCell { uuid: $uuid4 })"
+      "CREATE (sa:StudyArm { uuid: $uuid5 })"
+      "CREATE (se:StudyEpoch { uuid: $uuid6, studyEpochName: 'Single Epoch', studyEpochDesc: 'A single epoch for this study' })"
+      "CREATE (wf:Workflow { uuid: $uuid7, workflowName: 'SoA', workflowDesc: 'The SoA workflow' })"
+      "CREATE (s)-[:IDENTIFIED_BY]->(si)"
+      "CREATE (si)-[:SCOPED_BY]->(ns)"
+      "CREATE (s)-[:HAS_STATUS]->(rs)"
+      "CREATE (rs)-[:MANAGED_BY]->(ra)"
+      "CREATE (s)-[:STUDY_DESIGN]->(sd)"
+      "CREATE (sd)-[:STUDY_CELL]->(sc)"
+      "CREATE (sd)-[:STUDY_WORKFLOW]->(wf)"
+      "CREATE (sc)-[:STUDY_ARM]->(sa)"
+      "CREATE (sc)-[:STUDY_EPOCH]->(se)"
+      "RETURN s.uuid as uuid"
+    )
+    result = tx.run(query, 
+      title=title, 
+      id=identifier, 
+      sv=str(sv),
+      ns_uri=ns['uri'],
+      ns_value=ns['value'],
+      ra_uri=ra['uri'],
+      ra_owner=ra['name'],
+      date=datetime.now().strftime("%Y-%m-%d"),
+      uuid1=str(uuid4()), 
+      uuid2=str(uuid4()),
+      uuid3=str(uuid4()),
+      uuid4=str(uuid4()),
+      uuid5=str(uuid4()),
+      uuid6=str(uuid4()),
+      uuid7=str(uuid4()),
+      uuid8=str(uuid4()),
+      uuid9=str(uuid4()),
+      uuid10=str(uuid4())
+    )
 #      try:
-      for row in result:
-        return row["uuid"]
-      return None
+    for row in result:
+      return row["uuid"]
+    return None
 #      except ServiceUnavailable as exception:
 #        logging.error("{query} raised an error: \n {exception}".format(
 #          query=query, exception=exception))

@@ -36,8 +36,8 @@ async def read_root():
   description="Provide a list of all studies.",
   status_code=200,
   response_model=StudyList)
-async def list_studies():
-  return Study.list()
+async def list_studies(page: int = 0, size: int = 0, filter: str=""):
+  return StudyList.list(page, size, filter)
 
 @app.post("/v1/studies", 
   summary="Create a new study",
@@ -155,5 +155,4 @@ async def link_epoch_and_encounter(uuid: str, encounter: EncounterLink):
 async def create_workflow_item(uuid: str, wfi: WorkflowItemIn):
   workflow = Workflow.find(uuid)
   result = workflow.add_workflow_item(wfi.description, wfi.encounter_uuid, wfi.activity_uuid)
-  print(result)
   return result
