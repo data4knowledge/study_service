@@ -93,7 +93,7 @@ class Activity(BaseModel):
   def _create_study_data(tx, uuid, name, description, link):
     query = (
       "MATCH (a:Activity { uuid: $uuid1 })"
-      "CREATE (sd:StudyData { studyDataName: $name, studyDataDesc: $desc, link: $link, uuid: $uuid2 })"
+      "CREATE (sd:StudyData { studyDataName: $name, studyDataDesc: $desc, ecrfLink: $link, uuid: $uuid2 })"
       "CREATE (a)-[:STUDY_DATA_COLLECTION]->(sd)"
       "RETURN sd.uuid as uuid"
     )
