@@ -91,6 +91,28 @@ async def get_study_design_epochs(uuid: str):
   else:
     return study_design.workflows()
 
+@app.get("/v1/studyDesigns/{uuid}/soa", 
+  summary="Get the SoA for a study design",
+  description="Provides the Schedule of Activities for a given study design.",
+  response_model=list)
+async def get_study_design_soa(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.soa()
+
+@app.get("/v1/studyDesigns/{uuid}/dataContract", 
+  summary="Get the data contract for a study design",
+  description="Provides the data contract for a given study design.",
+  response_model=list)
+async def get_study_design_soa(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.data_contract()
+
 @app.post("/v1/studyDesigns/{uuid}/activities", 
   summary="Create a new activity within a study",
   description="Creates an activity. The activity is added to the end of the list of activities for the specified study.",

@@ -1,6 +1,7 @@
 from typing import List, Union
 from pydantic import BaseModel
 from model.node import Node
+from model.study_design_views import StudyDesignViews
 from .code import Code
 from .study_cell import StudyCell
 from .indication import Indication
@@ -68,6 +69,12 @@ class StudyDesign(Node):
       results['count'] = len(results['items'])
       results['size'] = len(results['items'])
       return results
+
+  def soa(self):
+    return StudyDesignViews().soa(self.uuid)
+
+  def data_contract(self):
+    return StudyDesignViews().data_contract(self.uuid)
 
   @staticmethod
   def _create_workflow(tx, uuid, name, description):
