@@ -3,6 +3,7 @@ from typing import List, Union
 from model.code import *
 from model.study_identifier import *
 from model.scoped_identifier import *
+from model.registration_status import *
 from model.study_protocol_version import *
 from model.study_design import *
 from model.neo4j_connection import Neo4jConnection
@@ -28,6 +29,10 @@ class StudyOut(BaseModel):
   studyProtocolVersions: dict
   studyDesigns: dict
 
+class StudyParameters(BaseModel):
+  studyType: dict
+  studyPhase: dict
+
 class StudySummary(BaseModel):
   #uri: str
   uuid: str
@@ -52,13 +57,6 @@ class StudyList(BaseModel):
     results['items'] = Study.list(page, size, filter)
     return results
 
-class StudyDesignList(BaseModel):
-  items: List[str]
-  page: int
-  size: int
-  filter: str
-  count: int
-
 class Study(Node):
   uuid: str
   uri: str = ""
@@ -69,31 +67,33 @@ class Study(Node):
   studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None]
   studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None]
   studyDesigns: Union[List[StudyDesign], List[UUID], None]
+  identified_by: Union[ScopedIdentifier, UUID, None] #EXTENSION
+  has_status: Union[RegistrationStatus, UUID, None] # EXTENSION
 
   @classmethod
   def find_full(cls, uuid):
-    study = Study.find(uuid)
     db = Neo4jConnection()
     with db.session() as session:
-      study.studyDesigns = session.execute_read(cls._find_study_designs, study.uuid)
-    return study
+      return session.execute_read(cls._find_full, uuid)
 
   @staticmethod
-  def _find_study_designs(tx, uuid):
+  def _find_full(tx, uuid):
+    study = None
     query = """
-      MATCH (s:StudyDesign { uuid: '%s' })
-      WITH s
-      MATCH (s)-[:STUDY_DESIGN]->(sd:StudyDesign)
-      RETURN sd
+      MATCH (s:Study { uuid: '%s' })-[:IDENTIFIED_BY]->(si:ScopedIdentifier)-[:SCOPED_BY]->(ns:Namespace),
+      (s)-[:HAS_STATUS]->(rs:RegistrationStatus)-[:MANAGED_BY]->(ra:RegistrationAuthority)
+      RETURN s,si,ns,rs,ra
     """ % (uuid)
     result = tx.run(query, uuid1=uuid)
-    results = []
     for row in result:
-      dict = {}
-      for items in row['sd'].items():
-        dict[items[0]] = items[1]
-      results.append(StudyDesign(**dict))
-    return results
+      if study == None:
+        study = Study.wrap(row['s'])
+        study.studyDesigns = []
+        study.identified_by = ScopedIdentifier.wrap(row['si'])
+        study.identified_by.scoped_by = Namespace.wrap(row['ns'])
+        study.has_status = RegistrationStatus.wrap(row['si'])
+        study.has_status.managed_by = RegistrationAuthority.wrap(row['ra'])
+    return study
 
   @classmethod
   def create(cls, identifier, title):
@@ -208,11 +208,12 @@ class Study(Node):
   def study_designs(self):
     db = Neo4jConnection()
     with db.session() as session:
-      results = {'items': [], 'page': 1, 'size': 0, 'filter': "", 'count': 0 }
-      results['items'] = session.execute_read(self._study_designs, self.uuid)
-      results['count'] = len(results['items'])
-      results['size'] = len(results['items'])
-      return results
+      return session.execute_read(self._study_designs, self.uuid)
+
+  def study_parameters(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(self._study_parameters, self.uuid)
 
   @staticmethod
   def _create_study(tx, identifier, title):
@@ -232,7 +233,11 @@ class Study(Node):
       "CREATE (sa:StudyArm { uuid: $uuid5 })"
       "CREATE (se:StudyEpoch { uuid: $uuid6, studyEpochName: 'Single Epoch', studyEpochDesc: 'A single epoch for this study' })"
       "CREATE (wf:Workflow { uuid: $uuid7, workflowName: 'SoA', workflowDesc: 'The SoA workflow' })"
+      "CREATE (st:Code {uuid: $uuid11, code: 'C12345', codeSystem: 'CDISC', codeSystemVersion: '1', decode: 'Observational'})"
+      "CREATE (sp:Code {uuid: $uuid12, code: 'C12346', codeSystem: 'CDISC', codeSystemVersion: '1', decode: 'None'})"
       "CREATE (s)-[:IDENTIFIED_BY]->(si)"
+      "CREATE (s)-[:STUDY_TYPE]->(st)"
+      "CREATE (s)-[:STUDY_PHASE]->(sp)"
       "CREATE (si)-[:SCOPED_BY]->(ns)"
       "CREATE (s)-[:HAS_STATUS]->(rs)"
       "CREATE (rs)-[:MANAGED_BY]->(ra)"
@@ -261,7 +266,9 @@ class Study(Node):
       uuid7=str(uuid4()),
       uuid8=str(uuid4()),
       uuid9=str(uuid4()),
-      uuid10=str(uuid4())
+      uuid10=str(uuid4()),
+      uuid11=str(uuid4()),
+      uuid12=str(uuid4())
     )
 #      try:
     for row in result:
@@ -276,7 +283,8 @@ class Study(Node):
   def _delete_study(tx, the_uuid):
       query = """
         MATCH (s:Study { uuid: $uuid1 })
-          -[:STUDY_DESIGN|IDENTIFIED_BY|SCOPED_BY|HAS_STATUS|MANAGED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|STUDY_WORKFLOW|STUDY_DATA_COLLECTION|
+          -[:STUDY_DESIGN|IDENTIFIED_BY|SCOPED_BY|HAS_STATUS|MANAGED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|
+          STUDY_WORKFLOW|STUDY_DATA_COLLECTION|STUDY_TYPE|STUDY_PHASE|
           STUDY_ACTIVITY|STUDY_ENCOUNTER|WORKFLOW_ITEM|WORKFLOW_ITEM_ENCOUNTER|WORKFLOW_ITEM_ACTIVITY  *1..]->(n)
         DETACH DELETE (n)
         DETACH DELETE (s)
@@ -312,12 +320,25 @@ class Study(Node):
     results = []
     query = (
       "MATCH (s:Study {uuid: $uuid})-[:STUDY_DESIGN]->(sd:StudyDesign)"
-      "RETURN sd.uuid as uuid"
+      "RETURN sd"
     )
     result = tx.run(query, uuid=uuid)
     for row in result:
-      results.append(row['uuid'])
+      results.append(StudyDesign.wrap(row['sd']))
     return results
+
+  @staticmethod
+  def _study_parameters(tx, uuid):
+    query = (
+      "MATCH (s:Study {uuid: $uuid}) "
+      "WITH s " 
+      "MATCH (s)-[:STUDY_TYPE]->(st:Code), "
+      "(s)-[:STUDY_PHASE]->(sp:Code)"
+      "RETURN st,sp"
+    )
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      return StudyParameters(**{ "studyType": Code.wrap(row['st']), "studyPhase": Code.wrap(row['sp']) })
 
   @staticmethod
   def _list(tx):

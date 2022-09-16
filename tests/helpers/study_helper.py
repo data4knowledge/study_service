@@ -8,7 +8,7 @@ class StudyHelper():
     self.db = db
     self.uuid = str(uuid4())
     query = """
-      CREATE (n:Study {uuid: '%s', title: '%s'}) RETURN n
+      CREATE (n:Study {uuid: '%s', studyTitle: '%s'}) RETURN n
     """ % (self.uuid, title)
     result = self.db.run(query)
 
@@ -16,5 +16,19 @@ class StudyHelper():
     query = """
       MATCH (n:Study {uuid: '%s'}), (m:StudyDesign {uuid: '%s'}) CREATE (n)-[:STUDY_DESIGN]->(m) RETURN n
     """ % (self.uuid, study_design.uuid)
+    result = self.db.run(query)
+    return None
+
+  def add_phase(self, code):
+    query = """
+      MATCH (n:Study {uuid: '%s'}), (m:Code {uuid: '%s'}) CREATE (n)-[:STUDY_PHASE]->(m) RETURN n
+    """ % (self.uuid, code.uuid)
+    result = self.db.run(query)
+    return None
+
+  def add_type(self, code):
+    query = """
+      MATCH (n:Study {uuid: '%s'}), (m:Code {uuid: '%s'}) CREATE (n)-[:STUDY_TYPE]->(m) RETURN n
+    """ % (self.uuid, code.uuid)
     result = self.db.run(query)
     return None

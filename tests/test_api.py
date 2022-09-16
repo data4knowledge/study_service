@@ -10,6 +10,7 @@ from tests.helpers.activity_helper import ActivityHelper
 from tests.helpers.study_epoch_helper import StudyEpochHelper
 from tests.helpers.encounter_helper import EncounterHelper
 from tests.helpers.workflow_helper import WorkflowHelper
+from tests.helpers.code_helper import CodeHelper
 
 client = TestClient(app)
 
@@ -66,6 +67,18 @@ def test_get_study_ok():
   assert response.status_code == 200
   store.close()
 
+def test_get_study_parameters_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "A title")
+  code = CodeHelper(db, "A", "system", "1", "Letter A")
+  study.add_phase(code)
+  code = CodeHelper(db, "B", "system", "1", "Letter B")
+  study.add_type(code)
+  response = client.get("/v1/studies/%s/parameters" % (study.uuid))
+  assert response.status_code == 200
+  db.close()
+
 def test_study_design_list_ok():
   store = Neo4jHelper()
   store.clear()
@@ -91,7 +104,7 @@ def test_study_design_epoch_list_ok():
   response = client.get("/v1/studies")
   study = response.json()['items'][0]['uuid']
   response = client.get("/v1/studies/%s/studyDesigns" % (study))
-  study_design = response.json()['items'][0]
+  study_design = response.json()[0]['uuid']
   response = client.get("/v1/studyDesigns/%s/studyEpochs" % (study_design))
   assert response.status_code == 200
   store.close()
@@ -106,7 +119,7 @@ def test_delete_study():
   }
   response = client.post("/v1/studies", json=body)
   assert response.status_code == 201
-  assert store.count() == 10
+  assert store.count() == 12
   response = client.delete("/v1/studies/%s" % (response.json()))
   assert response.status_code == 204
   assert store.count() == 0

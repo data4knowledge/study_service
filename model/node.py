@@ -9,6 +9,13 @@ class Node(BaseModel):
     with db.session() as session:
       return session.execute_read(cls._find, cls, uuid)
 
+  @classmethod
+  def wrap(cls, node):
+    dict = {}
+    for items in node.items():
+      dict[items[0]] = items[1]
+    return cls(**dict)
+
   @staticmethod
   def _find(tx, cls, uuid):
     query = """
@@ -22,4 +29,3 @@ class Node(BaseModel):
         dict[items[0]] = items[1]
       return cls(**dict)
     return None
-

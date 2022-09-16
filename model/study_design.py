@@ -2,28 +2,22 @@ from typing import List, Union
 from pydantic import BaseModel
 from model.node import Node
 from model.study_design_views import StudyDesignViews
-from .code import Code
-from .study_cell import StudyCell
-from .indication import Indication
-from .investigational_intervention import InvestigationalIntervention
-from .study_design_population import StudyDesignPopulation
-from .objective import Objective
-from .workflow import Workflow
-from .estimand import Estimand
-from .activity import Activity
-from .encounter import Encounter
-from .neo4j_connection import Neo4jConnection
+from model.code import Code
+from model.study_cell import StudyCell
+from model.study_epoch import StudyEpoch
+from model.indication import Indication
+from model.investigational_intervention import InvestigationalIntervention
+from model.study_design_population import StudyDesignPopulation
+from model.objective import Objective
+from model.workflow import Workflow
+from model.estimand import Estimand
+from model.activity import Activity
+from model.encounter import Encounter
+from model.neo4j_connection import Neo4jConnection
 from uuid import UUID, uuid4
 
 class StudyDesignOut(BaseModel):
   uuid: str
-
-class ChildList(BaseModel):
-  items: List[str]
-  page: int
-  size: int
-  filter: str
-  count: int
 
 class StudyDesign(Node):
   uuid: str
@@ -55,20 +49,12 @@ class StudyDesign(Node):
   def epochs(self):
     db = Neo4jConnection()
     with db.session() as session:
-      results = {'items': [], 'page': 1, 'size': 0, 'filter': "", 'count': 0 }
-      results['items'] = session.execute_read(self._epochs, self.uuid)
-      results['count'] = len(results['items'])
-      results['size'] = len(results['items'])
-      return results
+      return session.execute_read(self._epochs, self.uuid)
 
   def workflows(self):
     db = Neo4jConnection()
     with db.session() as session:
-      results = {'items': [], 'page': 1, 'size': 0, 'filter': "", 'count': 0 }
-      results['items'] = session.execute_read(self._workflows, self.uuid)
-      results['count'] = len(results['items'])
-      results['size'] = len(results['items'])
-      return results
+      return session.execute_read(self._workflows, self.uuid)
 
   def soa(self):
     return StudyDesignViews().soa(self.uuid)
@@ -80,10 +66,10 @@ class StudyDesign(Node):
   def _create_workflow(tx, uuid, name, description):
       query = (
         "MATCH (sd:StudyDesign { uuid: $uuid1 })-[:STUDY_WORKFLOW]->(e)"
-        "WHERE NOT (e)-[:NEXT_workflow]->()"
+        "WHERE NOT (e)-[:NEXT_WORKFLOW]->()"
         "CREATE (e1:Workflow { workflowName: $name, workflowDesc: $desc, uuid: $uuid2 })"
-        "CREATE (e)-[:NEXT_workflow]->(e1)"
-        "CREATE (e1)-[:PREVIOUS_workflow]->(e)"
+        "CREATE (e)-[:NEXT_WORKFLOW]->(e1)"
+        "CREATE (e1)-[:PREVIOUS_WORKFLOW]->(e)"
         "CREATE (sd)-[:STUDY_WORKFLOW]->(e1)"
         "RETURN e1.uuid as uuid"
       )
@@ -102,11 +88,11 @@ class StudyDesign(Node):
     results = []
     query = (
       "MATCH (s:StudyDesign {uuid: $uuid})-[:STUDY_CELL]->(:StudyCell)-[:STUDY_EPOCH]->(e:StudyEpoch)"
-      "RETURN e.uuid as uuid"
+      "RETURN e"
     )
     result = tx.run(query, uuid=uuid)
     for row in result:
-      results.append(row['uuid'])
+      results.append(StudyEpoch.wrap(row['e']))
     return results
 
   @staticmethod
@@ -114,11 +100,11 @@ class StudyDesign(Node):
     results = []
     query = (
       "MATCH (s:StudyDesign {uuid: $uuid})-[:STUDY_WORKFLOW]->(wfi:Workflow)"
-      "RETURN wfi.uuid as uuid"
+      "RETURN wfi"
     )
     result = tx.run(query, uuid=uuid)
     for row in result:
-      results.append(row['uuid'])
+      results.append(Workflow.wrap(row['wfi']))
     return results
 
   @staticmethod

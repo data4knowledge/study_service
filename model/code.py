@@ -1,8 +1,8 @@
+from model.node import Node
 from typing import Union
 from uuid import UUID
-from pydantic import BaseModel
 
-class Code(BaseModel):
+class Code(Node):
   uuid: Union[UUID, None]
   code: str
   codeSystem: str

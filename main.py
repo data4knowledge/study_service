@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
-from model.study import Study, StudyIn, StudyList, StudyDesignList
-from model.study_design import ChildList, StudyDesign
+from model.study import Study, StudyIn, StudyList, StudyParameters
+from model.study_design import StudyDesign
 from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch
 from model.study_data import StudyData, StudyDataIn
@@ -9,6 +9,7 @@ from model.encounter import Encounter, EncounterIn, EncounterLink
 from model.workflow import Workflow, WorkflowIn
 from model.workflow_item import WorkflowItem, WorkflowItemIn
 from utility.service_environment import ServiceEnvironment
+from typing import List
 
 VERSION = "0.1"
 SYSTEM_NAME = "d4k Study Build Microservice"
@@ -72,7 +73,7 @@ async def get_study(uuid: str):
 @app.get("/v1/studies/{uuid}/studyDesigns", 
   summary="Get the study designs for a study",
   description="Provides a list of uuids for te study designs that exisit for a specified study.",
-  response_model=StudyDesignList)
+  response_model=List[StudyDesign])
 async def get_study_designs(uuid: str):
   study = Study.find(uuid)
   if study == None:
@@ -80,10 +81,21 @@ async def get_study_designs(uuid: str):
   else:
     return study.study_designs()
 
+@app.get("/v1/studies/{uuid}/parameters", 
+  summary="Get the study parameters (type, phase) for a study",
+  description="Provides a dictionary of the study parameters that exisit for a specified study.",
+  response_model=StudyParameters)
+async def get_study_parameters(uuid: str):
+  study = Study.find(uuid)
+  if study == None:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+  else:
+    return study.study_parameters()
+
 @app.get("/v1/studyDesigns/{uuid}/studyEpochs", 
   summary="Get the epochs for a study design",
   description="Provides a list of uuids for the epochs that exisit for a specified study.",
-  response_model=ChildList)
+  response_model=List[StudyEpoch])
 async def get_study_design_epochs(uuid: str):
   study_design = StudyDesign.find(uuid)
   if study_design == None:
@@ -94,7 +106,7 @@ async def get_study_design_epochs(uuid: str):
 @app.get("/v1/studyDesigns/{uuid}/workflows", 
   summary="Get the workflows for a study design",
   description="Provides a list of uuids for the workflows that exisit for a specified study.",
-  response_model=ChildList)
+  response_model=List[Workflow])
 async def get_study_design_epochs(uuid: str):
   study_design = StudyDesign.find(uuid)
   if study_design == None:
