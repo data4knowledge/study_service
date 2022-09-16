@@ -19,7 +19,7 @@ class StudyIn(BaseModel):
 
 class StudyOut(BaseModel):
   uuid = str
-  uri = str
+  #uri = str
   studyTitle: str
   studyVersion: str
   studyType: dict
@@ -70,18 +70,31 @@ class Study(Node):
   studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None]
   studyDesigns: Union[List[StudyDesign], List[UUID], None]
 
-  # @classmethod
-  # def find(cls, uuid):
-  #   db = Neo4jConnection()
-  #   with db.session() as session:
-  #     results = session.execute_read(cls._find_study, uuid)
-  #     if len(results) == 1:
-  #       return results[0]
-  #     elif len(results) == 0:
-  #       return None
-  #     else:
-  #       return None
-        
+  @classmethod
+  def find_full(cls, uuid):
+    study = Study.find(uuid)
+    db = Neo4jConnection()
+    with db.session() as session:
+      study.studyDesigns = session.execute_read(cls._find_study_designs, study.uuid)
+    return study
+
+  @staticmethod
+  def _find_study_designs(tx, uuid):
+    query = """
+      MATCH (s:StudyDesign { uuid: '%s' })
+      WITH s
+      MATCH (s)-[:STUDY_DESIGN]->(sd:StudyDesign)
+      RETURN sd
+    """ % (uuid)
+    result = tx.run(query, uuid1=uuid)
+    results = []
+    for row in result:
+      dict = {}
+      for items in row['sd'].items():
+        dict[items[0]] = items[1]
+      results.append(StudyDesign(**dict))
+    return results
+
   @classmethod
   def create(cls, identifier, title):
     db = Neo4jConnection()
@@ -91,16 +104,6 @@ class Study(Node):
         return result
       else:
         return None
-
-  # @classmethod
-  # def list(cls):
-  #   db = Neo4jConnection()
-  #   with db.session() as session:
-  #     results = {'items': [], 'page': 1, 'size': 0, 'filter': "", 'count': 0 }
-  #     results['items'] = session.execute_read(cls._list)
-  #     results['count'] = len(results['items'])
-  #     results['size'] = len(results['items'])
-  #     return results
 
   @classmethod
   def list(cls, page=0, size=0, filter=""):
@@ -271,11 +274,13 @@ class Study(Node):
 
   @staticmethod
   def _delete_study(tx, the_uuid):
-      query = (
-        "MATCH (s:Study { uuid: $uuid1 })-[:STUDY_DESIGN|IDENTIFIED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|STUDY_WORKFLOW|STUDY_DATA_COLLECTION|STUDY_ACTIVITY|STUDY_ENCOUNTER|WORKFLOW_ITEM  *1..]->(n)"
-        "DETACH DELETE (n)"
-        "DETACH DELETE (s)"
-      )
+      query = """
+        MATCH (s:Study { uuid: $uuid1 })
+          -[:STUDY_DESIGN|IDENTIFIED_BY|SCOPED_BY|HAS_STATUS|MANAGED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|STUDY_WORKFLOW|STUDY_DATA_COLLECTION|
+          STUDY_ACTIVITY|STUDY_ENCOUNTER|WORKFLOW_ITEM|WORKFLOW_ITEM_ENCOUNTER|WORKFLOW_ITEM_ACTIVITY  *1..]->(n)
+        DETACH DELETE (n)
+        DETACH DELETE (s)
+      """
 #      try:
       result = tx.run(query, uuid1=the_uuid)
 #      except ServiceUnavailable as exception:

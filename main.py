@@ -58,6 +58,17 @@ async def create_study(study: StudyIn):
 async def delete_study(uuid: str):
   result = Study.delete(uuid)
 
+@app.get("/v1/studies/{uuid}", 
+  summary="Get a study",
+  description="Provides the detail for a specified study.",
+  response_model=Study)
+async def get_study(uuid: str):
+  study = Study.find_full(uuid)
+  if study == None:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+  else:
+    return study
+
 @app.get("/v1/studies/{uuid}/studyDesigns", 
   summary="Get the study designs for a study",
   description="Provides a list of uuids for te study designs that exisit for a specified study.",

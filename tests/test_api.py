@@ -54,6 +54,18 @@ def test_study_list():
   assert response.status_code == 200
   store.close()
 
+def test_get_study_ok():
+  store = Neo4jHelper()
+  store.clear()
+  body = {
+    "title": "123",
+    "identifier": "NZ123",
+  }
+  response = client.post("/v1/studies", json=body)
+  response = client.get("/v1/studies/%s" % (response.json()))
+  assert response.status_code == 200
+  store.close()
+
 def test_study_design_list_ok():
   store = Neo4jHelper()
   store.clear()
@@ -63,7 +75,7 @@ def test_study_design_list_ok():
   }
   response = client.post("/v1/studies", json=body)
   response = client.get("/v1/studies")
-  study = response.json()['items'][0]
+  study = response.json()['items'][0]['uuid']
   response = client.get("/v1/studies/%s/studyDesigns" % (study))
   assert response.status_code == 200
   store.close()
@@ -77,7 +89,7 @@ def test_study_design_epoch_list_ok():
   }
   response = client.post("/v1/studies", json=body)
   response = client.get("/v1/studies")
-  study = response.json()['items'][0]
+  study = response.json()['items'][0]['uuid']
   response = client.get("/v1/studies/%s/studyDesigns" % (study))
   study_design = response.json()['items'][0]
   response = client.get("/v1/studyDesigns/%s/studyEpochs" % (study_design))
@@ -94,7 +106,7 @@ def test_delete_study():
   }
   response = client.post("/v1/studies", json=body)
   assert response.status_code == 201
-  assert store.count() == 7
+  assert store.count() == 10
   response = client.delete("/v1/studies/%s" % (response.json()))
   assert response.status_code == 204
   assert store.count() == 0
