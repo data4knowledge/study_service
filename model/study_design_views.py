@@ -12,18 +12,23 @@ class StudyDesignViews():
       epoch_count = 0
 
       # Epochs and Visits
-      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->
-          (e:StudyEpoch)-[]->(v:Encounter)
-          WITH e.studyEpochName as epoch,v.encounterName as visit 
-          RETURN DISTINCT epoch, visit""" % (uuid)
+      query = """
+        MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(v:Encounter)-[r:NEXT_ENCOUNTER *0..]->()
+        WITH v ORDER BY LENGTH(path) DESC
+        MATCH (e:StudyEpoch)-[]->(v)
+        WITH e.studyEpochName as epoch,v.encounterName as visit 
+        RETURN DISTINCT epoch, visit
+      """ % (uuid)
       result = session.run(query)
       for record in result:
-          if not record["epoch"] in epoch_visits:
-              epoch_visits[record["epoch"]] = []    
-              epoch_count += 1
-          epoch_visits[record["epoch"]].append(record["visit"])
-          visits[record["visit"]] = record["epoch"]
-          visit_row[record["visit"]] = ""
+        print(record)
+        if not record["epoch"] in epoch_visits:
+          epoch_visits[record["epoch"]] = []    
+          epoch_count += 1
+        epoch_visits[record["epoch"]].append(record["visit"])
+        visits[record["visit"]] = record["epoch"]
+        visit_row[record["visit"]] = ""
+      print(visits)
 
       # Visit Rules
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)
@@ -53,14 +58,15 @@ class StudyDesignViews():
       
       # Activity Order
       activity_order = []
-      query = """MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(a:Activity)-[r:NEXT_ACTIVITY *1..]->(b:Activity) RETURN a.activityName as desc""" % (uuid)
+      query = """
+        MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(a:Activity)-[r:NEXT_ACTIVITY *0..]->()
+        WITH a ORDER BY LENGTH(path) ASC
+        RETURN DISTINCT a.activityName as name
+      """  % (uuid)
       result = session.run(query)
       for record in result:
-        activity_order.append(record["desc"])
-      query = """MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(a:Activity)-[r:NEXT_ACTIVITY *1..]->(b:Activity) RETURN b.activityName as desc ORDER BY LENGTH(path) ASC;"""  % (uuid)
-      result = session.run(query)
-      for record in result:
-        activity_order.append(record["desc"])
+        activity_order.append(record["name"])
+      print(activity_order)
 
       # Return the results
       results = []
