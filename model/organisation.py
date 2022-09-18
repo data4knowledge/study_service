@@ -1,14 +1,14 @@
 from typing import Union
 from uuid import UUID
-from pydantic import BaseModel
-from .code import Code
+from model.node import Node
+from model.code import Code
 
-class Organisation(BaseModel):
+class Organisation(Node):
   uuid: Union[UUID, None]
   organisationIdentifierScheme: str
   organisationIdentifier: str
   organisationName: str
-  organisationType: Union[UUID, Code]
+  organisationType: Union[UUID, Code, None]
 
   @classmethod
   def global_reuse(cls):

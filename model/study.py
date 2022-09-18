@@ -215,6 +215,11 @@ class Study(Node):
     with db.session() as session:
       return session.execute_read(self._study_parameters, self.uuid)
 
+  def study_identifiers(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(self._study_identifiers, self.uuid)
+
   @staticmethod
   def _create_study(tx, identifier, title):
     ra_service = RAService()
@@ -339,6 +344,21 @@ class Study(Node):
     result = tx.run(query, uuid=uuid)
     for row in result:
       return StudyParameters(**{ "studyType": Code.wrap(row['st']), "studyPhase": Code.wrap(row['sp']) })
+
+  @staticmethod
+  def _study_identifiers(tx, uuid):
+    results = []
+    query = (
+      "MATCH (s:Study {uuid: $uuid})-[:STUDY_IDENTIFIER]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation)-[:ORGANISATION_TYPE]->(c:Code)"
+      "RETURN si,o,c"
+    )
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      identifier = StudyIdentifier.wrap(row['si'])
+      identifier.studyIdentifierScope = Organisation.wrap(row['o'])
+      identifier.studyIdentifierScope.organisationType = Code.wrap(row['c'])
+      results.append(identifier)
+    return results
 
   @staticmethod
   def _list(tx):

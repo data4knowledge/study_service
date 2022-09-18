@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
 from model.study import Study, StudyIn, StudyList, StudyParameters
+from model.study_identifier import StudyIdentifier
 from model.study_design import StudyDesign
 from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch
@@ -91,6 +92,17 @@ async def get_study_parameters(uuid: str):
     raise HTTPException(status_code=404, detail="The requested study cannot be found")
   else:
     return study.study_parameters()
+
+@app.get("/v1/studies/{uuid}/identifiers", 
+  summary="Get the study identifiers for a study",
+  description="Provides a dictionary of the study identifiers that exisit for a specified study.",
+  response_model=List[StudyIdentifier])
+async def get_study_identifiers(uuid: str):
+  study = Study.find(uuid)
+  if study == None:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+  else:
+    return study.study_identifiers()
 
 @app.get("/v1/studyDesigns/{uuid}/studyEpochs", 
   summary="Get the epochs for a study design",
