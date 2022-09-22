@@ -336,3 +336,14 @@ def test_link_workflow_activity_encounter_ok():
   assert response.status_code == 201
   db.close()
 
+def test_add_epoch_ok():
+  db = Neo4jHelper()
+  db.clear()
+  sd = StudyDesignHelper(db)
+  body = {
+    "name": "New Epoch",
+    "description": "Something"
+  }
+  response = client.post("/v1/studyDesigns/%s/epochs" % (sd.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
