@@ -21,14 +21,14 @@ class StudyDesignViews():
       """ % (uuid)
       result = session.run(query)
       for record in result:
-        print(record)
+        #print(record)
         if not record["epoch"] in epoch_visits:
           epoch_visits[record["epoch"]] = []    
           epoch_count += 1
         epoch_visits[record["epoch"]].append(record["visit"])
         visits[record["visit"]] = record["epoch"]
         visit_row[record["visit"]] = ""
-      print(visits)
+      #print(visits)
 
       # Visit Rules
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)
@@ -66,7 +66,7 @@ class StudyDesignViews():
       result = session.run(query)
       for record in result:
         activity_order.append(record["name"])
-      print(activity_order)
+      #print(activity_order)
 
       # Return the results
       results = []

@@ -71,6 +71,30 @@ class Study(Node):
   has_status: Union[RegistrationStatus, UUID, None] # EXTENSION
 
   @classmethod
+  def identifier_properties(cls):
+    return [
+      "ni.identifier",
+      "ni.semantic_version",
+      "ni.version",
+      "ni.version_label",
+    ]
+
+  @classmethod
+  def status_properties(cls):
+    return [
+      "ns.effective_date",
+      "ns.until_date",
+      "ns.registration_status",
+      "ra.name",
+    ]
+  
+  @classmethod
+  def parent_properties(cls):
+    return [
+      "n.studyTitle",
+    ]
+
+  @classmethod
   def find_full(cls, uuid):
     db = Neo4jConnection()
     with db.session() as session:
@@ -122,9 +146,9 @@ class Study(Node):
           RETURN n,ni,ns,ra ORDER BY toInteger(ni.version) DESC %s
         """ % (skip_offset_clause)
       else:
-        identifier_filter_clause = cls.build_filter_clause(filter, cls.IDENTIFIER_PROPERTIES)
-        status_filter_clause = cls.build_filter_clause(filter, cls.STATUS_PROPERTIES)
-        parent_filter_clause = cls.build_filter_clause(filter, cls.PARENT_PROPERTIES)
+        identifier_filter_clause = cls.build_filter_clause(filter, cls.identifier_properties())
+        status_filter_clause = cls.build_filter_clause(filter, cls.status_properties())
+        parent_filter_clause = cls.build_filter_clause(filter, cls.parent_properties())
         query = """
           CALL {
               MATCH (n:Study)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier) %s
@@ -167,9 +191,10 @@ class Study(Node):
   def filter_count(cls, filter):
     db = Neo4jConnection()
     with db.session() as session:
-      identifier_filter_clause = cls.build_filter_clause(filter, cls.IDENTIFIER_PROPERTIES)
-      status_filter_clause = cls.build_filter_clause(filter, cls.STATUS_PROPERTIES)
-      parent_filter_clause = cls.build_filter_clause(filter, cls.PARENT_PROPERTIES)
+      #print(Study.identifier_properties())
+      identifier_filter_clause = cls.build_filter_clause(filter, cls.identifier_properties())
+      status_filter_clause = cls.build_filter_clause(filter, cls.status_properties())
+      parent_filter_clause = cls.build_filter_clause(filter, cls.parent_properties())
       query = """
           MATCH (n:Study)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier) %s
           RETURN n
@@ -180,8 +205,9 @@ class Study(Node):
           MATCH(n:Study) %s
           RETURN n
       """ % (identifier_filter_clause, status_filter_clause, parent_filter_clause)
+      print(query)
       query_results = session.run(query)
-      return len(query_results)
+      return len(query_results.data())
 
   @classmethod
   def build_filter_clause(cls, filter, properties):
@@ -285,12 +311,12 @@ class Study(Node):
 #        raise
 
   @staticmethod
+  # :STUDY_DESIGN|IDENTIFIED_BY|SCOPED_BY|HAS_STATUS|MANAGED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|
+  #        STUDY_WORKFLOW|STUDY_DATA_COLLECTION|STUDY_TYPE|STUDY_PHASE|
+  #        STUDY_ACTIVITY|STUDY_ENCOUNTER|WORKFLOW_ITEM|WORKFLOW_ITEM_ENCOUNTER|WORKFLOW_ITEM_ACTIVITY 
   def _delete_study(tx, the_uuid):
       query = """
-        MATCH (s:Study { uuid: $uuid1 })
-          -[:STUDY_DESIGN|IDENTIFIED_BY|SCOPED_BY|HAS_STATUS|MANAGED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|
-          STUDY_WORKFLOW|STUDY_DATA_COLLECTION|STUDY_TYPE|STUDY_PHASE|
-          STUDY_ACTIVITY|STUDY_ENCOUNTER|WORKFLOW_ITEM|WORKFLOW_ITEM_ENCOUNTER|WORKFLOW_ITEM_ACTIVITY  *1..]->(n)
+        MATCH (s:Study { uuid: $uuid1 })-[ *1..]->(n)
         DETACH DELETE (n)
         DETACH DELETE (s)
       """
