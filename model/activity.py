@@ -36,6 +36,11 @@ class Activity(Node):
     with db.session() as session:
       return session.execute_write(self._create_study_data, str(self.uuid), name, description, link)
 
+  def study_data(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_write(self._study_data, str(self.uuid))
+
   @staticmethod
   def _create_activity(tx, uuid, name, description):
       query = (
@@ -74,7 +79,7 @@ class Activity(Node):
   def _create_study_data(tx, uuid, name, description, link):
     query = (
       "MATCH (a:Activity { uuid: $uuid1 })"
-      "CREATE (sd:StudyData { studyDataName: $name, studyDataDesc: $desc, ecrfLink: $link, uuid: $uuid2 })"
+      "CREATE (sd:StudyData { studyDataName: $name, studyDataDesc: $desc, crfLink: $link, uuid: $uuid2 })"
       "CREATE (a)-[:STUDY_DATA_COLLECTION]->(sd)"
       "RETURN sd.uuid as uuid"
     )
@@ -82,6 +87,18 @@ class Activity(Node):
     for row in result:
       return row["uuid"]
     return None
+
+  @staticmethod
+  def _study_data(tx, uuid):
+    query = (
+      "MATCH (a:Activity { uuid: $uuid1 })-[:STUDY_DATA_COLLECTION]->(sd)"
+      "RETURN sd as sd"
+    )
+    result = tx.run(query, uuid1=uuid)
+    results = []
+    for row in result:
+      results.append(StudyData(**row["sd"]))
+    return results
 
   @staticmethod
   def _exists(tx, uuid, name):

@@ -241,16 +241,6 @@ async def find_activity(uuid: str):
 # Activities
 # ==========
 
-@app.post("/v1/activities/{uuid}/studyData", 
-  summary="Creates a new study data item within an activity",
-  description="Creates an an item of study data.",
-  status_code=201,
-  response_model=str)
-async def create_study_data(uuid: str, study_data: StudyDataIn):
-  activity = Activity.find(uuid)
-  result = activity.add_study_data(study_data.name, study_data.description, study_data.link)
-  return result
-
 @app.get("/v1/activities/{uuid}", 
   summary="Returns an activity",
   description="Returns the details about an activity.",
@@ -261,6 +251,27 @@ async def find_activity(uuid: str):
     raise HTTPException(status_code=404, detail="The requested activity cannot be found")
   else:
     return activity
+
+@app.post("/v1/activities/{uuid}/studyData", 
+  summary="Creates a new study data item within an activity",
+  description="Creates an an item of study data.",
+  status_code=201,
+  response_model=str)
+async def create_study_data(uuid: str, study_data: StudyDataIn):
+  activity = Activity.find(uuid)
+  result = activity.add_study_data(study_data.name, study_data.description, study_data.link)
+  return result
+
+@app.get("/v1/activities/{uuid}/studyData", 
+  summary="Returns the study data for an activity",
+  description="Returns the set of study data children related to the specified activity.",
+  response_model=List[StudyData])
+async def find_activity_study_data(uuid: str):
+  activity = Activity.find(uuid)
+  if activity == None:
+    raise HTTPException(status_code=404, detail="The requested activity cannot be found")
+  else:
+    return activity.study_data()
 
 # Workflow
 # ========

@@ -9,7 +9,7 @@ class StudyDataIn(BaseModel):
 
 class StudyData(BaseModel):
   uuid: Union[UUID, None] = None
-  uri: str
+  #uri: str
   studyDataName: str
   studyDataDesc: str
   crfLink: str

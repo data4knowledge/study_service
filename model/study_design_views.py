@@ -53,20 +53,20 @@ class StudyDesignViews():
       activities = {}
       for record in result:
         if not record["activity"] in activities:
-            activities[record["activity"]] = visit_row.copy()
+          activities[record["activity"]] = visit_row.copy()
         activities[record["activity"]][record["visit"]] = "X" 
       
       # Activity Order
       activity_order = []
       query = """
         MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(a:Activity)-[r:NEXT_ACTIVITY *0..]->()
-        WITH a ORDER BY LENGTH(path) ASC
-        RETURN DISTINCT a.activityName as name
+        WITH a ORDER BY LENGTH(path) DESC
+        RETURN DISTINCT a.activityName as name, a.uuid as uuid
       """  % (uuid)
       result = session.run(query)
       for record in result:
-        activity_order.append(record["name"])
-      #print(activity_order)
+        activity_order.append({ 'name': record["name"], 'uuid': record['uuid'] })
+      print(activity_order)
 
       # Return the results
       results = []
@@ -74,8 +74,8 @@ class StudyDesignViews():
       results.append([""] + list(visits.keys()))
       results.append([""] + list(visit_rule.values()))
       for activity in activity_order:
-        if activity in activities:
-          data = activities[activity]
+        if activity['name'] in activities:
+          data = activities[activity['name']]
           results.append([activity] + list(data.values()))
     return results
 
@@ -85,7 +85,7 @@ class StudyDesignViews():
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)
           -[]->(v:Encounter)<-[]-(wfi:WorkflowItem)-[]->(a:Activity)-[]->(sda:StudyData)
           WITH a.activityName as activity, v.encounterName as visit, sda.studyDataDesc as study_data, sda.ecrfLink as ecrf_link
-          RETURN DISTINCT activity, visit, study_data, ecrf_link""" % (uuid)
+          RETURN DISTINCT activity, visit, study_data, ecrf_link ORDER BY visit, activity, study_data""" % (uuid)
       result = session.run(query)
       results = []
       for record in result:
