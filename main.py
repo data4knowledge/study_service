@@ -197,6 +197,51 @@ async def create_workflow(uuid: str, wf: WorkflowIn):
   else:
     return result
 
+# Epochs
+# ======
+
+@app.put("/v1/studyEpochs/{uuid}", 
+  summary="Update an epoch",
+  description="Update the simple fields of an epoch.",
+  status_code=201,
+  response_model=StudyEpoch)
+async def update_epoch(uuid: str, data: StudyEpochIn):
+  epoch = StudyEpoch.find(uuid)
+  if epoch == None:
+    raise HTTPException(status_code=404, detail="The requested epoch cannot be found")
+  else:
+    return epoch.update(data.name, data.description)
+
+@app.put("/v1/studyEpochs/{uuid}/encounters", 
+  summary="Links an encounter with an epoch",
+  description="Creates an link between an epoch and an encounter.",
+  status_code=201,
+  response_model=str)
+async def link_epoch_and_encounter(uuid: str, encounter: EncounterLink):
+  epoch = StudyEpoch.find(uuid)
+  if epoch == None:
+    raise HTTPException(status_code=404, detail="The requested epoch cannot be found")
+  else:
+    return epoch.add_encounter(encounter.uuid)
+  
+
+# Encounters
+# ==========
+
+@app.get("/v1/encounters/{uuid}", 
+  summary="Returns an encounter",
+  description="Returns the details about an encounter.",
+  response_model=Encounter)
+async def find_activity(uuid: str):
+  activity = Encounter.find(uuid)
+  if activity == None:
+    raise HTTPException(status_code=404, detail="The requested encounter cannot be found")
+  else:
+    return activity
+
+# Activities
+# ==========
+
 @app.post("/v1/activities/{uuid}/studyData", 
   summary="Creates a new study data item within an activity",
   description="Creates an an item of study data.",
@@ -212,23 +257,14 @@ async def create_study_data(uuid: str, study_data: StudyDataIn):
   description="Returns the details about an activity.",
   response_model=Activity)
 async def find_activity(uuid: str):
-  print("A")
   activity = Activity.find(uuid)
-  print("A", activity)
   if activity == None:
     raise HTTPException(status_code=404, detail="The requested activity cannot be found")
   else:
     return activity
 
-@app.put("/v1/studyEpochs/{uuid}/encounters", 
-  summary="Links an encounter with an epoch",
-  description="Creates an link between an epoch and an encounter.",
-  status_code=201,
-  response_model=str)
-async def link_epoch_and_encounter(uuid: str, encounter: EncounterLink):
-  epoch = StudyEpoch.find(uuid)
-  result = epoch.add_encounter(encounter.uuid)
-  return result
+# Workflow
+# ========
 
 @app.post("/v1/workflows/{uuid}/workflowItems", 
   summary="Creates an encounter and an activity to a workflow",
@@ -240,15 +276,3 @@ async def create_workflow_item(uuid: str, wfi: WorkflowItemIn):
   result = workflow.add_workflow_item(wfi.description, wfi.encounter_uuid, wfi.activity_uuid)
   return result
 
-@app.get("/v1/encounters/{uuid}", 
-  summary="Returns an encounter",
-  description="Returns the details about an encounter.",
-  response_model=Encounter)
-async def find_activity(uuid: str):
-  print("A")
-  activity = Encounter.find(uuid)
-  print("A", activity)
-  if activity == None:
-    raise HTTPException(status_code=404, detail="The requested encounter cannot be found")
-  else:
-    return activity

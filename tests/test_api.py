@@ -297,7 +297,7 @@ def test_add_duplicate_encounter_error():
   assert response.status_code == 409
   db.close()
 
-def test_link_epooch_encounter_ok():
+def test_link_epoch_encounter_ok():
   db = Neo4jHelper()
   db.clear()
   epoch = StudyEpochHelper(db, "Epoch", "Epoch Desc")
@@ -356,6 +356,41 @@ def test_add_epoch_single_arm_ok():
   print(response.json())
   assert response.status_code == 201
   db.close()
+
+# Epochs
+# ======
+
+def test_update_epoch_ok():
+  db = Neo4jHelper()
+  db.clear()
+  epoch = StudyEpochHelper(db, "EPOCH", "Expoch 1")
+  body = { 'name': "NEW EPOCH", 'description': "Epoch Updated" }
+  response = client.put("/v1/studyEpochs/%s" % (epoch.uuid), json=body)
+  print(response.json())
+  assert response.status_code == 201
+  assert response.json() == { 
+    'uuid': epoch.uuid,
+    'studyEpochDesc': 'Epoch Updated',
+    'studyEpochName': 'NEW EPOCH',
+    'encounters': [],
+    'nextStudyEpochId': None,
+    'previousStudyEpochId': None,
+    'studyEpochType': None
+  }
+  db.close()
+
+def test_update_epoch_error():
+  db = Neo4jHelper()
+  db.clear()
+  uuid = uuid4()
+  body = { 'name': "NEW EPOCH", 'description': "Epoch Updated" }
+  response = client.put("/v1/studyEpochs/%s" % (uuid), json=body)
+  assert response.status_code == 404
+  assert response.json() == {'detail': 'The requested epoch cannot be found'}
+  db.close()
+
+# Activities
+# ==========
 
 def test_get_activity_ok():
   db = Neo4jHelper()

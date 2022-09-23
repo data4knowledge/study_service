@@ -32,6 +32,11 @@ class StudyEpoch(Node):
       else:
         return None
 
+  def update(self, name, description):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_write(self._update, str(self.uuid), name, description)
+
   def add_encounter(self, uuid):
     db = Neo4jConnection()
     with db.session() as session:
@@ -65,6 +70,18 @@ class StudyEpoch(Node):
 #        raise
 
   @staticmethod
+  def _update(tx, uuid, name, description):
+    query = """
+      MATCH (ep:StudyEpoch { uuid: $uuid1 })
+      SET ep.studyEpochName = $name, ep.studyEpochDesc = $desc
+      RETURN ep
+    """
+    result = tx.run(query, uuid1=uuid, name=name, desc=description)
+    for row in result:
+      return StudyEpoch(**row['ep'])
+    return None
+
+  @staticmethod
   def _arms(tx, uuid):
     query = (
       "MATCH (sd:StudyDesign { uuid: $uuid1 })-[:STUDY_CELL]->(c)-[:STUDY_ARM]->(a:StudyArm)"
@@ -74,7 +91,6 @@ class StudyEpoch(Node):
     results = []
     for row in result:
       results.append(row["uuid"])
-    print("ARMS:", results)
     return results
 
   @staticmethod
