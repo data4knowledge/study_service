@@ -11,6 +11,8 @@ from tests.helpers.study_epoch_helper import StudyEpochHelper
 from tests.helpers.encounter_helper import EncounterHelper
 from tests.helpers.workflow_helper import WorkflowHelper
 from tests.helpers.code_helper import CodeHelper
+from tests.helpers.study_cell_helper import StudyCellHelper
+from tests.helpers.study_arm_helper import StudyArmHelper
 
 client = TestClient(app)
 
@@ -336,14 +338,21 @@ def test_link_workflow_activity_encounter_ok():
   assert response.status_code == 201
   db.close()
 
-def test_add_epoch_ok():
+def test_add_first_epoch_no_arm_ok():
   db = Neo4jHelper()
   db.clear()
   sd = StudyDesignHelper(db)
+  sc = StudyCellHelper(db)
+  arm = StudyArmHelper(db, "Arm", "Arm Desc")
+  epoch = StudyEpochHelper(db, "Epoch", "Epoch Desc")
+  sc.add_arm(arm)
+  sc.add_epoch(epoch)
+  sd.add_cell(sc)
   body = {
     "name": "New Epoch",
     "description": "Something"
   }
-  response = client.post("/v1/studyDesigns/%s/epochs" % (sd.uuid), json=body)
+  response = client.post("/v1/studyDesigns/%s/studyEpochs" % (sd.uuid), json=body)
+  print(response.json())
   assert response.status_code == 201
   db.close()

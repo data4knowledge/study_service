@@ -10,3 +10,10 @@ class StudyDesignHelper():
       CREATE (n:StudyDesign {uuid: '%s' }) RETURN n
     """ % (self.uuid)
     result = self.db.run(query)
+
+  def add_cell(self, cell):
+    query = """
+      MATCH (n:StudyDesign {uuid: '%s' }), (m:StudyCell {uuid: '%s' })  
+      CREATE (n)-[:STUDY_CELL]->(m) 
+    """ % (self.uuid, cell.uuid)
+    result = self.db.run(query)

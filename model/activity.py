@@ -4,12 +4,13 @@ from .procedure import Procedure
 from .study_data import StudyData
 from .neo4j_connection import Neo4jConnection
 from uuid import UUID, uuid4
+from model.node import Node
 
 class ActivityIn(BaseModel):
   name: str
   description: str
   
-class Activity(BaseModel):
+class Activity(Node):
   uuid: Union[UUID, None] = None
   activityName: str
   activityDesc: str
@@ -17,12 +18,6 @@ class Activity(BaseModel):
   nextActivityId: Union[UUID, None] = None
   definedProcedures: Union[List[Procedure], List[UUID]] = []
   studyDataCollection: Union[List[StudyData], List[UUID]] = []
-
-  @classmethod
-  def find(cls, uuid):
-    db = Neo4jConnection()
-    with db.session() as session:
-      return session.execute_read(cls._find, uuid)
 
   @classmethod
   def create(cls, uuid, name, description):
@@ -61,20 +56,6 @@ class Activity(BaseModel):
 #        logging.error("{query} raised an error: \n {exception}".format(
 #          query=query, exception=exception))
 #        raise
-
-  @staticmethod
-  def _find(tx, uuid):
-    query = (
-      "MATCH (a:Activity { uuid: $uuid1 })"
-      "RETURN a"
-    )
-    result = tx.run(query, uuid1=uuid)
-    for row in result:
-      dict = {}
-      for items in row['a'].items():
-        dict[items[0]] = items[1]
-      return Activity(**dict)
-    return None
 
   @staticmethod
   def _create_first_activity(tx, uuid, name, description):

@@ -4,7 +4,7 @@ from model.study import Study, StudyIn, StudyList, StudyParameters
 from model.study_identifier import StudyIdentifier
 from model.study_design import StudyDesign
 from model.activity import Activity, ActivityIn
-from model.study_epoch import StudyEpoch
+from model.study_epoch import StudyEpoch, StudyEpochIn
 from model.study_data import StudyData, StudyDataIn
 from model.encounter import Encounter, EncounterIn, EncounterLink
 from model.workflow import Workflow, WorkflowIn
@@ -147,6 +147,19 @@ async def get_study_design_soa(uuid: str):
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
   else:
     return study_design.data_contract()
+
+@app.post("/v1/studyDesigns/{uuid}/studyEpochs", 
+  summary="Create a new epoch within a study",
+  description="Creates an epoch. The epoch is added to the end of the list of epochs for the specified study.",
+  status_code=201,
+  response_model=str)
+async def create_epoch(uuid: str, epoch: StudyEpochIn):
+  print("A1")
+  result = StudyEpoch.create(uuid, epoch.name, epoch.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate epoch within the study")
+  else:
+    return result
 
 @app.post("/v1/studyDesigns/{uuid}/activities", 
   summary="Create a new activity within a study",
