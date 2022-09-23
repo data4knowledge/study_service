@@ -261,7 +261,7 @@ class Study(Node):
       "CREATE (ra:RegistrationAuthority { uuid: $uuid10, registration_authority_uri: $ra_uri, owner: $ra_owner })"
       "CREATE (sd:StudyDesign { uuid: $uuid3 })"
       "CREATE (sc:StudyCell { uuid: $uuid4 })"
-      "CREATE (sa:StudyArm { uuid: $uuid5 })"
+      "CREATE (sa:StudyArm { uuid: $uuid5, studyArmName: 'Single Arm', studyArmDesc: 'A single arm for this study'  })"
       "CREATE (se:StudyEpoch { uuid: $uuid6, studyEpochName: 'Single Epoch', studyEpochDesc: 'A single epoch for this study' })"
       "CREATE (wf:Workflow { uuid: $uuid7, workflowName: 'SoA', workflowDesc: 'The SoA workflow' })"
       "CREATE (st:Code {uuid: $uuid11, code: 'C12345', codeSystem: 'CDISC', codeSystemVersion: '1', decode: 'Observational'})"

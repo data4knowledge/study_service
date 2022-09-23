@@ -357,6 +357,50 @@ def test_add_epoch_single_arm_ok():
   assert response.status_code == 201
   db.close()
 
+def test_add_epoch_duplicate_error():
+  db = Neo4jHelper()
+  db.clear()
+  sd = StudyDesignHelper(db)
+  sc = StudyCellHelper(db)
+  arm = StudyArmHelper(db, "Arm", "Arm Desc")
+  epoch = StudyEpochHelper(db, "Epoch", "Epoch Desc")
+  sc.add_arm(arm)
+  sc.add_epoch(epoch)
+  sd.add_cell(sc)
+  body = {
+    "name": "New Epoch",
+    "description": "Something"
+  }
+  response = client.post("/v1/studyDesigns/%s/studyEpochs" % (sd.uuid), json=body)
+  assert response.status_code == 201
+  response = client.post("/v1/studyDesigns/%s/studyEpochs" % (sd.uuid), json=body)
+  assert response.status_code == 409
+  db.close()
+
+def test_add_epoch_second_ok():
+  db = Neo4jHelper()
+  db.clear()
+  sd = StudyDesignHelper(db)
+  sc = StudyCellHelper(db)
+  arm = StudyArmHelper(db, "Arm", "Arm Desc")
+  epoch = StudyEpochHelper(db, "Epoch", "Epoch Desc")
+  sc.add_arm(arm)
+  sc.add_epoch(epoch)
+  sd.add_cell(sc)
+  body = {
+    "name": "New Epoch",
+    "description": "Something"
+  }
+  response = client.post("/v1/studyDesigns/%s/studyEpochs" % (sd.uuid), json=body)
+  assert response.status_code == 201
+  body = {
+    "name": "New Epoch 2nd",
+    "description": "Something"
+  }
+  response = client.post("/v1/studyDesigns/%s/studyEpochs" % (sd.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
 # Epochs
 # ======
 

@@ -154,7 +154,6 @@ async def get_study_design_soa(uuid: str):
   status_code=201,
   response_model=str)
 async def create_epoch(uuid: str, epoch: StudyEpochIn):
-  print("A1")
   result = StudyEpoch.create(uuid, epoch.name, epoch.description)
   if result == None:
     raise HTTPException(status_code=409, detail="Trying to create a duplicate epoch within the study")

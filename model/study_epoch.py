@@ -23,10 +23,7 @@ class StudyEpoch(Node):
   def create(cls, uuid, name, description):
     db = Neo4jConnection()
     with db.session() as session:
-      print("A")
-      print("B")
       if not session.execute_read(cls._exists, uuid, name):
-        print("C")
         arms = session.execute_read(cls._arms, uuid)
         return session.execute_write(cls._create_epoch, uuid, name, description, arms)
       else:
@@ -44,6 +41,7 @@ class StudyEpoch(Node):
 
   @staticmethod
   def _create_epoch(tx, uuid, name, description, arms):
+      print("ARMS", arms)
       query = """
         MATCH (sd:StudyDesign { uuid: $uuid1 })-[:STUDY_CELL]->(c:StudyCell)-[:STUDY_EPOCH]->(a:StudyEpoch)
         WHERE NOT (a)-[:NEXT_EPOCH]->()
@@ -83,11 +81,11 @@ class StudyEpoch(Node):
 
   @staticmethod
   def _arms(tx, uuid):
-    query = (
-      "MATCH (sd:StudyDesign { uuid: $uuid1 })-[:STUDY_CELL]->(c)-[:STUDY_ARM]->(a:StudyArm)"
-      "RETURN DISTINCT a.uuid as uuid"
-    )
-    result = tx.run(query, uuid1=uuid)
+    query = """
+      MATCH (sd:StudyDesign { uuid: '%s' })-[:STUDY_CELL]->(c)-[:STUDY_ARM]->(a:StudyArm)
+      RETURN DISTINCT a.uuid as uuid
+    """ % (uuid)
+    result = tx.run(query)
     results = []
     for row in result:
       results.append(row["uuid"])
@@ -96,7 +94,7 @@ class StudyEpoch(Node):
   @staticmethod
   def _exists(tx, uuid, name):
     query = (
-      "MATCH (sd:StudyDesign { uuid: $uuid })-[:STUDY_CELL]->(c)-[:STUDY_EPOCH]->(a:StudyEpoch { epochName: $name })"
+      "MATCH (sd:StudyDesign { uuid: $uuid })-[:STUDY_CELL]->(c)-[:STUDY_EPOCH]->(a:StudyEpoch { studyEpochName: $name })"
       "RETURN a.uuid as uuid"
     )
     result = tx.run(query, name=name, uuid=uuid)
