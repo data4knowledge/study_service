@@ -207,6 +207,19 @@ async def create_study_data(uuid: str, study_data: StudyDataIn):
   result = activity.add_study_data(study_data.name, study_data.description, study_data.link)
   return result
 
+@app.get("/v1/activities/{uuid}", 
+  summary="Returns an activity",
+  description="Returns the details about an activity.",
+  response_model=Activity)
+async def find_activity(uuid: str):
+  print("A")
+  activity = Activity.find(uuid)
+  print("A", activity)
+  if activity == None:
+    raise HTTPException(status_code=404, detail="The requested activity cannot be found")
+  else:
+    return activity
+
 @app.put("/v1/studyEpochs/{uuid}/encounters", 
   summary="Links an encounter with an epoch",
   description="Creates an link between an epoch and an encounter.",
@@ -226,3 +239,16 @@ async def create_workflow_item(uuid: str, wfi: WorkflowItemIn):
   workflow = Workflow.find(uuid)
   result = workflow.add_workflow_item(wfi.description, wfi.encounter_uuid, wfi.activity_uuid)
   return result
+
+@app.get("/v1/encounters/{uuid}", 
+  summary="Returns an encounter",
+  description="Returns the details about an encounter.",
+  response_model=Encounter)
+async def find_activity(uuid: str):
+  print("A")
+  activity = Encounter.find(uuid)
+  print("A", activity)
+  if activity == None:
+    raise HTTPException(status_code=404, detail="The requested encounter cannot be found")
+  else:
+    return activity

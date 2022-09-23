@@ -338,7 +338,7 @@ def test_link_workflow_activity_encounter_ok():
   assert response.status_code == 201
   db.close()
 
-def test_add_first_epoch_no_arm_ok():
+def test_add_epoch_single_arm_ok():
   db = Neo4jHelper()
   db.clear()
   sd = StudyDesignHelper(db)
@@ -355,4 +355,61 @@ def test_add_first_epoch_no_arm_ok():
   response = client.post("/v1/studyDesigns/%s/studyEpochs" % (sd.uuid), json=body)
   print(response.json())
   assert response.status_code == 201
+  db.close()
+
+def test_get_activity_ok():
+  db = Neo4jHelper()
+  db.clear()
+  activity = ActivityHelper(db, "ACT", "Activity 1")
+  response = client.get("/v1/activities/%s" % (activity.uuid))
+  print(response.json())
+  assert response.status_code == 200
+  assert response.json() == { 
+    'uuid': activity.uuid,
+    'activityDesc': 'Activity 1',
+    'activityName': 'ACT',
+    'definedProcedures': [],
+    'nextActivityId': None,
+    'previousActivityId': None,
+    'studyDataCollection': []
+  }
+  db.close()
+  
+def test_get_activity_error():
+  db = Neo4jHelper()
+  db.clear()
+  uuid = uuid4()
+  response = client.get("/v1/activities/%s" % (uuid))
+  assert response.status_code == 404
+  assert response.json() == {'detail': 'The requested activity cannot be found'}
+  db.close()
+
+def test_get_encounter_ok():
+  db = Neo4jHelper()
+  db.clear()
+  item = EncounterHelper(db, "ENC", "Encounter 1")
+  response = client.get("/v1/encounters/%s" % (item.uuid))
+  assert response.status_code == 200
+  assert response.json() == { 
+    'uuid': item.uuid,
+    'encounterDesc': 'Encounter 1',
+    'encounterName': 'ENC',
+    'encounterContactMode': None,
+    'encounterEnvironmentalSetting': None,
+    'encounterType': None,
+    'nextEncounterId': None,
+    'previousEncounterId': None,
+    'transitionStartRule': None,
+    'transitionEndRule': None,
+    'uri': ''
+  }
+  db.close()
+  
+def test_get_encounter_error():
+  db = Neo4jHelper()
+  db.clear()
+  uuid = uuid4()
+  response = client.get("/v1/encounters/%s" % (uuid))
+  assert response.status_code == 404
+  assert response.json() == {'detail': 'The requested encounter cannot be found'}
   db.close()

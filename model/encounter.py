@@ -2,7 +2,7 @@ from typing import List, Union
 from pydantic import BaseModel
 from model.code import Code
 from model.transition_rule import TransitionRule
-from model.activity import Activity
+from model.node import Node
 from uuid import UUID, uuid4
 from model.neo4j_connection import Neo4jConnection
 
@@ -13,7 +13,7 @@ class EncounterIn(BaseModel):
 class EncounterLink(BaseModel):
   uuid: str
 
-class Encounter(BaseModel):
+class Encounter(Node):
   uuid: Union[UUID, None] = None
   uri: str = ""
   encounterName: str
