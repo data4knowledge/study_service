@@ -13,7 +13,7 @@ from utility.service_environment import ServiceEnvironment
 from typing import List
 
 VERSION = "0.1"
-SYSTEM_NAME = "d4k Study Build Microservice"
+SYSTEM_NAME = "d4k Study Microservice"
 
 app = FastAPI(
   title = SYSTEM_NAME,
