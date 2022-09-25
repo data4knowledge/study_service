@@ -84,10 +84,10 @@ class StudyDesignViews():
     with db.session() as session:
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)
           -[]->(v:Encounter)<-[]-(wfi:WorkflowItem)-[]->(a:Activity)-[]->(sda:StudyData)
-          WITH a.activityName as activity, v.encounterName as visit, sda.studyDataDesc as study_data, sda.ecrfLink as ecrf_link
+          WITH a.activityName as activity, v.encounterName as visit, sda.studyDataDesc as study_data, sda.crfLink as crf_link
           RETURN DISTINCT activity, visit, study_data, ecrf_link ORDER BY visit, activity, study_data""" % (uuid)
       result = session.run(query)
       results = []
       for record in result:
-        results.append({ "visit": record["visit"], "activity": record["activity"], "study_data": record["study_data"], "ecrf_link": record["ecrf_link"] })
+        results.append({ "visit": record["visit"], "activity": record["activity"], "study_data": record["study_data"], "crf_link": record["crf_link"] })
     return results
