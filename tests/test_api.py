@@ -69,6 +69,37 @@ def test_get_study_ok():
   assert response.status_code == 200
   store.close()
 
+# Study Identifiers
+# =================
+
+def test_add_sponsor_identifier_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "IDENTIFIER")
+  body = {
+    "organisation_name": "ACME sponsor",
+    "scheme": "DUNS",
+    "number": "123456789",
+    "identifier": "AC1234",
+  }
+  response = client.post("/v1/study/%s/studyIdentifiers/sponsor" % (study.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
+def test_add_ct_dot_gov_identifier_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study = StudyHelper(db, "IDENTIFIER")
+  body = {
+    "identifier": "NCT123456",
+  }
+  response = client.post("/v1/study/%s/studyIdentifiers/ctdotgov" % (study.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
+# Study Parameters
+# ================
+
 def test_get_study_parameters_ok():
   db = Neo4jHelper()
   db.clear()
