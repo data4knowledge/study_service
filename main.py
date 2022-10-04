@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from model.system import SystemOut
 from model.study import Study, StudyIn, StudyList, StudyParameters
-from model.study_identifier import StudyIdentifier
+from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 from model.study_design import StudyDesign
 from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch, StudyEpochIn
@@ -107,6 +107,30 @@ async def get_study_identifiers(uuid: str):
     raise HTTPException(status_code=404, detail="The requested study cannot be found")
   else:
     return study.study_identifiers()
+
+@app.post("/v1/studies/{uuid}/studyIdentifiers/sponsor", 
+  summary="Set a sponsor identifier for a study",
+  description="Sets a sponsor identifier for a study.",
+  status_code=201,
+  response_model=str)
+async def create_sponsor_identifiers(uuid: str, params: StudyIdentifierIn):
+  study = Study.find(uuid)
+  if study == None:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+  else:
+    return study.add_sponsor_identifier(params.identifier, params.name, params.scheme, params.scheme_identifier)
+
+@app.post("/v1/studies/{uuid}/studyIdentifiers/ctdotgov", 
+  summary="Set a CT.gov identifier for a study",
+  description="Sets a CT.gov identifier for a study. Only the NCT identifier needs to be provided.",
+  status_code=201,
+  response_model=str)
+async def create_sponsor_identifiers(uuid: str, params: StudyIdentifierIn):
+  study = Study.find(uuid)
+  if study == None:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+  else:
+    return study.add_ct_dot_gov_identifier(params.identifier)
 
 # Study Designs
 # =============

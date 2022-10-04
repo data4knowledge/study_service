@@ -246,6 +246,16 @@ class Study(Node):
     with db.session() as session:
       return session.execute_read(self._study_identifiers, self.uuid)
 
+  def add_sponsor_identifier(self, identifier, name, scheme, scheme_identifier):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_write(self._study_sponsor_identifier, self.uuid, identifier, name, scheme, scheme_identifier)
+
+  def add_ct_dot_gov_identifier(self, identifier):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_write(self._study_ct_dot_gov_identifier, self.uuid, identifier)
+
   @staticmethod
   def _create_study(tx, identifier, title):
     ra_service = RAService()
@@ -385,6 +395,36 @@ class Study(Node):
       identifier.studyIdentifierScope.organisationType = Code.wrap(row['c'])
       results.append(identifier)
     return results
+
+  @staticmethod
+  def _study_sponsor_identifier(tx, uuid, identifier, name, scheme, scheme_identifier):
+    results = []
+    query = """
+      MATCH (s:Study {uuid: $uuid1})
+      CREATE (s)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier { uuid: $uuid2, studyIdentifier: $identifier })
+      CREATE (si)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation {uuid: $uuid3,  organisationIdentifierScheme: $scheme, organisationIdentifier: $scheme_identifier, organisationName: $name })
+      CREATE (o)-[:ORGANISATION_TYPE]->(c:Code {uuid: $uuid4, code: 'C70793', codeSystem: 'CDISC', codeSystemVersion: '2022-03-25', decode: 'Clinical Study Sponsor'})
+      RETURN si.uuid as uuid
+    """
+    results = tx.run(query, uuid1=uuid, uuid2=str(uuid4()), uuid3=str(uuid4()), uuid4=str(uuid4()), identifier=identifier, name=name, scheme=scheme, scheme_identifier=scheme_identifier)
+    for row in results:
+      return row['uuid']
+    return None
+
+  @staticmethod
+  def _study_ct_dot_gov_identifier(tx, uuid, identifier):
+    results = []
+    query = """
+      MATCH (s:Study {uuid: $uuid1})
+      CREATE (s)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier { uuid: $uuid2, studyIdentifier: $identifier })
+      CREATE (si)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation { uuid: $uuid3, organisationIdentifierScheme: "USGOV", organisationIdentifier: "CT.gov", organisationName: "clinicaltrials.gov" })
+      CREATE (o)-[:ORGANISATION_TYPE]->(c:Code {uuid: $uuid4, code: 'C93453', codeSystem: 'CDISC', codeSystemVersion: '2022-03-25', decode: 'Study Registry'})
+      RETURN si.uuid as uuid
+    """
+    results = tx.run(query, uuid1=uuid, uuid2=str(uuid4()), uuid3=str(uuid4()), uuid4=str(uuid4()), identifier=identifier)
+    for row in results:
+      return row['uuid']
+    return None
 
   @staticmethod
   def _list(tx):

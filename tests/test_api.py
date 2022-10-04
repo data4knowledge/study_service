@@ -82,7 +82,7 @@ def test_add_sponsor_identifier_ok():
     "number": "123456789",
     "identifier": "AC1234",
   }
-  response = client.post("/v1/study/%s/studyIdentifiers/sponsor" % (study.uuid), json=body)
+  response = client.post("/v1/studies/%s/studyIdentifiers/sponsor" % (study.uuid), json=body)
   assert response.status_code == 201
   db.close()
 
@@ -93,7 +93,7 @@ def test_add_ct_dot_gov_identifier_ok():
   body = {
     "identifier": "NCT123456",
   }
-  response = client.post("/v1/study/%s/studyIdentifiers/ctdotgov" % (study.uuid), json=body)
+  response = client.post("/v1/studies/%s/studyIdentifiers/ctdotgov" % (study.uuid), json=body)
   assert response.status_code == 201
   db.close()
 
