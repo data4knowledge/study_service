@@ -357,6 +357,9 @@ def test_link_workflow_activity_encounter_ok():
   assert response.status_code == 201
   db.close()
 
+# Arms
+# ====
+
 def test_add_arm_single_arm_ok():
   db = Neo4jHelper()
   db.clear()
@@ -371,10 +374,57 @@ def test_add_arm_single_arm_ok():
     "name": "New Arm",
     "description": "Something"
   }
-  response = client.post("/v1/studyDesigns/%s/studyarms" % (sd.uuid), json=body)
+  response = client.post("/v1/studyDesigns/%s/studyArms" % (sd.uuid), json=body)
   print(response.json())
   assert response.status_code == 201
   db.close()
+
+def test_add_arm_duplicate_error():
+  db = Neo4jHelper()
+  db.clear()
+  sd = StudyDesignHelper(db)
+  sc = StudyCellHelper(db)
+  arm = StudyArmHelper(db, "Arm", "Arm Desc")
+  epoch = StudyEpochHelper(db, "Epoch", "Epoch Desc")
+  sc.add_arm(arm)
+  sc.add_epoch(epoch)
+  sd.add_cell(sc)
+  body = {
+    "name": "New Arm",
+    "description": "Something"
+  }
+  response = client.post("/v1/studyDesigns/%s/studyArms" % (sd.uuid), json=body)
+  assert response.status_code == 201
+  response = client.post("/v1/studyDesigns/%s/studyArms" % (sd.uuid), json=body)
+  assert response.status_code == 409
+  db.close()
+
+def test_add_arm_second_arm_ok():
+  db = Neo4jHelper()
+  db.clear()
+  sd = StudyDesignHelper(db)
+  sc = StudyCellHelper(db)
+  arm = StudyArmHelper(db, "Arm", "Arm Desc")
+  epoch = StudyEpochHelper(db, "Epoch", "Epoch Desc")
+  sc.add_arm(arm)
+  sc.add_epoch(epoch)
+  sd.add_cell(sc)
+  body = {
+    "name": "New Arm",
+    "description": "Something"
+  }
+  response = client.post("/v1/studyDesigns/%s/studyArms" % (sd.uuid), json=body)
+  assert response.status_code == 201
+  body = {
+    "name": "New Arm 2",
+    "description": "Something"
+  }
+  response = client.post("/v1/studyDesigns/%s/studyArms" % (sd.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
+# Epochs
+# ======
 
 def test_add_epoch_single_arm_ok():
   db = Neo4jHelper()

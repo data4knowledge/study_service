@@ -42,7 +42,7 @@ class StudyArm(Node):
           CREATE (c1)-[:STUDY_EPOCH]->(se)
         RETURN a1.uuid as uuid
       """
-      result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()), uuid3=str(uuid4()), arms=arms)
+      result = tx.run(query, name=name, desc=description, uuid1=uuid, uuid2=str(uuid4()), uuid3=str(uuid4()), epochs=epochs)
 #      try:
       for row in result:
         return row["uuid"]
