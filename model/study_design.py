@@ -5,6 +5,7 @@ from model.study_design_views import StudyDesignViews
 from model.code import Code
 from model.study_cell import StudyCell
 from model.study_epoch import StudyEpoch
+from model.study_arm import StudyArm
 from model.indication import Indication
 from model.investigational_intervention import InvestigationalIntervention
 from model.study_design_population import StudyDesignPopulation
@@ -46,6 +47,11 @@ class StudyDesign(Node):
       else:
         return session.execute_write(cls._create_first_workflow, uuid, name, description)
 
+  def arms(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(self._arms, self.uuid)
+
   def epochs(self):
     db = Neo4jConnection()
     with db.session() as session:
@@ -84,11 +90,23 @@ class StudyDesign(Node):
 #        raise
 
   @staticmethod
+  def _arms(tx, uuid):
+    results = []
+    query = (
+      "MATCH (s:StudyDesign {uuid: $uuid})-[:STUDY_CELL]->(:StudyCell)-[:STUDY_ARM]->(a:StudyArm)"
+      "RETURN a ORDER BY a.name"
+    )
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      results.append(StudyArm.wrap(row['a']))
+    return results
+
+  @staticmethod
   def _epochs(tx, uuid):
     results = []
     query = (
       "MATCH (s:StudyDesign {uuid: $uuid})-[:STUDY_CELL]->(:StudyCell)-[:STUDY_EPOCH]->(e:StudyEpoch)"
-      "RETURN e"
+      "RETURN e ORDER BY e.name"
     )
     result = tx.run(query, uuid=uuid)
     for row in result:

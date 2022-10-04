@@ -5,6 +5,7 @@ from model.study_identifier import StudyIdentifier
 from model.study_design import StudyDesign
 from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch, StudyEpochIn
+from model.study_arm import StudyArm, StudyArmIn
 from model.study_data import StudyData, StudyDataIn
 from model.encounter import Encounter, EncounterIn, EncounterLink
 from model.workflow import Workflow, WorkflowIn
@@ -32,6 +33,9 @@ app = FastAPI(
   response_model=SystemOut)
 async def read_root():
   return SystemOut(**{ 'system_name': SYSTEM_NAME, 'version': VERSION, 'environment': ServiceEnvironment().environment() })
+
+# Studies
+# =======
 
 @app.get("/v1/studies", 
   summary="List of studies",
@@ -104,16 +108,8 @@ async def get_study_identifiers(uuid: str):
   else:
     return study.study_identifiers()
 
-@app.get("/v1/studyDesigns/{uuid}/studyEpochs", 
-  summary="Get the epochs for a study design",
-  description="Provides a list of uuids for the epochs that exisit for a specified study.",
-  response_model=List[StudyEpoch])
-async def get_study_design_epochs(uuid: str):
-  study_design = StudyDesign.find(uuid)
-  if study_design == None:
-    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
-  else:
-    return study_design.epochs()
+# Study Designs
+# =============
 
 @app.get("/v1/studyDesigns/{uuid}/workflows", 
   summary="Get the workflows for a study design",
@@ -148,42 +144,6 @@ async def get_study_design_soa(uuid: str):
   else:
     return study_design.data_contract()
 
-@app.post("/v1/studyDesigns/{uuid}/studyEpochs", 
-  summary="Create a new epoch within a study",
-  description="Creates an epoch. The epoch is added to the end of the list of epochs for the specified study.",
-  status_code=201,
-  response_model=str)
-async def create_epoch(uuid: str, epoch: StudyEpochIn):
-  result = StudyEpoch.create(uuid, epoch.name, epoch.description)
-  if result == None:
-    raise HTTPException(status_code=409, detail="Trying to create a duplicate epoch within the study")
-  else:
-    return result
-
-@app.post("/v1/studyDesigns/{uuid}/activities", 
-  summary="Create a new activity within a study",
-  description="Creates an activity. The activity is added to the end of the list of activities for the specified study.",
-  status_code=201,
-  response_model=str)
-async def create_activity(uuid: str, activity: ActivityIn):
-  result = Activity.create(uuid, activity.name, activity.description)
-  if result == None:
-    raise HTTPException(status_code=409, detail="Trying to create a duplicate activity within the study")
-  else:
-    return result
-
-@app.post("/v1/studyDesigns/{uuid}/encounters", 
-  summary="Creates a new encounter within a study design",
-  description="Creates an encounter withn a study design.",
-  status_code=201,
-  response_model=str)
-async def create_encounter(uuid: str, encounter: EncounterIn):
-  result = Encounter.create(uuid, encounter.name, encounter.description)
-  if result == None:
-    raise HTTPException(status_code=409, detail="Trying to create a duplicate encounter within the study")
-  else:
-    return result
-
 @app.post("/v1/studyDesigns/{uuid}/workflows", 
   summary="Creates a new workflow within a study design",
   description="Creates an workflow withn a study design.",
@@ -196,8 +156,57 @@ async def create_workflow(uuid: str, wf: WorkflowIn):
   else:
     return result
 
+# Arms
+# ====
+
+@app.get("/v1/studyDesigns/{uuid}/studyArms", 
+  summary="Get the arms for a study design",
+  description="Provides a list of uuids for the arms that exisit for a specified study.",
+  response_model=List[StudyArm])
+async def get_study_design_epochs(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.arms()
+
+@app.post("/v1/studyDesigns/{uuid}/studyArms", 
+  summary="Create a new arm within a study design.",
+  description="Creates an arm.",
+  status_code=201,
+  response_model=str)
+async def create_arm(uuid: str, arm: StudyArmIn):
+  result = StudyArm.create(uuid, arm.name, arm.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate arm within the study")
+  else:
+    return result
+
 # Epochs
 # ======
+
+@app.get("/v1/studyDesigns/{uuid}/studyEpochs", 
+  summary="Get the epochs for a study design.",
+  description="Provides a list of uuids for the epochs that exisit for a specified study.",
+  response_model=List[StudyEpoch])
+async def get_study_design_epochs(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.epochs()
+
+@app.post("/v1/studyDesigns/{uuid}/studyEpochs", 
+  summary="Create a new epoch within a study design.",
+  description="Creates an epoch. The epoch is added to the end of the list of epochs for the specified study.",
+  status_code=201,
+  response_model=str)
+async def create_epoch(uuid: str, epoch: StudyEpochIn):
+  result = StudyEpoch.create(uuid, epoch.name, epoch.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate epoch within the study")
+  else:
+    return result
 
 @app.put("/v1/studyEpochs/{uuid}", 
   summary="Update an epoch",
@@ -211,6 +220,21 @@ async def update_epoch(uuid: str, data: StudyEpochIn):
   else:
     return epoch.update(data.name, data.description)
 
+# Encounters
+# ==========
+
+@app.post("/v1/studyDesigns/{uuid}/encounters", 
+  summary="Creates a new encounter within a study design",
+  description="Creates an encounter withn a study design.",
+  status_code=201,
+  response_model=str)
+async def create_encounter(uuid: str, encounter: EncounterIn):
+  result = Encounter.create(uuid, encounter.name, encounter.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate encounter within the study")
+  else:
+    return result
+
 @app.put("/v1/studyEpochs/{uuid}/encounters", 
   summary="Links an encounter with an epoch",
   description="Creates an link between an epoch and an encounter.",
@@ -222,7 +246,6 @@ async def link_epoch_and_encounter(uuid: str, encounter: EncounterLink):
     raise HTTPException(status_code=404, detail="The requested epoch cannot be found")
   else:
     return epoch.add_encounter(encounter.uuid)
-  
 
 # Encounters
 # ==========
@@ -240,6 +263,18 @@ async def find_activity(uuid: str):
 
 # Activities
 # ==========
+
+@app.post("/v1/studyDesigns/{uuid}/activities", 
+  summary="Create a new activity within a study",
+  description="Creates an activity. The activity is added to the end of the list of activities for the specified study.",
+  status_code=201,
+  response_model=str)
+async def create_activity(uuid: str, activity: ActivityIn):
+  result = Activity.create(uuid, activity.name, activity.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate activity within the study")
+  else:
+    return result
 
 @app.get("/v1/activities/{uuid}", 
   summary="Returns an activity",

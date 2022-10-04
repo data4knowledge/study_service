@@ -19,12 +19,12 @@ client = TestClient(app)
 def test_root_1():
   response = client.get("/")
   assert response.status_code == 200
-  assert response.json() == { 'system_name': 'd4k Study Build Microservice', 'version': app_version, 'environment': 'test' }
+  assert response.json() == { 'system_name': 'd4k Study Microservice', 'version': app_version, 'environment': 'test' }
 
 def test_root_2():
   response = client.get("/v1")
   assert response.status_code == 200
-  assert response.json() == { 'system_name': 'd4k Study Build Microservice', 'version': app_version, 'environment': 'test' }
+  assert response.json() == { 'system_name': 'd4k Study Microservice', 'version': app_version, 'environment': 'test' }
 
 def test_add_study_ok():
   store = Neo4jHelper()
@@ -110,6 +110,25 @@ def test_study_design_epoch_list_ok():
   response = client.get("/v1/studyDesigns/%s/studyEpochs" % (study_design))
   assert response.status_code == 200
   store.close()
+
+def test_study_design_arm_list_ok():
+  db = Neo4jHelper()
+  db.clear()
+  study_design = StudyDesignHelper(db)
+  cell_1 = StudyCellHelper(db)
+  cell_2 = StudyCellHelper(db)
+  arm_1 = StudyArmHelper(db, "ARM1", "Arm One")
+  arm_2 = StudyArmHelper(db, "ARM2", "Arm Two")
+  study_design.add_cell(cell_1)
+  study_design.add_cell(cell_2)
+  cell_1.add_arm(arm_1)
+  cell_2.add_arm(arm_2)
+  response = client.get("/v1/studyDesigns/%s/studyArms" % (study_design.uuid))
+  assert response.status_code == 200
+  result = response.json()
+  assert result[0]['uuid'] == arm_1.uuid
+  assert result[1]['uuid'] == arm_2.uuid
+  db.close()
 
 def test_delete_study():
   store = Neo4jHelper()
@@ -335,6 +354,25 @@ def test_link_workflow_activity_encounter_ok():
     "encounter_uuid": encounter.uuid,
   }
   response = client.post("/v1/workflows/%s/workflowItems" % (wf.uuid), json=body)
+  assert response.status_code == 201
+  db.close()
+
+def test_add_arm_single_arm_ok():
+  db = Neo4jHelper()
+  db.clear()
+  sd = StudyDesignHelper(db)
+  sc = StudyCellHelper(db)
+  arm = StudyArmHelper(db, "Arm", "Arm Desc")
+  epoch = StudyEpochHelper(db, "Epoch", "Epoch Desc")
+  sc.add_arm(arm)
+  sc.add_epoch(epoch)
+  sd.add_cell(sc)
+  body = {
+    "name": "New Arm",
+    "description": "Something"
+  }
+  response = client.post("/v1/studyDesigns/%s/studyarms" % (sd.uuid), json=body)
+  print(response.json())
   assert response.status_code == 201
   db.close()
 
