@@ -75,7 +75,6 @@ class Study(Node):
     return [
       "ni.identifier",
       "ni.semantic_version",
-      "ni.version",
       "ni.version_label",
     ]
 

@@ -94,7 +94,7 @@ class StudyDesign(Node):
     results = []
     query = (
       "MATCH (s:StudyDesign {uuid: $uuid})-[:STUDY_CELL]->(:StudyCell)-[:STUDY_ARM]->(a:StudyArm)"
-      "RETURN a ORDER BY a.name"
+      "RETURN DISTINCT a ORDER BY a.name"
     )
     result = tx.run(query, uuid=uuid)
     for row in result:
@@ -106,7 +106,7 @@ class StudyDesign(Node):
     results = []
     query = (
       "MATCH (s:StudyDesign {uuid: $uuid})-[:STUDY_CELL]->(:StudyCell)-[:STUDY_EPOCH]->(e:StudyEpoch)"
-      "RETURN e ORDER BY e.name"
+      "RETURN DISTINCT e ORDER BY e.name"
     )
     result = tx.run(query, uuid=uuid)
     for row in result:
