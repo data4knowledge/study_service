@@ -142,7 +142,7 @@ class Study(Node):
         query = """
           MATCH (n:Study)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier),
           (n)-[:HAS_STATUS]->(ns:RegistrationStatus)-[:MANAGED_BY]->(ra:RegistrationAuthority) 
-          RETURN n,ni,ns,ra ORDER BY toInteger(ni.version) DESC %s
+          RETURN n,ni,ns,ra ORDER BY n.studyTitle, toInteger(ni.version) DESC %s
         """ % (skip_offset_clause)
       else:
         identifier_filter_clause = cls.build_filter_clause(filter, cls.identifier_properties())
@@ -162,7 +162,7 @@ class Study(Node):
           WITH n 
           MATCH (n)-[:IDENTIFIED_BY]->(ni:ScopedIdentifier),
           (n)-[:HAS_STATUS]->(ns:RegistrationStatus)-[:MANAGED_BY]->(ra:RegistrationAuthority) 
-          RETURN n,ni,ns,ra ORDER BY toInteger(ni.version) DESC %s
+          RETURN n,ni,ns,ra ORDER BY n.studyTitle, toInteger(ni.version) DESC %s
         """ % (identifier_filter_clause, status_filter_clause, parent_filter_clause, skip_offset_clause)
       query_results = session.run(query)
       for query_result in query_results:

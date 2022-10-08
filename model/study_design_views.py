@@ -66,7 +66,7 @@ class StudyDesignViews():
       result = session.run(query)
       for record in result:
         activity_order.append({ 'name': record["name"], 'uuid': record['uuid'] })
-      print(activity_order)
+      #print(activity_order)
 
       # Return the results
       results = []
@@ -89,6 +89,6 @@ class StudyDesignViews():
       result = session.run(query)
       results = []
       for record in result:
-        print(record)
+        #print(record)
         results.append({ "visit": record["visit"], "activity": record["activity"], "study_data": record["study_data"], "crf_link": record["crf_link"] })
     return results
