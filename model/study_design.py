@@ -1,7 +1,8 @@
 from typing import List, Union
 from pydantic import BaseModel
 from model.node import Node
-from model.study_design_views import StudyDesignViews
+from model.study_design_data_contract import StudyDesignDataContract
+from model.study_design_soa import StudyDesignSOA
 from model.code import Code
 from model.study_cell import StudyCell
 from model.study_epoch import StudyEpoch
@@ -63,10 +64,10 @@ class StudyDesign(Node):
       return session.execute_read(self._workflows, self.uuid)
 
   def soa(self):
-    return StudyDesignViews().soa(self.uuid)
+    return StudyDesignSOA.read(self.uuid)
 
   def data_contract(self):
-    return StudyDesignViews().data_contract(self.uuid)
+    return StudyDesignDataContract.read(self.uuid)
 
   @staticmethod
   def _create_workflow(tx, uuid, name, description):
