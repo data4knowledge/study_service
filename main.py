@@ -13,7 +13,7 @@ from model.workflow_item import WorkflowItem, WorkflowItemIn
 from utility.service_environment import ServiceEnvironment
 from typing import List
 
-VERSION = "0.2"
+VERSION = "0.3"
 SYSTEM_NAME = "d4k Study Microservice"
 
 app = FastAPI(
