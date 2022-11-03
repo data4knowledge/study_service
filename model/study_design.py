@@ -66,8 +66,8 @@ class StudyDesign(Node):
   def soa(self):
     return StudyDesignSOA.read(self.uuid)
 
-  def data_contract(self):
-    return StudyDesignDataContract.read(self.uuid)
+  def data_contract(self, page, size, filter):
+    return StudyDesignDataContract.read(self.uuid, page, size, filter)
 
   @staticmethod
   def _create_workflow(tx, uuid, name, description):
