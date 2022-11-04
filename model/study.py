@@ -11,7 +11,7 @@ from model.semantic_version import SemanticVersion
 from model.node import Node
 from service.ra_service import RAService
 from datetime import datetime
-
+from utility.utility import *
 from uuid import UUID, uuid4
 
 class StudyIn(BaseModel):
@@ -19,8 +19,8 @@ class StudyIn(BaseModel):
   identifier: str
 
 class StudyOut(BaseModel):
-  uuid = str
-  #uri = str
+  uuid: str
+  uri: str = ""
   studyTitle: str
   studyVersion: str
   studyType: dict
@@ -262,13 +262,15 @@ class Study(Node):
     ra = ra_service.registration_authority_by_namespace_uuid(ns['uuid'])
     sv = SemanticVersion()
     sv.draft()
+    study_uri = extend_uri(ns['value'], "dataset/%s" % (format_name(identifier)))
+    study_design_uri = extend_uri(study_uri, "sd-1")
     query = (
-      "CREATE (s:Study { studyTitle: $title, uuid: $uuid1 })"
+      "CREATE (s:Study { studyTitle: $title, uuid: $uuid1, uri: $uri1 })"
       "CREATE (si:ScopedIdentifier { identifier: $id, version: 1, semantic_version: $sv, uuid: $uuid2 })"
       "CREATE (ns:Namespace { uuid: $uuid8, namespace_uri: $ns_uri, namespace_value: $ns_value })"
       "CREATE (rs:RegistrationStatus { effective_date: $date, registration_status: 'Draft', until_date: '', uuid: $uuid9 })"
       "CREATE (ra:RegistrationAuthority { uuid: $uuid10, registration_authority_uri: $ra_uri, owner: $ra_owner })"
-      "CREATE (sd:StudyDesign { uuid: $uuid3 })"
+      "CREATE (sd:StudyDesign { uuid: $uuid3, uri: $uri2 })"
       "CREATE (sc:StudyCell { uuid: $uuid4 })"
       "CREATE (sa:StudyArm { uuid: $uuid5, studyArmName: 'Single Arm', studyArmDesc: 'A single arm for this study'  })"
       "CREATE (se:StudyEpoch { uuid: $uuid6, studyEpochName: 'Single Epoch', studyEpochDesc: 'A single epoch for this study' })"
@@ -297,6 +299,8 @@ class Study(Node):
       ra_uri=ra['uri'],
       ra_owner=ra['name'],
       date=datetime.now().strftime("%Y-%m-%d"),
+      uri1=study_uri,
+      uri2=study_design_uri,
       uuid1=str(uuid4()), 
       uuid2=str(uuid4()),
       uuid3=str(uuid4()),

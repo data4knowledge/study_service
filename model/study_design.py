@@ -23,6 +23,7 @@ class StudyDesignOut(BaseModel):
 
 class StudyDesign(Node):
   uuid: str
+  uri: str = ""
   trialIntentTypes: Union[List[Code], List[UUID]] = []
   trialType: Union[Code, UUID, None] 
   interventionModel: Union[Code, UUID, None]
