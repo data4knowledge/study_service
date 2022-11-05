@@ -25,12 +25,23 @@ class StudyDesignDataContract():
       # -[:HAS_STUDY_BC_DATA_TYPE_PROPERTY *1..]->(dtp:StudyBCDataTypeProperty)
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(wf:Workflow)-[]->(wfi:WorkflowItem)
         WITH wfi
-        MATCH (a:Activity)<-[]-(wfi)-[]->(v:Encounter), (wfi)-[]->(bc:StudyBCInstance)-[]->(i:StudyBCItem)-[]->(dt:StudyBCDataType) WHERE i.collect="True"
-        WITH a.activityName as activity, v.encounterName as visit, bc.name as bc_name, dt.uri as data_uri, bc.reference_uri as bc_uri, i.name as item, dt.name as data_type
-        RETURN DISTINCT activity, visit, bc_name, bc_uri, data_uri, item, data_type ORDER BY visit, activity, bc_name, item %s""" % (uuid, skip_offset_clause)
+        MATCH (a:Activity)<-[]-(wfi)-[]->(v:Encounter), (wfi)-[]->(bc:StudyBCInstance)-[]->(i:StudyBCItem)-[]->(dt:StudyBCDataType)-[:HAS_STUDY_BC_DATA_TYPE_PROPERTY *1..]->(dtp:StudyBCDataTypeProperty) WHERE i.collect="True" AND dtp.collect=true
+        WITH a.activityName as activity, v.encounterName as visit, bc.name as bc_name, bc.reference_uri as bc_uri, i.name as item, dt.name as data_type, dtp.name as property, dtp.uri as data_uri 
+        RETURN DISTINCT activity, visit, bc_name, bc_uri, data_uri, item, data_type, property ORDER BY visit, activity, bc_name, item %s""" % (uuid, skip_offset_clause)
+      print(query)
       result = session.run(query)
       results = []
       for record in result:
-        results.append({ "visit": record["visit"], "activity": record["activity"], "bc_name": record["bc_name"], "bc_uri": record["bc_uri"], "item": record["item"], "data_type": record["data_type"], "data_uri": record["data_uri"] })
+        final_record = { 
+          "visit": record["visit"], 
+          "activity": record["activity"], 
+          "bc_name": record["bc_name"], 
+          "bc_uri": record["bc_uri"], 
+          "item": record["item"], 
+          "data_type": record["data_type"], 
+          "property": record["property"],
+          "data_uri": record["data_uri"] 
+        }
+        results.append(final_record)
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result

@@ -324,14 +324,20 @@ class Study(Node):
 #        raise
 
   @staticmethod
-  # :STUDY_DESIGN|IDENTIFIED_BY|SCOPED_BY|HAS_STATUS|MANAGED_BY|STUDY_CELL|STUDY_ARM|STUDY_EPOCH|
-  #        STUDY_WORKFLOW|STUDY_DATA_COLLECTION|STUDY_TYPE|STUDY_PHASE|
-  #        STUDY_ACTIVITY|STUDY_ENCOUNTER|WORKFLOW_ITEM|WORKFLOW_ITEM_ENCOUNTER|WORKFLOW_ITEM_ACTIVITY 
   def _delete_study(tx, the_uuid):
       query = """
-        MATCH (s:Study { uuid: $uuid1 })-[ *1..]->(n)
-        DETACH DELETE (n)
-        DETACH DELETE (s)
+        MATCH (s:Study { uuid: $uuid1 })-[]->(sd:StudyDesign)
+        WITH s,sd
+        OPTIONAL MATCH (si:Site)-[:PARTICIPATES_IN]->(sd)
+        WITH s,sd,si
+        OPTIONAL MATCH (i:Investigator)-[:WORKS_AT]->(si)
+        WITH s,sd,si,i
+        OPTIONAL MATCH (subj:Subject)-[:AT_SITE]->(si)
+        WITH s,sd,si,i,subj
+        OPTIONAL MATCH (dp:DataPoint)-[:FOR_SUBJECT]->(subj)
+        WITH s,sd,si,i,subj,dp
+        MATCH (s)-[ *1..]->(n)
+        DETACH DELETE n,s,si,i,subj,dp
       """
 #      try:
       result = tx.run(query, uuid1=the_uuid)
