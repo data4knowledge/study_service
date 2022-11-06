@@ -335,16 +335,14 @@ class Study(Node):
         OPTIONAL MATCH (subj:Subject)-[:AT_SITE]->(si)
         WITH s,sd,si,i,subj
         OPTIONAL MATCH (dp:DataPoint)-[:FOR_SUBJECT]->(subj)
-        WITH s,sd,si,i,subj,dp
-        MATCH (s)-[ *1..]->(n)
-        DETACH DELETE n,s,si,i,subj,dp
+        DETACH DELETE si,i,subj,dp
       """
-#      try:
       result = tx.run(query, uuid1=the_uuid)
-#      except ServiceUnavailable as exception:
-#        logging.error("{query} raised an error: \n {exception}".format(
-#          query=query, exception=exception))
-#        raise
+      query = """
+        MATCH (s:Study { uuid: $uuid1 })-[ *1..]->(n)
+        DETACH DELETE n,s
+      """
+      result = tx.run(query, uuid1=the_uuid)
 
   @staticmethod
   def _exists(tx, identifier):
