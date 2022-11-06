@@ -2,6 +2,7 @@ from typing import List, Union
 from pydantic import BaseModel
 from model.node import Node
 from model.study_design_data_contract import StudyDesignDataContract
+from model.study_design_subject_data import StudyDesignSubjectData
 from model.study_design_soa import StudyDesignSOA
 from model.code import Code
 from model.study_cell import StudyCell
@@ -69,6 +70,9 @@ class StudyDesign(Node):
 
   def data_contract(self, page, size, filter):
     return StudyDesignDataContract.read(self.uuid, page, size, filter)
+
+  def subject_data(self, page, size, filter):
+    return StudyDesignSubjectData.read(self.uuid, page, size, filter)
 
   @staticmethod
   def _create_workflow(tx, uuid, name, description):
