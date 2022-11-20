@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from model.node import Node
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_subject_data import StudyDesignSubjectData
+from model.study_design_sdtm import StudyDesignSDTM
 from model.study_design_soa import StudyDesignSOA
 from model.code import Code
 from model.study_cell import StudyCell
@@ -73,6 +74,9 @@ class StudyDesign(Node):
 
   def subject_data(self, page, size, filter):
     return StudyDesignSubjectData.read(self.uuid, page, size, filter)
+
+  def sdtm_domains(self, page, size, filter):
+    return StudyDesignSDTM.domains(self.uuid, page, size, filter)
 
   @staticmethod
   def _create_workflow(tx, uuid, name, description):

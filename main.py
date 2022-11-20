@@ -3,6 +3,7 @@ from model.system import SystemOut
 from model.study import Study, StudyIn, StudyList, StudyParameters
 from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 from model.study_design import StudyDesign
+from model.study_domain_instance import StudyDomainInstance
 from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch, StudyEpochIn
 from model.study_arm import StudyArm, StudyArmIn
@@ -161,12 +162,23 @@ async def get_study_design_soa(uuid: str):
   summary="Get the data contract for a study design",
   description="Provides the data contract for a given study design.",
   response_model=dict)
-async def get_study_design_soa(uuid: str, page: int=0, size: int=0, filter: str=""):
+async def get_study_design_data_contract(uuid: str, page: int=0, size: int=0, filter: str=""):
   study_design = StudyDesign.find(uuid)
   if study_design == None:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
   else:
     return study_design.data_contract(page, size, filter)
+
+@app.get("/v1/studyDesigns/{uuid}/sdtmDomains", 
+  summary="Get the SDTM domains for a study design",
+  description="Provides the SDTM domains for a given study design.",
+  response_model=dict)
+async def get_study_sdtm_domains(uuid: str, page: int=0, size: int=0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.sdtm_domains(page, size, filter)
 
 @app.get("/v1/studyDesigns/{uuid}/subjectData", 
   summary="Get the subject data for a study design",
@@ -356,3 +368,16 @@ async def create_workflow_item(uuid: str, wfi: WorkflowItemIn):
   result = workflow.add_workflow_item(wfi.description, wfi.encounter_uuid, wfi.activity_uuid)
   return result
 
+# Domains
+# =======
+
+@app.get("/v1/domains/{uuid}", 
+  summary="Returns an SDTM domain",
+  description="Returns the SDTM.",
+  response_model=dict)
+async def find_domain(uuid: str):
+  item = StudyDomainInstance.find(uuid)
+  if item == None:
+    raise HTTPException(status_code=404, detail="The requested domain cannot be found")
+  else:
+    return item.data()
