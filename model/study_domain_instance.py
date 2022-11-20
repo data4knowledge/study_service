@@ -13,26 +13,28 @@ class StudyDomainInstance(Node):
     with db.session() as session:
       results = []
       # TODO Add in enabled true for USING BC relationship
+      # TODO Add in stud identifier
       #  WITH DISTINCT bc, bcr1, sd, sv, fdt, bdt, sdp, wfi
       #  OPTIONAL MATCH (sv)-[:BC_RESTRICTION]->(bcr2:BiomedicalConceptRef) WHERE IS NULL bcr2 OR bcr1.uuid = bcr2.uuid
-      # si.org_code as study_id,
       query = """
         MATCH (std:StudyDesign)-[]->(sd:StudyDomainInstance {name: '%s'})
         WITH std,sd
+        MATCH (std)<-[]-(s:Study)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation)-[:ORGANISATION_TYPE]->(c:Code {decode: 'Clinical Study Sponsor'})
+        WITH si, std, sd
         MATCH (wfi:WorkflowItem)-[:HAS_STUDY_BC_INSTANCE]->(bc:StudyBCInstance)<-[:BC_REF]-(bcr1:BiomedicalConceptRef)<-[:USING_BC]-(sd)-[:HAS_VARIABLE]->(sv:StudyVariable)
           -[:CLINICAL_RECORDING_REF]->(fdt:ClinicalRecordingRef)<-[:CLINICAL_RECORDING_REF]-(bdt:StudyBCDataTypeProperty)
           <-[:FOR_DATA_POINT]-(sdp:DataPoint)
-        WITH DISTINCT std, sd, bc, sv, fdt, bdt, sdp, wfi 
+        WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi 
         MATCH (wfi)-[:WORKFLOW_ITEM_ENCOUNTER]->(v:Encounter)<-[]-(e:StudyEpoch)
-        WITH DISTINCT std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e
+        WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e
         MATCH (sdp)-[:FOR_SUBJECT]->(subj:Subject)-[:PARTICIPATES_IN]->(std)-[]->(sd)
-        WITH DISTINCT std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj
+        WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj
         MATCH (subj)-[:AT_SITE]->(site:Site)<-[:WORKS_AT]-(inv:Investigator)
-        WITH DISTINCT std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj, site, inv
+        WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj, site, inv
         MATCH (ct:ValueSet)<-[:HAS_RESPONSE]-()<-[:HAS_STUDY_BC_DATA_TYPE]-(StudyBCItem {name: "Test"})<-[:HAS_STUDY_BC_ITEM]-(bc)-[*]->(bdt)
         RETURN DISTINCT sd.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
           subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
-          inv.name as invnam, inv.identifier as invid, site.country_code as country
+          inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid
       """ % (self.name)
       print(query)
       rows = session.run(query)
@@ -42,7 +44,7 @@ class StudyDomainInstance(Node):
           'variable': row["variable"], 
           'value': row["data"], 
           'DOMAIN': row["domain"], 
-          'STUDYID': 'ISARIC', 
+          'STUDYID': row["studyid"], 
           'SUBJID': row["subject"], 
           'SITEID': row["siteid"],
           'INVNAM': row["invnam"],
