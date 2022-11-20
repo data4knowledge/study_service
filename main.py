@@ -374,7 +374,7 @@ async def create_workflow_item(uuid: str, wfi: WorkflowItemIn):
 @app.get("/v1/domains/{uuid}", 
   summary="Returns an SDTM domain",
   description="Returns the SDTM.",
-  response_model=dict)
+  response_model=List[dict])
 async def find_domain(uuid: str):
   item = StudyDomainInstance.find(uuid)
   if item == None:

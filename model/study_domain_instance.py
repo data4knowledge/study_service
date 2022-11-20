@@ -29,12 +29,22 @@ class StudyDomainInstance(Node):
         MATCH (subj)-[:AT_SITE]->(site:Site)
         WITH DISTINCT std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj, site
         MATCH (ct:ValueSet)<-[:HAS_RESPONSE]-()<-[:HAS_STUDY_BC_DATA_TYPE]-(StudyBCItem {name: "Test"})<-[:HAS_STUDY_BC_ITEM]-(bc)-[*]->(bdt)
-        RETURN DISTINCT sd.name as domain, sv.name as variable, sdp.value as data, wfi.id as uuid, v.name as visit, e.study_epoch_name as epoch, subj.identifier as subject, ct.notation as test_code, 
+        RETURN DISTINCT sd.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, subj.identifier as subject, ct.notation as test_code, 
           site.site_id as siteid, site.inv_name as invnam, site.inv_id as invid, site.country_code as country
       """ % (self.name)
       print(query)
       rows = session.run(query)
       for row in rows:
-        results.append(row)
-        print ("%s, %s, %s, %s, %s, %s, [%s -> %s]" % (row["domain"], row["variable"], row["test_code"], row["subject"], row["uuid"], row["data"], row["visit"], row["epoch"]))
+        record = { 
+          'domain': row["domain"], 
+          'variable': row["variable"], 
+          'test_code': row["test_code"], 
+          'subject': row["subject"], 
+          'uuid': row["uuid"], 
+          'data': row["data"], 
+          'visit': row["visit"], 
+          'epoch': row["epoch"] 
+        }
+        results.append(record)
+        print ("RECORD:", record)
       return results
