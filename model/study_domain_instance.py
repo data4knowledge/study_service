@@ -13,7 +13,6 @@ class StudyDomainInstance(Node):
     with db.session() as session:
       results = []
       # TODO Add in enabled true for USING BC relationship
-      # TODO Add in stud identifier
       #  WITH DISTINCT bc, bcr1, sd, sv, fdt, bdt, sdp, wfi
       #  OPTIONAL MATCH (sv)-[:BC_RESTRICTION]->(bcr2:BiomedicalConceptRef) WHERE IS NULL bcr2 OR bcr1.uuid = bcr2.uuid
       query = """
