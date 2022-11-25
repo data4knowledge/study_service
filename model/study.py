@@ -274,7 +274,7 @@ class Study(Node):
       "CREATE (sc:StudyCell { uuid: $uuid4 })"
       "CREATE (sa:StudyArm { uuid: $uuid5, studyArmName: 'Single Arm', studyArmDesc: 'A single arm for this study'  })"
       "CREATE (se:StudyEpoch { uuid: $uuid6, studyEpochName: 'Single Epoch', studyEpochDesc: 'A single epoch for this study' })"
-      "CREATE (wf:Workflow { uuid: $uuid7, workflowName: 'SoA', workflowDesc: 'The SoA workflow' })"
+      "CREATE (wf:Workflow { uuid: $uuid7, workflowName: 'SoA', workflowDesc: 'The SoA workflow', uniqueLabel: 'wf-1' })"
       "CREATE (st:Code {uuid: $uuid11, code: 'C12345', codeSystem: 'CDISC', codeSystemVersion: '1', decode: 'Observational'})"
       "CREATE (sp:Code {uuid: $uuid12, code: 'C12346', codeSystem: 'CDISC', codeSystemVersion: '1', decode: 'None'})"
       "CREATE (s)-[:IDENTIFIED_BY]->(si)"

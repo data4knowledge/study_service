@@ -16,3 +16,5 @@ class WorkflowItem(BaseModel):
   nextWorkflowItemId: Union[UUID, None] = None
   workflowItemEncounter: Union[Encounter, UUID, None] = None
   workflowItemActivity: Union[Activity, UUID, None] = None
+  uniqueLabel: str = ""
+  
