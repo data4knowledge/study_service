@@ -39,6 +39,9 @@ class StudyDesign(Node):
   studyActivities: Union[List[Activity], List[UUID], None] = []   # EXTENSION
   studyEncounters: Union[List[Encounter], List[UUID], None] = []  # EXTENSION
 
+  # TODO 
+  # Method looks like a cut & paste and then nothing done. 
+  # Not sure it is being used
   @classmethod
   def create(cls, uuid, name, description):
     db = Neo4jConnection()

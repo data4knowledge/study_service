@@ -55,8 +55,8 @@ class StudyDomainInstance(Node):
         }
         results.append(record)
         print ("RECORD:", record)
-        df = self.construct_domain_dataframe(self.name, results)
-        self.print_dataframe(self.name, df)
+      df = self.construct_domain_dataframe(self.name, results)
+      self.print_dataframe(self.name, df)
       return results
 
   def construct_domain_dataframe(self, domain, results):
