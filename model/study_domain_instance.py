@@ -16,7 +16,7 @@ class StudyDomainInstance(Node):
       #  WITH DISTINCT bc, bcr1, sd, sv, fdt, bdt, sdp, wfi
       #  OPTIONAL MATCH (sv)-[:BC_RESTRICTION]->(bcr2:BiomedicalConceptRef) WHERE IS NULL bcr2 OR bcr1.uuid = bcr2.uuid
       query = """
-        MATCH (std:StudyDesign)-[]->(sd:StudyDomainInstance {name: '%s'})
+        MATCH (std:StudyDesign)-[]->(sd:StudyDomainInstance {uuid: '%s'})
         WITH std,sd
         MATCH (std)<-[]-(s:Study)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation)-[:ORGANISATION_TYPE]->(c:Code {decode: 'Clinical Study Sponsor'})
         WITH si, std, sd
@@ -34,8 +34,8 @@ class StudyDomainInstance(Node):
         RETURN DISTINCT sd.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
           subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
           inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid
-      """ % (self.name)
-      print(query)
+      """ % (self.uuid)
+      #print(query)
       rows = session.run(query)
       for row in rows:
         record = { 
@@ -54,15 +54,19 @@ class StudyDomainInstance(Node):
           'test_code': row["test_code"], 
         }
         results.append(record)
-        print ("RECORD:", record)
-      df = self.construct_domain_dataframe(self.name, results)
-      self.print_dataframe(self.name, df)
-      return results
+      #print ("RESULTS:", results)
+      df = self.construct_domain_dataframe(results)
+      #self.print_dataframe(self.name, df)
+      result = df.to_dict('index')
+      #result = df.to_json()
+      print("JSON:", result)
+      return result
 
-  def construct_domain_dataframe(self, domain, results):
+  def construct_domain_dataframe(self, results):
     multiples = {}
     supp_quals = {}
-    column_names = self.variable_list(domain)
+    column_names = self.variable_list()
+    #print("COLS:", column_names)
     final_results = {}
     for result in results:
       key = result["SUBJID"]
@@ -92,7 +96,7 @@ class StudyDomainInstance(Node):
             supp_quals[variable_name] = len(multiples[key][variable_name])
       else:
         final_results[key][variable_index] = result["value"]
-      print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+      #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)
@@ -114,13 +118,13 @@ class StudyDomainInstance(Node):
       df.loc[len(df.index)] = result
     return df
 
-  def variable_list(self, domain):
+  def variable_list(self):
     results = []
     db = Neo4jConnection()
     with db.session() as session:
-      query = """MATCH (sd:StudyDomainInstance)-[:HAS_VARIABLE]->(sv:StudyVariable) WHERE sd.name = "%s"
+      query = """MATCH (sd:StudyDomainInstance)-[:HAS_VARIABLE]->(sv:StudyVariable) WHERE sd.uuid = "%s"
         RETURN sv.name as name ORDER BY toInteger(sv.ordinal)
-      """ % (domain)
+      """ % (self.uuid)
       result = session.run(query)
       for record in result:
         results.append(record["name"])
