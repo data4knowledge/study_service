@@ -25,7 +25,7 @@ class StudyDesignSDTM():
         MATCH (sd:StudyDesign {uuid: '%s'})-[]->(d:StudyDomainInstance) RETURN d
         ORDER BY d.name %s
       """ % (uuid, skip_offset_clause)
-      print(query)
+      #print(query)
       result = session.run(query)
       results = []
       for record in result:

@@ -41,7 +41,7 @@ class StudyEpoch(Node):
 
   @staticmethod
   def _create_epoch(tx, uuid, name, description, arms):
-      print("ARMS", arms)
+      #print("ARMS", arms)
       query = """
         MATCH (sd:StudyDesign { uuid: $uuid1 })-[:STUDY_CELL]->(c:StudyCell)-[:STUDY_EPOCH]->(a:StudyEpoch)
         WHERE NOT (a)-[:NEXT_EPOCH]->()

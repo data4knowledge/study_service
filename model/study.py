@@ -204,7 +204,7 @@ class Study(Node):
           MATCH(n:Study) %s
           RETURN n
       """ % (identifier_filter_clause, status_filter_clause, parent_filter_clause)
-      print(query)
+      #print(query)
       query_results = session.run(query)
       return len(query_results.data())
 

@@ -27,7 +27,7 @@ class StudyDesignSubjectData():
         RETURN subj.identifier as subject, dp.value as value, si.identifier as site, dtp.uri as data_uri, dtp.name as property, dt.name as data_type, i.name as item, bc.name as bc 
         ORDER BY site, subject, bc, item, data_type, property %s
       """ % (uuid, skip_offset_clause)
-      print(query)
+      #print(query)
       result = session.run(query)
       results = []
       for record in result:

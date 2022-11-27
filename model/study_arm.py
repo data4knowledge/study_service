@@ -29,7 +29,7 @@ class StudyArm(Node):
 
   @staticmethod
   def _create_arm(tx, uuid, name, description, epochs):
-      print("EPOCH", epochs)
+      #print("EPOCH", epochs)
       query = """
         MATCH (sd:StudyDesign { uuid: $uuid1 })
         CREATE (a1:StudyArm { studyArmName: $name, studyArmDesc: $desc, uuid: $uuid2 })

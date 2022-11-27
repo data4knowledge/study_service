@@ -59,7 +59,7 @@ class StudyDomainInstance(Node):
       #self.print_dataframe(self.name, df)
       result = df.to_dict('index')
       #result = df.to_json()
-      print("JSON:", result)
+      #print("JSON:", result)
       return result
 
   def construct_domain_dataframe(self, results):
