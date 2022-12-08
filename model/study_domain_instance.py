@@ -55,14 +55,14 @@ class StudyDomainInstance(Node):
         }
         results.append(record)
       #print ("RESULTS:", results)
-      df = self.construct_domain_dataframe(results)
-      #self.print_dataframe(self.name, df)
+      if results[0]['DOMAIN'] == "DM":
+        df = self.construct_dm_dataframe(results)
+      else:
+        df = self.construct_findings_dataframe(results)
       result = df.to_dict('index')
-      #result = df.to_json()
-      #print("JSON:", result)
       return result
 
-  def construct_domain_dataframe(self, results):
+  def construct_dm_dataframe(self, results):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
@@ -115,6 +115,33 @@ class StudyDomainInstance(Node):
 
     df = pd.DataFrame(columns=column_names)
     for subject, result in final_results.items():
+      df.loc[len(df.index)] = result
+    return df
+
+  def construct_findings_dataframe(self, results):
+    multiples = {}
+    supp_quals = {}
+    column_names = self.variable_list()
+    #print("COLS:", column_names)
+    final_results = {}
+    for result in results:
+      print("R:", result)
+      key = "%s.%s" % (result['SUBJID'], result['uuid'])
+      if not key in final_results:
+        record = [""] * len(column_names)
+        record[column_names.index("STUDYID")] = result["STUDYID"]
+        record[column_names.index("DOMAIN")] = result["DOMAIN"]
+        record[column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
+        record[column_names.index("VSTESTCD")] = result["test_code"]
+        record[column_names.index("VISIT")] = result["VISIT"]
+        record[column_names.index("EPOCH")] = result["EPOCH"]
+        final_results[key] = record
+      else:
+        record = final_results[key]
+      variable_index = [column_names.index(result["variable"])][0]
+      record[variable_index] = result["value"]
+    df = pd.DataFrame(columns=column_names)
+    for key, result in final_results.items():
       df.loc[len(df.index)] = result
     return df
 
