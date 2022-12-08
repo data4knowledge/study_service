@@ -22,14 +22,12 @@ class StudyDesignSOA():
       """ % (uuid)
       result = session.run(query)
       for record in result:
-        #print(record)
         if not record["epoch"] in epoch_visits:
           epoch_visits[record["epoch"]] = []    
           epoch_count += 1
         epoch_visits[record["epoch"]].append(record["visit"])
         visits[record["visit"]] = record["epoch"]
         visit_row[record["visit"]] = ""
-      #print(visits)
 
       # Visit Rules
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)
@@ -67,7 +65,6 @@ class StudyDesignSOA():
       result = session.run(query)
       for record in result:
         activity_order.append({ 'name': record["name"], 'uuid': record['uuid'] })
-      #print(activity_order)
 
       # Return the results
       results = []
