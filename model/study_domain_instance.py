@@ -88,7 +88,7 @@ class StudyDomainInstance(Node):
       MATCH (bc)-[:HAS_STUDY_BC_ITEM]->(StudyBCItem {name: "Test"})-[:HAS_STUDY_BC_DATA_TYPE]->()-[:HAS_RESPONSE]->(ct:ValueSet)
       RETURN DISTINCT sdi.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
         subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
-        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid
+        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid LIMIT 2000
     """ % (self.uuid)
     return query
 
@@ -149,20 +149,17 @@ class StudyDomainInstance(Node):
     return df
 
   def construct_findings_dataframe(self, results):
-    multiples = {}
-    supp_quals = {}
+    topic = self.topic()
     column_names = self.variable_list()
-    #print("COLS:", column_names)
     final_results = {}
     for result in results:
-      print("R:", result)
       key = "%s.%s" % (result['SUBJID'], result['uuid'])
       if not key in final_results:
         record = [""] * len(column_names)
         record[column_names.index("STUDYID")] = result["STUDYID"]
         record[column_names.index("DOMAIN")] = result["DOMAIN"]
         record[column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
-        record[column_names.index("VSTESTCD")] = result["test_code"]
+        record[column_names.index(topic)] = result["test_code"]
         record[column_names.index("VISIT")] = result["VISIT"]
         record[column_names.index("EPOCH")] = result["EPOCH"]
         final_results[key] = record
@@ -186,6 +183,17 @@ class StudyDomainInstance(Node):
       for record in result:
         results.append(record["name"])
     return results
+
+  def topic(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """MATCH (sd:StudyDomainInstance)-[:HAS_VARIABLE]->(sv:StudyVariable) WHERE sd.uuid = "%s" and sv.role="Topic"
+        RETURN sv.name as name 
+      """ % (self.uuid)
+      result = session.run(query)
+      for record in result:
+        return record["name"]
+    return None
 
   def print_dataframe(self, title, df):
     pd.set_option('display.width', None)
