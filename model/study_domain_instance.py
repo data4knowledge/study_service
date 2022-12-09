@@ -12,30 +12,11 @@ class StudyDomainInstance(Node):
     db = Neo4jConnection()
     with db.session() as session:
       results = []
-      # TODO Add in enabled true for USING BC relationship
-      #  WITH DISTINCT bc, bcr1, sd, sv, fdt, bdt, sdp, wfi
-      #  OPTIONAL MATCH (sv)-[:BC_RESTRICTION]->(bcr2:BiomedicalConceptRef) WHERE IS NULL bcr2 OR bcr1.uuid = bcr2.uuid
-      query = """
-        MATCH (std:StudyDesign)-[]->(sd:StudyDomainInstance {uuid: '%s'})
-        WITH std,sd
-        MATCH (std)<-[]-(s:Study)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation)-[:ORGANISATION_TYPE]->(c:Code {decode: 'Clinical Study Sponsor'})
-        WITH si, std, sd
-        MATCH (wfi:WorkflowItem)-[:HAS_STUDY_BC_INSTANCE]->(bc:StudyBCInstance)<-[:BC_REF]-(bcr1:BiomedicalConceptRef)<-[:USING_BC]-(sd)-[:HAS_VARIABLE]->(sv:StudyVariable)
-          -[:CLINICAL_RECORDING_REF]->(fdt:ClinicalRecordingRef)<-[:CLINICAL_RECORDING_REF]-(bdt:StudyBCDataTypeProperty)
-          <-[:FOR_DATA_POINT]-(sdp:DataPoint)
-        WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi 
-        MATCH (wfi)-[:WORKFLOW_ITEM_ENCOUNTER]->(v:Encounter)<-[]-(e:StudyEpoch)
-        WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e
-        MATCH (sdp)-[:FOR_SUBJECT]->(subj:Subject)-[:PARTICIPATES_IN]->(std)-[]->(sd)
-        WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj
-        MATCH (subj)-[:AT_SITE]->(site:Site)<-[:WORKS_AT]-(inv:Investigator)
-        WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj, site, inv
-        MATCH (ct:ValueSet)<-[:HAS_RESPONSE]-()<-[:HAS_STUDY_BC_DATA_TYPE]-(StudyBCItem {name: "Test"})<-[:HAS_STUDY_BC_ITEM]-(bc)-[*]->(bdt)
-        RETURN DISTINCT sd.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
-          subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
-          inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid
-      """ % (self.uuid)
-      #print(query)
+      if self.name == "DM":
+        query = self.dm_query()
+      else:
+        query = self.findings_query()
+      print(query)
       rows = session.run(query)
       for row in rows:
         record = { 
@@ -55,12 +36,61 @@ class StudyDomainInstance(Node):
         }
         results.append(record)
       #print ("RESULTS:", results)
-      if results[0]['DOMAIN'] == "DM":
+      if self.name == "DM":
         df = self.construct_dm_dataframe(results)
       else:
         df = self.construct_findings_dataframe(results)
       result = df.to_dict('index')
       return result
+
+  def dm_query(self):
+    # TODO Add in enabled true for USING BC relationship
+    #  WITH DISTINCT bc, bcr1, sd, sv, fdt, bdt, sdp, wfi
+    #  OPTIONAL MATCH (sv)-[:BC_RESTRICTION]->(bcr2:BiomedicalConceptRef) WHERE IS NULL bcr2 OR bcr1.uuid = bcr2.uuid
+    query = """
+      MATCH (std:StudyDesign)-[]->(sd:StudyDomainInstance {uuid: '%s'})
+      WITH std,sd
+      MATCH (std)<-[]-(s:Study)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation)-[:ORGANISATION_TYPE]->(c:Code {decode: 'Clinical Study Sponsor'})
+      WITH si, std, sd
+      MATCH (wfi:WorkflowItem)-[:HAS_STUDY_BC_INSTANCE]->(bc:StudyBCInstance)<-[:BC_REF]-(bcr1:BiomedicalConceptRef)<-[:USING_BC]-(sd)-[:HAS_VARIABLE]->(sv:StudyVariable)
+        -[:CLINICAL_RECORDING_REF]->(fdt:ClinicalRecordingRef)<-[:CLINICAL_RECORDING_REF]-(bdt:StudyBCDataTypeProperty)
+        <-[:FOR_DATA_POINT]-(sdp:DataPoint)
+      WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi 
+      MATCH (wfi)-[:WORKFLOW_ITEM_ENCOUNTER]->(v:Encounter)<-[]-(e:StudyEpoch)
+      WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e
+      MATCH (sdp)-[:FOR_SUBJECT]->(subj:Subject)-[:PARTICIPATES_IN]->(std)-[]->(sd)
+      WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj
+      MATCH (subj)-[:AT_SITE]->(site:Site)<-[:WORKS_AT]-(inv:Investigator)
+      WITH DISTINCT si, std, sd, bc, sv, fdt, bdt, sdp, wfi, v, e, subj, site, inv
+      MATCH (ct:ValueSet)<-[:HAS_RESPONSE]-()<-[:HAS_STUDY_BC_DATA_TYPE]-(StudyBCItem {name: "Test"})<-[:HAS_STUDY_BC_ITEM]-(bc)-[*]->(bdt)
+      RETURN DISTINCT sd.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
+        subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
+        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid
+    """ % (self.uuid)
+    return query
+
+  def findings_query(self):
+    query = """
+      MATCH (sdp:DataPoint)-[:FOR_DATA_POINT]->(bdtp:StudyBCDataTypeProperty)<-[]-(bdt:StudyBCDataType)<-[]-(bi:StudyBCItem)<-[]-(bc:StudyBCInstance)
+        <-[:BC_REF]-(bcr:BiomedicalConceptRef)<-[:USING_BC]-(sdi:StudyDomainInstance {uuid: '%s'})
+      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi
+      MATCH (sdi)-[:HAS_VARIABLE]->(sv:StudyVariable)-[:CLINICAL_RECORDING_REF]->(crr:ClinicalRecordingRef)<-[:CLINICAL_RECORDING_REF]-(bdtp)
+      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr
+      MATCH (bc)<-[:HAS_STUDY_BC_INSTANCE]-(wfi:WorkflowItem)-[:WORKFLOW_ITEM_ENCOUNTER]->(v:Encounter)<-[]-(e:StudyEpoch)
+      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e
+      MATCH (sdp)-[:FOR_SUBJECT]->(subj:Subject)-[:PARTICIPATES_IN]->(sd:StudyDesign)-[]->(sdi)
+      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd
+      MATCH (sd)<-[]-(s:Study)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation)-[:ORGANISATION_TYPE]->
+        (c:Code {decode: 'Clinical Study Sponsor'})
+      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd, si
+      MATCH (subj)-[:AT_SITE]->(site:Site)<-[:WORKS_AT]-(inv:Investigator)
+      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd, si, site, inv
+      MATCH (bc)-[:HAS_STUDY_BC_ITEM]->(StudyBCItem {name: "Test"})-[:HAS_STUDY_BC_DATA_TYPE]->()-[:HAS_RESPONSE]->(ct:ValueSet)
+      RETURN DISTINCT sdi.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
+        subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
+        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid
+    """ % (self.uuid)
+    return query
 
   def construct_dm_dataframe(self, results):
     multiples = {}
