@@ -65,7 +65,7 @@ class StudyDomainInstance(Node):
       MATCH (ct:ValueSet)<-[:HAS_RESPONSE]-()<-[:HAS_STUDY_BC_DATA_TYPE]-(StudyBCItem {name: "Test"})<-[:HAS_STUDY_BC_ITEM]-(bc)-[*]->(bdt)
       RETURN DISTINCT sd.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
         subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
-        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid
+        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject
     """ % (self.uuid)
     return query
 
@@ -86,7 +86,7 @@ class StudyDomainInstance(Node):
       MATCH (subj)-[:AT_SITE]->(site:Site)<-[:WORKS_AT]-(inv:Investigator)
       WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd, si, site, inv
       MATCH (bc)-[:HAS_STUDY_BC_ITEM]->(StudyBCItem {name: "Test"})-[:HAS_STUDY_BC_DATA_TYPE]->()-[:HAS_RESPONSE]->(ct:ValueSet)
-      RETURN DISTINCT sdi.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
+      RETURN DISTINCT sdi.name as domain, sv.name as variable, sdp.value as data, bc.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
         subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
         inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
     """ % (self.uuid)
@@ -181,8 +181,22 @@ class StudyDomainInstance(Node):
       """ % (self.uuid)
       result = session.run(query)
       for record in result:
-        results.append(record["name"])
+        name = record['name']
+        if not self.hide_variable(name):
+          results.append(name)
     return results
+
+  def hide_variable(self, name):
+    # TODO This is a quick fix, needs enable/disable flag on Study Domain 
+    hide_list = [
+      "--GRPID", "--REFID", "--SPID", "--NAM",	"--LOINC", "--ANMETH", "--TMTHSN", "--LOBXFL",
+      "--DRVFL", "--TOX", "--TOXGR", "--CLSIG", "TAETORD",
+      "--TPT", "--TPTNUM", "--ELTM", "--TPTREF", "--RFTDTC", "--PTFL", "--PDUR",
+      "--TSTCND", "--BDAGNT", "--TSTOPO"
+    ]
+
+    local_name = name.replace(self.name, '--', 1)
+    return local_name in hide_list
 
   def topic(self):
     db = Neo4jConnection()
