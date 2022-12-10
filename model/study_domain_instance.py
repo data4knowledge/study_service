@@ -88,7 +88,7 @@ class StudyDomainInstance(Node):
       MATCH (bc)-[:HAS_STUDY_BC_ITEM]->(StudyBCItem {name: "Test"})-[:HAS_STUDY_BC_DATA_TYPE]->()-[:HAS_RESPONSE]->(ct:ValueSet)
       RETURN DISTINCT sdi.name as domain, sv.name as variable, sdp.value as data, wfi.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
         subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
-        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid LIMIT 2000
+        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
     """ % (self.uuid)
     return query
 

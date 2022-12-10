@@ -15,7 +15,7 @@ class StudyDesignSubjectData():
     db = Neo4jConnection()
     with db.session() as session:
       query = """MATCH (sd:StudyDesign {uuid: '%s'})<-[]-(subj:Subject)<-[]-(dp:DataPoint)-[]->(dtp:StudyBCDataTypeProperty)
-        <-[]-(dt:StudyBCDataType)<-[]-(i:StudyBCItem)<-[]-(bc:StudyBCInstance), (subj)-[]->(si:Site) 
+        <-[]-(dt:StudyBCDataType)<-[]-(i:StudyBCItem)<-[]-(bc:StudyBCInstance)
         RETURN COUNT(dp) AS count
       """ % (uuid)
       result = session.run(query)
@@ -23,11 +23,13 @@ class StudyDesignSubjectData():
       for record in result:
         count = record['count']
       query = """MATCH (sd:StudyDesign {uuid: '%s'})<-[]-(subj:Subject)<-[]-(dp:DataPoint)-[]->(dtp:StudyBCDataTypeProperty)
-        <-[]-(dt:StudyBCDataType)<-[]-(i:StudyBCItem)<-[]-(bc:StudyBCInstance), (subj)-[]->(si:Site) 
+        <-[]-(dt:StudyBCDataType)<-[]-(i:StudyBCItem)<-[]-(bc:StudyBCInstance)
+        WITH sd, subj, dp, dtp, dt, i, bc 
+        MATCH (subj)-[]->(si:Site)  
         RETURN subj.identifier as subject, dp.value as value, si.identifier as site, dtp.uri as data_uri, dtp.name as property, dt.name as data_type, i.name as item, bc.name as bc 
         ORDER BY site, subject, bc, item, data_type, property %s
       """ % (uuid, skip_offset_clause)
-      #print(query)
+      print(query)
       result = session.run(query)
       results = []
       for record in result:
