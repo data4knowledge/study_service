@@ -216,7 +216,7 @@ class StudyDomainInstance(Node):
       "--GRPID", "--REFID", "--SPID", "--NAM",	"--LOINC", "--ANMETH", "--TMTHSN", "--LOBXFL",
       "--DRVFL", "--TOX", "--TOXGR", "--CLSIG",
       "--TPT", "--TPTNUM", "--ELTM", "--TPTREF", "--RFTDTC", "--PTFL", "--PDUR",
-      "--TSTCND", "--BDAGNT", "--TSTOPO"
+      "--TSTCND", "--BDAGNT", "--TSTOPO", "--STRESC", "--STRESN", "--STRESU"
     ]
     full_hide_list = [
       "TAETORD", "RFSTDTC", "RFENDTC", "RFXSTDTC", "RFXENDTC", "RFCSTDTC", "RFCENDTC", "RFICDTC", "RFPENDTC"
@@ -227,7 +227,7 @@ class StudyDomainInstance(Node):
     if local_name in domain_hide_list:
       return True
     return False
-    
+
   def topic(self):
     db = Neo4jConnection()
     with db.session() as session:
