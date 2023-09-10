@@ -127,5 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-.development_test_env
+.development_env
+.production_env
 .DS_Store

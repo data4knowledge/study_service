@@ -4,10 +4,11 @@ from utility.service_environment import ServiceEnvironment
 class Neo4jConnection():
   
   def __init__(self):
-    self.__db_name = ServiceEnvironment().get('NEO4J_DB_NAME')
-    self.__url = ServiceEnvironment().get('NEO4J_URL')
-    self.__usr = ServiceEnvironment().get('NEO4J_USER')
-    self.__pwd = ServiceEnvironment().get('NEO4J_PWD')
+    sv = ServiceEnvironment()
+    self.__db_name = sv.get('NEO4J_DB_NAME')
+    self.__url = sv.get('NEO4J_URI')
+    self.__usr = sv.get('NEO4J_USERNAME')
+    self.__pwd = sv.get('NEO4J_PASSWORD')
     try:
       self.__driver = GraphDatabase.driver(self.__url, auth=(self.__usr, self.__pwd))
       self.__error = None
@@ -39,3 +40,16 @@ class Neo4jConnection():
 
   def error(self):
     return self.__error
+  
+  def clear(self):
+    query = """
+      CALL apoc.periodic.iterate('MATCH (n) RETURN n', 'DETACH DELETE n', {batchSize:1000})
+    """
+    self.query(query)
+
+  def count(self):
+    with self.__driver.session(database=self.__db_name) as session:
+      result = session.run('MATCH (n) RETURN COUNT(n) as count')
+      record = result.single()
+      session.close()
+      return record['count']
