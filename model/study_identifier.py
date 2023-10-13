@@ -14,5 +14,5 @@ class StudyIdentifierIn(BaseModel):
 class StudyIdentifier(Node):
   uuid: Union[UUID, None]
   studyIdentifier: str
-  studyIdentifierScope: Union[UUID, Organisation, None]
+  studyIdentifierScope: Union[UUID, Organisation, None] = None
 

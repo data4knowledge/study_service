@@ -8,7 +8,7 @@ class Organisation(Node):
   organisationIdentifierScheme: str
   organisationIdentifier: str
   organisationName: str
-  organisationType: Union[UUID, Code, None]
+  organisationType: Union[UUID, Code, None] = None
 
   @classmethod
   def global_reuse(cls):

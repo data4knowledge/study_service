@@ -62,13 +62,13 @@ class Study(Node):
   uri: str = ""
   studyTitle: str
   studyVersion: str = ""
-  studyType: Union[Code, UUID, None]
-  studyPhase: Union[Code, UUID, None]
-  studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None]
-  studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None]
-  studyDesigns: Union[List[StudyDesign], List[UUID], None]
-  identified_by: Union[ScopedIdentifier, UUID, None] #EXTENSION
-  has_status: Union[RegistrationStatus, UUID, None] # EXTENSION
+  studyType: Union[Code, UUID, None] = None
+  studyPhase: Union[Code, UUID, None] = None
+  studyIdentifiers: Union[List[StudyIdentifier], List[UUID], None]  = None
+  studyProtocolVersions: Union[List[StudyProtocolVersion], List[UUID], None] = None
+  studyDesigns: Union[List[StudyDesign], List[UUID], None] = None
+  identified_by: Union[ScopedIdentifier, UUID, None]  = None #EXTENSION
+  has_status: Union[RegistrationStatus, UUID, None]  = None # EXTENSION
 
   @classmethod
   def identifier_properties(cls):
@@ -386,7 +386,7 @@ class Study(Node):
     )
     result = tx.run(query, uuid=uuid)
     for row in result:
-      return StudyParameters(**{ "studyType": Code.wrap(row['st']), "studyPhase": Code.wrap(row['sp']) })
+      return StudyParameters(**{ "studyType": Code.wrap(row['st']).__dict__, "studyPhase": Code.wrap(row['sp']).__dict__ })
 
   @staticmethod
   def _study_identifiers(tx, uuid):

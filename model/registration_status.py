@@ -9,4 +9,4 @@ class RegistrationStatus(Node):
   registration_status: str = ""
   effective_date: str = ""
   until_date: str = ""
-  managed_by: Union[RegistrationAuthority, UUID, None]
+  managed_by: Union[RegistrationAuthority, UUID, None] = None

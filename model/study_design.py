@@ -27,8 +27,8 @@ class StudyDesign(Node):
   uuid: str
   uri: str = ""
   trialIntentTypes: Union[List[Code], List[UUID]] = []
-  trialType: Union[Code, UUID, None] 
-  interventionModel: Union[Code, UUID, None]
+  trialType: Union[Code, UUID, None] = None
+  interventionModel: Union[Code, UUID, None]  = None
   studyCells: Union[List[StudyCell], List[UUID], None] = []
   studyIndications: Union[List[Indication], List[UUID], None] = []
   studyInvestigationalInterventions: Union[List[InvestigationalIntervention], List[UUID], None] = []

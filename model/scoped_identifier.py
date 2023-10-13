@@ -8,4 +8,4 @@ class ScopedIdentifier(Node):
   identifier: str
   version: int
   semantic_version: str
-  scoped_by: Union[Namespace, UUID, None]
+  scoped_by: Union[Namespace, UUID, None] = None
