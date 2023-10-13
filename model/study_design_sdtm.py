@@ -1,4 +1,5 @@
 from model.neo4j_connection import Neo4jConnection
+from model.study_domain_instance import StudyDomainInstance
 
 class StudyDesignSDTM():
 
@@ -29,7 +30,7 @@ class StudyDesignSDTM():
       result = session.run(query)
       results = []
       for record in result:
-        results.append(record['d'])
+        results.append(StudyDomainInstance.wrap(record['d']).__dict__)
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
 
