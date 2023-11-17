@@ -1,6 +1,7 @@
 from .node import Node
 from .neo4j_connection import Neo4jConnection
 from .file_nodes_and_edges import FileNodesAndEdges
+from service.github_service import GithubService
 from uuid import uuid4
 from usdm_excel import USDMExcel
 
@@ -62,6 +63,10 @@ class StudyFile(Node):
       print(f"EXE: Dump")
       ne = FileNodesAndEdges(self.dir_path, nodes_and_edges)
       ne.dump()
+
+      print(f"EXE: Github")
+      github = GithubService()
+      github.upload_dir(self.uuid, self.dir_path, '*.csv')
 
       return True
     except Exception as e:
