@@ -129,4 +129,8 @@ dmypy.json
 .pyre/
 .development_env
 .production_env
-.DS_Store
+**/.DS_Store
+
+# Uploads folder
+/uploads/*
+!/uploads/placeholder.txt
