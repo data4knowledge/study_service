@@ -18,12 +18,14 @@ class AuraService():
     self.project_root = sv.get("GITHUB_BASE")
 
   def load(self, file_list):
-    print(f"AURA: {file_list}")
+    #print(f"AURA: {file_list}")
     try:
       load_files = []
       for filename in file_list:
-        parts = filename.replace("load_data/", "").split("-")
+        filename_parts = filename.split("/")
+        parts = filename_parts[2].split("-")
         file_path = os.path.join(self.project_root, filename)
+        #print(f"PATH: {file_path}")
         if parts[0] == "node":
           load_files.append({ "label": pascalcase(parts[1]), "filename": file_path })
         else:
@@ -32,12 +34,14 @@ class AuraService():
       session = self.driver.session(database=self.database)
       nodes = []
       relationships = []
+      print(f"AURA: {load_files}")
       for file_item in load_files:
         if "label" in file_item:
           nodes.append("{ fileName: '%s', labels: ['%s'] }" % (file_item["filename"], file_item["label"]) )
         else:
           relationships.append("{ fileName: '%s', type: '%s' }" % (file_item["filename"], file_item["type"]) )
-      query = """CALL apoc.import.csv( [%s], [%s], {stringIds: false})""" % (", ".join(nodes), ", ".join(relationships))
+      query = """CALL apoc.import.csv( [%s], [%s], {stringIds: true})""" % (", ".join(nodes), ", ".join(relationships))
+      #print(f"AURA: query={query}")        
       result = session.run(query)
       for record in result:
         print(record)

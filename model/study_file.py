@@ -9,6 +9,7 @@ from usdm_excel import USDMExcel
 
 import os
 import yaml
+import time
 
 class StudyFile(Node):
   uuid: str = ""
@@ -69,6 +70,20 @@ class StudyFile(Node):
       print(f"EXE: Github")
       github = GithubService()
       file_list = github.upload_dir(self.uuid, self.dir_path, '*.csv')
+
+      print(f"EXE: Wait")
+      check = True
+      loop_count = 0
+      while check and (loop_count <= 12):
+        file_count = github.file_count(self.uuid)
+        print(f"EXE: File count {loop_count} {file_count} v {len(file_list)}")
+        if file_count >= len(file_list):
+          check = False
+          print(f"EXE: File count done")
+        else:
+          time.sleep(5)
+          loop_count += 1
+          print(f"EXE: Sleep {loop_count}")
 
       print(f"EXE: Aura {file_list}")
       aura = AuraService()

@@ -32,3 +32,14 @@ class GithubService():
     except Exception as e:
       print(f"GIT: Upload exception {e}")
       print(f"{traceback.format_exc()}")
+
+  def file_count(self, uuid):
+    count = 0
+    contents = self.repo.get_contents(f'uploads/{uuid}', ref=self.branch_name)
+    while contents:
+      file_content = contents.pop(0)
+      if file_content.type == "dir":
+        contents.extend(self.repo.get_contents(file_content.path, ref=self.branch_name))
+      else:
+        count += 1
+    return count

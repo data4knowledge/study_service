@@ -21,6 +21,8 @@ import traceback
 VERSION = "0.5"
 SYSTEM_NAME = "d4k Study Microservice"
 
+#logging.basicConfig(level=logging.DEBUG)
+
 app = FastAPI(
   title = SYSTEM_NAME,
   description = "A microservice to handle Study Builds in a Neo4j database.",
