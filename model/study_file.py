@@ -1,45 +1,72 @@
 from .node import Node
 from .neo4j_connection import Neo4jConnection
+from .file_nodes_and_edges import FileNodesAndEdges
 from uuid import uuid4
+from usdm_excel import USDMExcel
 
 import os
+import yaml
 
 class StudyFile(Node):
-  uuid: str
-  full_path: str
-  status: str
+  uuid: str = ""
+  filename: str = ""
+  full_path: str = ""
+  dir_path: str = ""
+  status: str = ""
+  error: str = ""
 
-  @classmethod
-  def create(cls, filename, contents):
-    if not cls._check_extension(filename):
-      return None, "Invalid extension, must be '.xlsx'"
+  def create(self, filename, contents):
+    if not self._check_extension(filename):
+      self.error = "Invalid extension, must be '.xlsx'"
+      return False
+    self.filename = filename
+    self.uuid = str(uuid4())
+    self.dir_path = os.path.join("uploads", self.uuid)
+    self.full_path = os.path.join("uploads", self.uuid, f"{self.uuid}.xlsx")
     db = Neo4jConnection()
-    uuid = str(uuid4())
-    dir_path = os.path.join("uploads", uuid)
-    full_path = os.path.join("uploads", uuid, filename)
     with db.session() as session:
       try:
-        os.mkdir(dir_path)
+        os.mkdir(self.dir_path)
       except Exception as e:
-        return None, f"Failed to create directory {e}"
+        self.error = f"Failed to create directory {e}"
+        return False
       else:
         try:
-          with open(full_path, 'wb') as f:
+          with open(self.full_path, 'wb') as f:
             f.write(contents)
         except Exception as e:
-          return None, f"Failed to save file content {e}"
+          self.error = f"Failed to save file content {e}"
+          return False
         else:
           try:
-            session.execute_write(cls._create, full_path, uuid)
+            session.execute_write(self._create, self.filename, self.full_path, self.uuid)
           except Exception as e:
-            return None, f"Failed to save file details {e}"
+            self.error = f"Failed to save file details {e}"
+            return False
           else:    
-            return uuid, ""
+            return True
 
   def clear(self):
     db = Neo4jConnection()
     with db.session() as session:
       status = session.execute_write(self._set_status, self.uuid, 'initialised')
+
+  def execute(self):
+    try:
+      excel = USDMExcel(self.full_path)
+      nodes_and_edges = excel.to_neo4j_dict()
+      filename = os.path.join("uploads", self.uuid, f"{self.uuid}.yaml")
+      with open(f"{filename}", 'w') as f:
+        f.write(yaml.dump(nodes_and_edges))
+
+      print(f"EXE: Dump")
+      ne = FileNodesAndEdges(self.dir_path, nodes_and_edges)
+      ne.dump()
+
+      return True
+    except Exception as e:
+      self.error = f"Failed to convert file {e}"
+      return False
 
   # def execute(self):
   #   db = Neo4jConnection()
@@ -61,12 +88,13 @@ class StudyFile(Node):
   #     return status
 
   @staticmethod
-  def _create(tx, full_path, uuid):
+  def _create(tx, filename, full_path, uuid):
     query = """
-      CREATE (df:StudyFile {full_path: $full_path, uuid: $uuid, status: 'initialised'})
+      CREATE (df:StudyFile {filename: $filename, full_path: $full_path, uuid: $uuid, status: 'initialised'})
       RETURN df.uuid as uuid
     """
     results = tx.run(query, 
+      filename=filename,
       full_path=full_path,
       uuid=uuid
     )

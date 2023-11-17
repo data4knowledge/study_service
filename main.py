@@ -15,7 +15,6 @@ from model.study_file import StudyFile
 # from model.workflow_item import WorkflowItem, WorkflowItemIn
 from utility.service_environment import ServiceEnvironment
 # from typing import List
-from usdm_excel import USDMExcel
 import logging
 import traceback
 
@@ -27,15 +26,6 @@ app = FastAPI(
   description = "A microservice to handle Study Builds in a Neo4j database.",
   version = VERSION
 )
-
-# def process_excel(uuid):
-#   files = Files()
-#   file = files(uuid)
-#   try:
-#     excel = USDMExcel(file.source_file())
-#   except Exception as e:
-#     logging.info(f"Exception: {e}\n{traceback.format_exc()}")
-#   files.save_neo4j(uuid, excel.to_json(), excel.errors(), excel.to_timeline(USDMExcel.BODY_HTML), excel.to_pdf())
 
 @app.get("/", 
   summary="Get system and version",
@@ -56,16 +46,17 @@ async def read_root():
   description="", 
   status_code=status.HTTP_201_CREATED,
   response_model=str)
-async def create_format_file(request: Request):
+async def create_format_file(request: Request, background_tasks: BackgroundTasks):
   form = await request.form()
   filename = form['upload_file'].filename
   contents = await form['upload_file'].read()
-  result, error = StudyFile.create(filename, contents)
-  if result == None:
-    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {error}")
+  sf = StudyFile()
+  success = sf.create(filename, contents)
+  if not success:
+    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
   else:
-    #background_tasks.add_task(process_excel, uuid)
-    return result
+    background_tasks.add_task(sf.execute)
+    return sf.uuid
 
 # @app.get("/v1/studies", 
 #   summary="List of studies",
