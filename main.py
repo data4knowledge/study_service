@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, status, Response, Request, Backgroun
 from uuid import UUID
 from model.system import SystemOut
 from model.study_file import StudyFile
-# from model.study import Study, StudyIn, StudyList, StudyParameters
+from model.study import Study, StudyList
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
 # from model.study_domain_instance import StudyDomainInstance
@@ -60,13 +60,13 @@ async def create_format_file(request: Request, background_tasks: BackgroundTasks
     background_tasks.add_task(sf.execute)
     return sf.uuid
 
-# @app.get("/v1/studies", 
-#   summary="List of studies",
-#   description="Provide a list of all studies.",
-#   status_code=200,
-#   response_model=StudyList)
-# async def list_studies(page: int = 0, size: int = 0, filter: str=""):
-#   return StudyList.list(page, size, filter)
+@app.get("/v1/studies", 
+  summary="List of studies",
+  description="Provide a list of all studies.",
+  status_code=200,
+  response_model=StudyList)
+async def list_studies(page: int = 0, size: int = 0, filter: str=""):
+  return StudyList.list(page, size, filter)
 
 # @app.post("/v1/studies", 
 #   summary="Create a new study",
