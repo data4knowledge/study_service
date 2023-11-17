@@ -10,11 +10,13 @@ class GithubService():
   def __init__(self):
     self.token = ServiceEnvironment().get("GITHUB_TOKEN")
     self.repo_name = ServiceEnvironment().get("GITHUB_REPO")
+    self.branch_name = ServiceEnvironment().get("GITHUB_BRANCH")
     self.g = Github(self.token)
     self.repo = self.g.get_repo(self.repo_name)
-
+ 
   def upload_dir(self, uuid, dir, file_type):
     try:
+      result = []
       print(f"GIT: Dir {dir}")
       files = glob.glob(os.path.join(dir, file_type))
       print(f"GIT: Files {files}")
@@ -23,7 +25,10 @@ class GithubService():
         with open(file, 'r') as f:
           data = f.read()
         name = os.path.basename(file)
-        self.repo.create_file(f'uploads/{uuid}/{name}', 'Study service excel import', data, branch='aura')
+        filename = f'uploads/{uuid}/{name}'
+        self.repo.create_file(filename, 'Study service excel import', data, branch=self.branch_name)
+        result.append(filename)
+      return result
     except Exception as e:
       print(f"GIT: Upload exception {e}")
       print(f"{traceback.format_exc()}")

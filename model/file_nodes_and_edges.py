@@ -91,5 +91,5 @@ class FileNodesAndEdges():
   def fill_missing(self, type, keys, row):
     for k in keys:
       if k not in row:
-        row[k] = None
+        row[k] = ''
         print(f"NE (fill missing): {type} missing {k}")

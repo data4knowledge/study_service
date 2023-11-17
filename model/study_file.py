@@ -2,6 +2,8 @@ from .node import Node
 from .neo4j_connection import Neo4jConnection
 from .file_nodes_and_edges import FileNodesAndEdges
 from service.github_service import GithubService
+from service.aura_service import AuraService
+
 from uuid import uuid4
 from usdm_excel import USDMExcel
 
@@ -66,7 +68,11 @@ class StudyFile(Node):
 
       print(f"EXE: Github")
       github = GithubService()
-      github.upload_dir(self.uuid, self.dir_path, '*.csv')
+      file_list = github.upload_dir(self.uuid, self.dir_path, '*.csv')
+
+      print(f"EXE: Aura {file_list}")
+      aura = AuraService()
+      aura.load(file_list)
 
       return True
     except Exception as e:
