@@ -5,6 +5,7 @@ import os
 import glob
 import time
 import traceback
+import logging
 
 class GithubService():
   
@@ -21,11 +22,11 @@ class GithubService():
   def upload_dir(self, uuid, dir, file_type):
     result = []
     try:
-      print(f"GIT: Dir {dir}")
+      #print(f"GIT: Dir {dir}")
       files = glob.glob(os.path.join(dir, file_type))
-      print(f"GIT: Files {files}")
+      #print(f"GIT: Files {files}")
       for file in files:
-        print(f"GIT: File {file}")
+        #print(f"GIT: File {file}")
         with open(file, 'r') as f:
           data = f.read()
         name = os.path.basename(file)
@@ -33,8 +34,9 @@ class GithubService():
         self.repo.create_file(filename, 'Study service excel import', data, branch=self.branch_name)
         result.append(name)
     except Exception as e:
-      print(f"GIT: Upload exception {e}")
-      print(f"{traceback.format_exc()}")
+      logging.error(f"Exception raised while uploading to Github, uploading")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      raise self.UploadFail    
     else:
       self._all_visible(dir, len(result))
       return result
@@ -50,6 +52,8 @@ class GithubService():
         time.sleep(5)
         loop_count += 1
     if check:
+      logging.error(f"Exception raised while uploading to Github, checking files")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
       raise self.UploadFail
   
   def _file_count(self, dir):

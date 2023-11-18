@@ -2,6 +2,8 @@ import csv
 import os
 import glob
 import traceback
+import logging
+
 from stringcase import snakecase 
 
 class StudyFileNodesAndEdges():
@@ -18,7 +20,7 @@ class StudyFileNodesAndEdges():
       self.add_edges(k, v)
 
   def add_nodes(self, klass, items):
-    print(f"NE (Add Nodes): {items}")
+    #print(f"NE (Add Nodes): {items}")
     if not klass in self.nodes:
       self.nodes[klass] = []
     self.nodes[klass] = self.nodes[klass] + items
@@ -33,14 +35,14 @@ class StudyFileNodesAndEdges():
   def dump(self):
     try:
       for k, v in self.nodes.items():
-        print("NODE '%s': %s" % (k, len(v)))
+        #print("NODE '%s': %s" % (k, len(v)))
         self.dump_nodes(k, v)
       for k, v in self.edges.items():
-        print("REL '%s': %s" % (k, len(v)))
+        #print("REL '%s': %s" % (k, len(v)))
         self.dump_edges(k, v)
     except Exception as e:
-      print(f"NE: Dump exception {e}")
-      print(f"{traceback.format_exc()}")
+      logging.error(f"Exception raised while dumping nodes and edges")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
 
   def clean(self):
     files = glob.glob("%s/*.csv" % (self.dir))
@@ -98,4 +100,4 @@ class StudyFileNodesAndEdges():
     for k in keys:
       if k not in row:
         row[k] = ''
-        print(f"NE (fill missing): {type} missing {k}")
+        logging.info(f"Fill missing, class '{type}', missing attribute '{k}' set to ''")
