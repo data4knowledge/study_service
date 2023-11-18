@@ -34,7 +34,6 @@ class StudyVersion(NodeId):
   def parent_properties(cls):
     return ["n.studyTitle", "n.studyVersion", "n.studyRationale", "n.studyAcronym"]
 
-
 #   @classmethod
 #   def exists(cls, identifier):
 #     db = Neo4jConnection()
