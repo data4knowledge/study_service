@@ -25,6 +25,7 @@ class GithubService():
       #print(f"GIT: Dir {dir}")
       files = glob.glob(os.path.join(dir, file_type))
       #print(f"GIT: Files {files}")
+      file_count = 0
       for file in files:
         #print(f"GIT: File {file}")
         with open(file, 'r') as f:
@@ -33,6 +34,10 @@ class GithubService():
         filename = os.path.join(dir, name)
         self.repo.create_file(filename, 'Study service excel import', data, branch=self.branch_name)
         result.append(name)
+        file_count += 1
+        if file_count % 10 == 0:
+          logging.info(f"Uploaded {file_count} files to Github")    
+      logging.info(f"Uploaded {file_count} files to Github")    
     except Exception as e:
       logging.error(f"Exception raised while uploading to Github, uploading")
       logging.error(f"Exception {e}\n{traceback.format_exc()}")
