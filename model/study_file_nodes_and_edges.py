@@ -100,4 +100,4 @@ class StudyFileNodesAndEdges():
     for k in keys:
       if k not in row:
         row[k] = ''
-        logging.info(f"Fill missing, class '{type}', missing attribute '{k}' set to ''")
+        logging.info(f"Attribute missing, class '{type}', missing attribute '{k}' set to ''")

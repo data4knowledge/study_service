@@ -57,7 +57,7 @@ class StudyFile(Node):
   def set_status(self, status):
     self.status = status
     logging.info(f"Study load, status: {status}")
-    print(f"Study load, status: {status}")
+    #print(f"Study load, status: {status}")
     db = Neo4jConnection()
     with db.session() as session:
       session.execute_write(self._set_status, self.uuid, status)

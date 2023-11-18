@@ -52,7 +52,7 @@ class AuraService():
         return_value = {'nodes': record['nodes'], 'relationships': record['relationships'], 'time': record['time']}
       self.driver.close()
       logging.info(f"Loaded Aura, details: {record}")
-      print(f"Loaded Aura, details: {record}")
+      #print(f"Loaded Aura, details: {record}")
       return return_value
     except Exception as e:
       logging.error(f"Exception raised while uploading to Aura database")
