@@ -44,8 +44,8 @@ async def read_root():
 # ===========
 
 @app.post('/v1/studyFiles', 
-  summary="",
-  description="", 
+  summary="Load a study",
+  description="Upload and process a study Excel file loading the data into the database", 
   status_code=status.HTTP_201_CREATED,
   response_model=str)
 async def create_format_file(request: Request, background_tasks: BackgroundTasks):
@@ -60,6 +60,7 @@ async def create_format_file(request: Request, background_tasks: BackgroundTasks
     background_tasks.add_task(sf.execute)
     return sf.uuid
 
+<<<<<<< Updated upstream
 @app.get("/v1/studies", 
   summary="List of studies",
   description="Provide a list of all studies.",
@@ -67,6 +68,26 @@ async def create_format_file(request: Request, background_tasks: BackgroundTasks
   response_model=StudyList)
 async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   return StudyList.list(page, size, filter)
+=======
+@app.get("/v1/studyFiles/{uuid}", 
+  summary="Get study file status",
+  description="Get the status of the processing for a given study file",
+  response_model=str)
+async def get_study(uuid: str):
+  sf = StudyFile.find(uuid)
+  if sf:
+    return sf.status
+  else:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+
+  # @app.get("/v1/studies", 
+#   summary="List of studies",
+#   description="Provide a list of all studies.",
+#   status_code=200,
+#   response_model=StudyList)
+# async def list_studies(page: int = 0, size: int = 0, filter: str=""):
+#   return StudyList.list(page, size, filter)
+>>>>>>> Stashed changes
 
 # @app.post("/v1/studies", 
 #   summary="Create a new study",

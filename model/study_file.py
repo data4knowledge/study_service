@@ -1,6 +1,6 @@
 from .node import Node
 from .neo4j_connection import Neo4jConnection
-from .file_nodes_and_edges import FileNodesAndEdges
+from .study_file_nodes_and_edges import StudyFileNodesAndEdges
 from service.github_service import GithubService
 from service.aura_service import AuraService
 
@@ -10,6 +10,7 @@ from usdm_excel import USDMExcel
 import os
 import yaml
 import time
+import traceback
 
 class StudyFile(Node):
   uuid: str = ""
@@ -47,25 +48,32 @@ class StudyFile(Node):
           except Exception as e:
             self.error = f"Failed to save file details {e}"
             return False
-          else:    
+          else:
+            self.set_status("Loaded")
             return True
 
-  def clear(self):
+  def set_status(self, status):
     db = Neo4jConnection()
     with db.session() as session:
-      status = session.execute_write(self._set_status, self.uuid, 'initialised')
+      session.execute_write(self._set_status, self.uuid, status)
 
   def execute(self):
     try:
+      self.set_status("Processing Excel")
+
       excel = USDMExcel(self.full_path)
       nodes_and_edges = excel.to_neo4j_dict()
       filename = os.path.join("uploads", self.uuid, f"{self.uuid}.yaml")
       with open(f"{filename}", 'w') as f:
         f.write(yaml.dump(nodes_and_edges))
 
+      self.set_status("Processing Nodes")
+
       print(f"EXE: Dump")
-      ne = FileNodesAndEdges(self.dir_path, nodes_and_edges)
+      ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
       ne.dump()
+
+      self.set_status("Uploading to github")
 
       print(f"EXE: Github")
       github = GithubService()
@@ -85,12 +93,15 @@ class StudyFile(Node):
           loop_count += 1
           print(f"EXE: Sleep {loop_count}")
 
-      print(f"EXE: Aura {file_list}")
+      self.set_status("Loading database")
       aura = AuraService()
-      aura.load(file_list)
+      aura.load(self.uuid, self.dir_path, file_list)
 
+      self.set_status("Complete")
       return True
     except Exception as e:
+      print(f"EXE: Exception {e}")
+      print(f"{traceback.format_exc()}")
       self.error = f"Failed to convert file {e}"
       return False
 

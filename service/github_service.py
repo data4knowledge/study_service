@@ -25,9 +25,9 @@ class GithubService():
         with open(file, 'r') as f:
           data = f.read()
         name = os.path.basename(file)
-        filename = f'uploads/{uuid}/{name}'
+        filename = os.path.join(dir, name)
         self.repo.create_file(filename, 'Study service excel import', data, branch=self.branch_name)
-        result.append(filename)
+        result.append(name)
       return result
     except Exception as e:
       print(f"GIT: Upload exception {e}")

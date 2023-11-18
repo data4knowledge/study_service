@@ -4,7 +4,7 @@ import glob
 import traceback
 from stringcase import snakecase 
 
-class FileNodesAndEdges():
+class StudyFileNodesAndEdges():
 
   def __init__(self, dir, data):
     self.nodes = {}
