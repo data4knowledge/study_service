@@ -1,18 +1,6 @@
-from pydantic import BaseModel
-from model.node import Node
-from typing import Union
-from uuid import UUID
+from .node import *
+from .organization import Organization
 
-from .organisation import Organisation
-
-class StudyIdentifierIn(BaseModel):
-  identifier: str
-  name: str=""
-  scheme: str=""
-  scheme_identifier: str=""
-
-class StudyIdentifier(Node):
-  uuid: Union[UUID, None]
+class StudyIdentifier(NodeId):
   studyIdentifier: str
-  studyIdentifierScope: Union[UUID, Organisation, None] = None
-
+  studyIdentifierScope: Organization

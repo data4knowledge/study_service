@@ -4,56 +4,7 @@ from .node import NodeNameLabelDesc
 from .neo4j_connection import Neo4jConnection
 
 class Study(NodeNameLabelDesc):
-
-  @classmethod
-  def list(cls, page=0, size=0, filter=""):
-    ra = {}
-    db = Neo4jConnection()
-    with db.session() as session:
-      results = []
-      skip_offset_clause = ""
-      if page != 0:
-        offset = (page - 1) * size
-        skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
-      if filter == "":
-        query = """
-          MATCH (n:Study) RETURN n ORDER BY n.name DESC %s
-        """ % (skip_offset_clause)
-      else:
-        parent_filter_clause = cls.build_filter_clause(filter, cls.parent_properties())
-        query = """
-          MATCH(n:Study) %s RETURN n
-          }
-        """ % (parent_filter_clause, skip_offset_clause)
-      query_results = session.run(query)
-      for query_result in query_results:
-        rel = dict(query_result['n'])
-        results.append(rel)
-      return results
-
-  @classmethod
-  def full_count(cls):
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (n:Study) RETURN COUNT(n) as count 
-      """
-      query_results = session.run(query)
-      for result in query_results:
-        return result['count']
-      return 0
-
-  @classmethod
-  def filter_count(cls, filter):
-    db = Neo4jConnection()
-    with db.session() as session:
-      parent_filter_clause = cls.build_filter_clause(filter, cls.parent_properties())
-      query = """
-          MATCH(n:Study) %s RETURN n
-      """ % (parent_filter_clause)
-      #print(query)
-      query_results = session.run(query)
-      return len(query_results.data())
+  pass
 
   # @classmethod
   # def delete(cls, uuid):
@@ -112,21 +63,3 @@ class Study(NodeNameLabelDesc):
   #   for row in result:
   #     results.append(row['uuid'])
   #   return results
-
-class StudyList(BaseModel):
-  items: List[Study]
-  page: int
-  size: int
-  filter: str
-  count: int
-
-  @classmethod
-  def list(cls, page, size, filter):
-    if filter == "":
-      count = Study.full_count()
-    else:
-      count = Study.filter_count(filter)
-    results = {'items': [], 'page': page, 'size': size, 'filter': filter, 'count': count }
-    results['items'] = Study.list(page, size, filter)
-    return results
-

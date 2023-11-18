@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException, status, Response, Request, BackgroundTasks
-from uuid import UUID
 from model.system import SystemOut
 from model.study_file import StudyFile
-from model.study import Study, StudyList
+from model.study import Study
+from model.study_version import StudyVersion
 from model.neo4j_connection import Neo4jConnection
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
@@ -81,9 +81,16 @@ async def get_study_file_status(uuid: str):
   summary="List of studies",
   description="Provide a list of all studies.",
   status_code=200,
-  response_model=StudyList)
+  response_model=dict)
 async def list_studies(page: int = 0, size: int = 0, filter: str=""):
-  return StudyList.list(page, size, filter)
+  return Study.list(page, size, filter)
+
+@app.get("/v1/studies/{uuid}/studyVersions", 
+  summary="Get the study versions for a study",
+  description="Provides a list of study versions that exisit for a specified study.",
+  response_model=dict)
+async def list_study_versions(page: int = 0, size: int = 0, filter: str=""):
+  return StudyVersion.list(page, size, filter)
 
 # @app.post("/v1/studies", 
 #   summary="Create a new study",
