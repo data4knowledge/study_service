@@ -3,6 +3,7 @@ from uuid import UUID
 from model.system import SystemOut
 from model.study_file import StudyFile
 from model.study import Study, StudyList
+from model.neo4j_connection import Neo4jConnection
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
 # from model.study_domain_instance import StudyDomainInstance
@@ -40,8 +41,13 @@ app = FastAPI(
 async def read_root():
   return SystemOut(**{ 'system_name': SYSTEM_NAME, 'version': VERSION, 'environment': ServiceEnvironment().environment() })
 
-# Study Files
-# ===========
+@app.delete("/v1/clean", 
+  summary="Delete database",
+  description="Deletes the entire database.",
+  status_code=204)
+async def delete_clean():
+  db = Neo4jConnection()
+  db.clear()
 
 @app.post('/v1/studyFiles', 
   summary="Load a study",
