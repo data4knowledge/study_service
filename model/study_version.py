@@ -38,7 +38,22 @@ class StudyVersion(NodeId):
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:Study {uuid: '%s'})-[]->(n:StudyVersion)" % (uuid), "ORDER BY n.studyTitle ASC", page, size, filter)
 
-#   @classmethod
+  def study_designs(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(self._study_designs, self.uuid)
+
+  @staticmethod
+  def _study_designs(tx, uuid):
+    results = []
+    query = "MATCH (s:StudyVersion {uuid: $uuid})-[:STUDY_DESIGNS]->(sd:StudyDesign) RETURN sd"
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      print(f"ROW: {row}")
+      results.append(StudyDesign.wrap(row['sd']))
+    return results
+
+  #   @classmethod
 #   def exists(cls, identifier):
 #     db = Neo4jConnection()
 #     with db.session() as session:
@@ -51,10 +66,6 @@ class StudyVersion(NodeId):
 #     with db.session() as session:
 #       session.execute_write(cls._delete_study, uuid)
 
-#   def study_designs(self):
-#     db = Neo4jConnection()
-#     with db.session() as session:
-#       return session.execute_read(self._study_designs, self.uuid)
 
 #   def study_parameters(self):
 #     db = Neo4jConnection()
@@ -184,17 +195,6 @@ class StudyVersion(NodeId):
 #     #         for row in result:
 #     #             print("Found person: {row}".format(row=row))
 
-#   @staticmethod
-#   def _study_designs(tx, uuid):
-#     results = []
-#     query = (
-#       "MATCH (s:Study {uuid: $uuid})-[:STUDY_DESIGN]->(sd:StudyDesign)"
-#       "RETURN sd"
-#     )
-#     result = tx.run(query, uuid=uuid)
-#     for row in result:
-#       results.append(StudyDesign.wrap(row['sd']))
-#     return results
 
 #   @staticmethod
 #   def _study_parameters(tx, uuid):

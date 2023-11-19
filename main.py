@@ -3,6 +3,7 @@ from model.system import SystemOut
 from model.study_file import StudyFile
 from model.study import Study
 from model.study_version import StudyVersion
+from model.study_design import StudyDesign
 from model.neo4j_connection import Neo4jConnection
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
@@ -12,8 +13,6 @@ from model.neo4j_connection import Neo4jConnection
 # from model.study_arm import StudyArm, StudyArmIn
 # from model.study_data import StudyData, StudyDataIn
 # from model.encounter import Encounter, EncounterIn, EncounterLink
-# from model.workflow import Workflow, WorkflowIn
-# from model.workflow_item import WorkflowItem, WorkflowItemIn
 from utility.service_environment import ServiceEnvironment
 # from typing import List
 import logging
@@ -94,6 +93,17 @@ async def list_study_versions(request: Request, page: int = 0, size: int = 0, fi
   uuid = request.path_params['uuid']
   #print(f"SV: '{uuid}' '{page}', '{size}' '{filter}'")
   return StudyVersion.list(uuid, page, size, filter)
+
+@app.get("/v1/studyVersions/{uuid}/studyDesigns", 
+  summary="Get the study design",
+  description="Provides the basic data for the study design for a study version (currently limited to one desing only).",
+  response_model=list[dict])
+async def get_study_design(uuid: str):
+  item = StudyVersion.find(uuid)
+  if item:
+    return item.study_designs()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
 
 # @app.post("/v1/studies", 
 #   summary="Create a new study",
