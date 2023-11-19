@@ -14,12 +14,13 @@ class StudyDesignSOA():
 
       # Epochs and Visits
       query = """
-        MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(v:Encounter)-[r:NEXT_ENCOUNTER *0..]->()
+        MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(v:Encounter)-[r:NEXT *0..]->()
         WITH v ORDER BY LENGTH(path) DESC
-        MATCH (e:StudyEpoch)-[]->(v)
-        WITH e.studyEpochName as epoch,v.encounterName as visit 
+        MATCH (e:StudyEpoch)<-[]-(sai:ScheduledActivityInstance)-[]->(v)
+        WITH e.name as epoch,v.name as visit 
         RETURN DISTINCT epoch, visit
       """ % (uuid)
+      print(f"SOA1: {query}")
       result = session.run(query)
       for record in result:
         if not record["epoch"] in epoch_visits:
@@ -28,12 +29,13 @@ class StudyDesignSOA():
         epoch_visits[record["epoch"]].append(record["visit"])
         visits[record["visit"]] = record["epoch"]
         visit_row[record["visit"]] = ""
+      print(f"SOA2: {epoch_visits} {visits} {visit_row}")
 
       # Visit Rules
-      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)
-          -[]->(v:Encounter)
+      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)<-[]-(sai:ScheduledActivityInstance)-[]->(v:Encounter)
           WITH v 
-          RETURN v.encounterName as visit""" % (uuid)
+          RETURN v.name as visit""" % (uuid)
+      print(f"SOA3: {query}")
       result = session.run(query)
       for visit in visits.keys():
           visit_rule[visit] = ""
@@ -42,29 +44,35 @@ class StudyDesignSOA():
           #    visit_rule[record["visit"]] = "%s" % (record["start_rule"])
           #else:
         visit_rule[record["visit"]] =  "not set" #"%s to %s" % (record["start_rule"], record["end_rule"])
+      print(f"SOA4: {visit_rule}")
 
       # Activities
-      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)
-          -[]->(v:Encounter)<-[]-(wfi:WorkflowItem)-[]->(a:Activity) 
-          WITH a.activityName as activity, v.encounterName as visit
+      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)<-[]-(sai:ScheduledActivityInstance)
+          WITH sai
+          MATCH (v:Encounter)<-[]-(sai)-[]->(a:Activity) 
+          WITH a.name as activity, v.name as visit
           RETURN DISTINCT activity, visit""" % (uuid)
+      print(f"SOA5: {query}")
       result = session.run(query)
       activities = {}
       for record in result:
         if not record["activity"] in activities:
           activities[record["activity"]] = visit_row.copy()
         activities[record["activity"]][record["visit"]] = "X" 
+      print(f"SOA6: {activities}")
       
       # Activity Order
       activity_order = []
       query = """
-        MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(a:Activity)-[r:NEXT_ACTIVITY *0..]->()
+        MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(a:Activity)-[r:NEXT *0..]->()
         WITH a ORDER BY LENGTH(path) DESC
-        RETURN DISTINCT a.activityName as name, a.uuid as uuid
+        RETURN DISTINCT a.name as name, a.uuid as uuid
       """  % (uuid)
+      print(f"SOA7: {query}")
       result = session.run(query)
       for record in result:
         activity_order.append({ 'name': record["name"], 'uuid': record['uuid'] })
+      print(f"SOA8: {activity_order}")
 
       # Return the results
       results = []
