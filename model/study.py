@@ -4,7 +4,10 @@ from .node import NodeNameLabelDesc
 from .neo4j_connection import Neo4jConnection
 
 class Study(NodeNameLabelDesc):
-  pass
+  
+  @classmethod
+  def list(cls, page, size, filter):
+    return cls.base_list("MATCH (n:Study)", "ORDER BY n.name ASC", page, size, filter)
 
   # @classmethod
   # def delete(cls, uuid):

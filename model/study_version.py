@@ -34,6 +34,10 @@ class StudyVersion(NodeId):
   def parent_properties(cls):
     return ["n.studyTitle", "n.studyVersion", "n.studyRationale", "n.studyAcronym"]
 
+  @classmethod
+  def list(cls, uuid, page, size, filter):
+    return cls.base_list("MATCH (m:Study {uuid: '%s'})-[]->(n:StudyVersion)" % (uuid), "ORDER BY n.studyTitle ASC", page, size, filter)
+
 #   @classmethod
 #   def exists(cls, identifier):
 #     db = Neo4jConnection()
@@ -250,17 +254,17 @@ class StudyVersion(NodeId):
 #       return row['uuid']
 #     return None
 
-  @staticmethod
-  def _list(tx):
-    results = []
-    query = (
-      "MATCH (s:Study)"
-      "RETURN s.uuid as uuid"
-    )
-    result = tx.run(query)
-    for row in result:
-      results.append(row['uuid'])
-    return results
+  # @staticmethod
+  # def _list(tx):
+  #   results = []
+  #   query = (
+  #     "MATCH (s:Study)"
+  #     "RETURN s.uuid as uuid"
+  #   )
+  #   result = tx.run(query)
+  #   for row in result:
+  #     results.append(row['uuid'])
+  #   return results
 
   # @staticmethod
   # def _find_study(tx, the_uuid):

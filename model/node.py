@@ -42,16 +42,20 @@ class Node(BaseModel):
 
   @classmethod
   def list(cls, page, size, filter):
+    return cls.base_list(cls, f"MATCH (n:{cls.__name__})", "ORDER BY n.name ASC", page, size, filter)
+
+  @classmethod
+  def base_list(cls, base_query, order_clause, page, size, filter):
     if filter == "":
-      count = cls.full_count()
+      count = cls.full_count(base_query)
     else:
-      count = cls.filter_count(filter)
+      count = cls.filter_count(base_query, filter)
     results = {'items': [], 'page': page, 'size': size, 'filter': filter, 'count': count }
-    results['items'] = cls.list_items(page, size, filter)
+    results['items'] = cls.base_list_items(base_query, order_clause, page, size, filter)
     return results
 
   @classmethod
-  def list_items(cls, page=0, size=0, filter=""):
+  def base_list_items(cls, base_query, order_clause, page=0, size=0, filter=""):
     ra = {}
     db = Neo4jConnection()
     with db.session() as session:
@@ -62,14 +66,15 @@ class Node(BaseModel):
         skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
       if filter == "":
         query = """
-          MATCH (n:%s) RETURN n ORDER BY n.name DESC %s
-        """ % (cls.__name__, skip_offset_clause)
+          %s RETURN n %s %s
+        """ % (base_query, order_clause, skip_offset_clause)
       else:
         parent_filter_clause = cls.build_filter_clause(filter, cls.parent_properties())
         query = """
-          MATCH(n:%s) %s RETURN n
+          %s %s RETURN n %s %s
           }
-        """ % (cls.__name__, parent_filter_clause, skip_offset_clause)
+        """ % (base_query, parent_filter_clause, order_clause, skip_offset_clause)
+      print(f"LIST: {query}")
       query_results = session.run(query)
       for query_result in query_results:
         rel = dict(query_result['n'])
@@ -77,26 +82,27 @@ class Node(BaseModel):
       return results
 
   @classmethod
-  def full_count(cls):
+  def full_count(cls, base_query):
     db = Neo4jConnection()
     with db.session() as session:
       query = """
-        MATCH (n:%s) RETURN COUNT(n) as count 
-      """ % (cls.__name__)
+        %s RETURN COUNT(n) as count 
+      """ % (base_query)
+      print(f"FULL COUNT: {query}")
       query_results = session.run(query)
       for result in query_results:
         return result['count']
       return 0
 
   @classmethod
-  def filter_count(cls, filter):
+  def filter_count(cls, base_query, filter):
     db = Neo4jConnection()
     with db.session() as session:
       parent_filter_clause = cls.build_filter_clause(filter, cls.parent_properties())
       query = """
-          MATCH(n:%s) %s RETURN n
-      """ % (cls.__name__, parent_filter_clause)
-      #print(query)
+          %s %s RETURN n
+      """ % (base_query, parent_filter_clause)
+      print(f"FILTER COUNT: {query}")
       query_results = session.run(query)
       return len(query_results.data())
 

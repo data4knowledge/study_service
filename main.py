@@ -90,8 +90,10 @@ async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   summary="Get the study versions for a study",
   description="Provides a list of study versions that exisit for a specified study.",
   response_model=dict)
-async def list_study_versions(page: int = 0, size: int = 0, filter: str=""):
-  return StudyVersion.list(page, size, filter)
+async def list_study_versions(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  #print(f"SV: '{uuid}' '{page}', '{size}' '{filter}'")
+  return StudyVersion.list(uuid, page, size, filter)
 
 # @app.post("/v1/studies", 
 #   summary="Create a new study",
