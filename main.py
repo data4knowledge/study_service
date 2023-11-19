@@ -105,6 +105,31 @@ async def get_study_design(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 
+# Study Designs
+# =============
+
+@app.get("/v1/studyDesigns/{uuid}", 
+  summary="Get the study design",
+  description="Provides the details for a given study design.",
+  response_model=dict)
+async def get_study_design_soa(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
+@app.get("/v1/studyDesigns/{uuid}/soa", 
+  summary="Get the SoA for a study design",
+  description="Provides the Schedule of Activities for a given study design.",
+  response_model=list)
+async def get_study_design_soa(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design.soa()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
 # @app.post("/v1/studies", 
 #   summary="Create a new study",
 #   description="Creates a study. If succesful the uuid of the created resource is returned.",
@@ -192,8 +217,6 @@ async def get_study_design(uuid: str):
 #   else:
 #     return study.add_ct_dot_gov_identifier(params.identifier)
 
-# # Study Designs
-# # =============
 
 # @app.get("/v1/studyDesigns/{uuid}/workflows", 
 #   summary="Get the workflows for a study design",
@@ -205,17 +228,6 @@ async def get_study_design(uuid: str):
 #     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 #   else:
 #     return study_design.workflows()
-
-# @app.get("/v1/studyDesigns/{uuid}/soa", 
-#   summary="Get the SoA for a study design",
-#   description="Provides the Schedule of Activities for a given study design.",
-#   response_model=list)
-# async def get_study_design_soa(uuid: str):
-#   study_design = StudyDesign.find(uuid)
-#   if study_design == None:
-#     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
-#   else:
-#     return study_design.soa()
 
 # @app.get("/v1/studyDesigns/{uuid}/dataContract", 
 #   summary="Get the data contract for a study design",

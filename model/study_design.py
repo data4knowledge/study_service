@@ -44,6 +44,9 @@ class StudyDesign(NodeNameLabelDesc):
   # studyEligibilityCritieria: List[EligibilityCriteria] = []    
   # dictionaries: List[SyntaxTemplateDictionary] = []
 
+  def soa(self):
+    return StudyDesignSOA.read(self.uuid)
+
 #   def arms(self):
 #     db = Neo4jConnection()
 #     with db.session() as session:
@@ -59,8 +62,6 @@ class StudyDesign(NodeNameLabelDesc):
 #     with db.session() as session:
 #       return session.execute_read(self._workflows, self.uuid)
 
-#   def soa(self):
-#     return StudyDesignSOA.read(self.uuid)
 
 #   def data_contract(self, page, size, filter):
 #     return StudyDesignDataContract.read(self.uuid, page, size, filter)
