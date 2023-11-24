@@ -18,8 +18,8 @@ from .study_protocol_document_version import StudyProtocolDocumentVersion
 
 class StudyVersion(NodeId):
   studyTitle: str
-  studyVersion: str
-  studyRationale: str
+  versionIdentifier: str
+  rationale: str
   studyAcronym: str
   type: Union[Code, None] = None
   studyPhase: Union[AliasCode, None] = None
