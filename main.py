@@ -69,13 +69,13 @@ async def create_study_file(request: Request, background_tasks: BackgroundTasks)
 @app.get("/v1/studyFiles/{uuid}/status", 
   summary="Get study file status",
   description="Get the status of the processing for a given study file",
-  response_model=str)
+  response_model=dict)
 async def get_study_file_status(uuid: str):
   sf = StudyFile.find(uuid)
   if sf:
-    return sf.status
+    return sf.get_status()
   else:
-    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+    raise HTTPException(status_code=404, detail="The requested study file cannot be found")
 
 @app.get("/v1/studies", 
   summary="List of studies",

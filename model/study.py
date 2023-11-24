@@ -1,7 +1,5 @@
-from pydantic import BaseModel
-from typing import List, Union
 from .node import NodeNameLabelDesc
-from .neo4j_connection import Neo4jConnection
+#from .neo4j_connection import Neo4jConnection
 
 class Study(NodeNameLabelDesc):
   

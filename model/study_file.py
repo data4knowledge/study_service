@@ -29,6 +29,7 @@ class StudyFile(Node):
     self.full_path = os.path.join("uploads", self.uuid, f"{self.uuid}.xlsx")
     db = Neo4jConnection()
     with db.session() as session:
+      self.set_status("commencing", "Uploading file", 0)
       try:
         os.mkdir(self.dir_path)
       except Exception as e:
@@ -51,40 +52,38 @@ class StudyFile(Node):
             self._log(e, f"{traceback.format_exc()}")
             return False
           else:
-            self.set_status("Loaded")
+            self.set_status("initialised", "Uploaded file", 0)
             return True
-
-  def set_status(self, status):
-    self.status = status
-    logging.info(f"Study load, status: {status}")
-    #print(f"Study load, status: {status}")
-    db = Neo4jConnection()
-    with db.session() as session:
-      session.execute_write(self._set_status, self.uuid, status)
 
   def execute(self):
     try:
 
-      self.set_status("processing excel file")
+      self.set_status("running", "Processing excel file", 0)
       excel = USDMExcel(self.full_path)
       nodes_and_edges = excel.to_neo4j_dict()
       filename = os.path.join("uploads", self.uuid, f"{self.uuid}.yaml")
       with open(f"{filename}", 'w') as f:
         f.write(yaml.dump(nodes_and_edges))
 
-      self.set_status("processing nodes")
+      self.set_status("running", "Converting data to database format", 10)
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
       ne.dump()
 
-      self.set_status("uploading to github")
+      self.set_status("running", "Uploading to github", 15)
       github = GithubService()
-      file_list = github.upload_dir(self.uuid, self.dir_path, '*.csv')
+      total = github.upload_dir(self.uuid, self.dir_path, '*.csv')
+      while github.next():
+        count = github.progress()
+        percent = 15 + int(65.0 * (float(count) / float(total)))
+        self.set_status("running", "Uploading to github", percent)
+      github.check_all_visible()
+      file_list = github.upload_file_list()
 
-      self.set_status("loading database")
+      self.set_status("running", "Loading database", 80)
       aura = AuraService()
       aura.load(self.uuid, self.dir_path, file_list)
 
-      self.set_status("completed")
+      self.set_status("complete", "Finsihed", 100)
       return True
 
     except Exception as e:
@@ -92,6 +91,24 @@ class StudyFile(Node):
       self._log(e, f"{traceback.format_exc()}")
       return False
 
+  def set_status(self, status, stage, percentage):
+    self.status = status
+    logging.info(f"Study load, status: {status}")
+    #print(f"Study load, status: {status}")
+    db = Neo4jConnection()
+    with db.session() as session:
+      session.execute_write(self._set_status, self.uuid, status, stage, percentage)
+
+  def get_status(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = "MATCH (n:StudyFile {uuid: '%s'}) RETURN n.status as status, n.percentage as percent, n.stage as stage" % (self.uuid)
+      result = session.run(query)
+      for record in result:
+        print(f"RECORD: {record}")
+        return {'status': record['status'], 'percentage': record['percent'], 'stage': record['stage'] }
+    return ""
+    
   def _log(self, e, trace):
     logging.error(self.error)
     logging.error(f"Exception {e}\n{trace}")
@@ -126,13 +143,13 @@ class StudyFile(Node):
   #   return None
 
   @staticmethod
-  def _set_status(tx, uuid, status):
+  def _set_status(tx, uuid, status, stage, percentage):
     query = """
       MATCH (sf:StudyFile {uuid: $uuid})
-      SET sf.status = $status
+      SET sf.status = $status, sf.stage = $stage, sf.percentage = $percentage
       RETURN sf
     """
-    results = tx.run(query, uuid=uuid, status=status)
+    results = tx.run(query, uuid=uuid, status=status, stage=stage, percentage=percentage)
     for row in results:
       return StudyFile.wrap(row['sf'])
     return None
