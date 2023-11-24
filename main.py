@@ -91,7 +91,6 @@ async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   response_model=dict)
 async def list_study_versions(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
-  #print(f"SV: '{uuid}' '{page}', '{size}' '{filter}'")
   return StudyVersion.list(uuid, page, size, filter)
 
 @app.get("/v1/studyVersions/{uuid}/studyDesigns", 

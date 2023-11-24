@@ -18,7 +18,7 @@ class StudyDesignDataContract():
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(wf:Workflow)-[]->(wfi:WorkflowItem)-[]->(bc:StudyBCInstance)-[]->(i:StudyBCItem)-[]->(dt:StudyBCDataType) WHERE i.collect=True
         RETURN COUNT(dt) as count
       """ % (uuid)
-      print(f"QUERY 1: {query}")
+      #print(f"QUERY 1: {query}")
       result = session.run(query)
       count = 0
       for record in result:
@@ -29,7 +29,7 @@ class StudyDesignDataContract():
         MATCH (a:Activity)<-[]-(wfi)-[]->(v:Encounter), (wfi)-[]->(bc:StudyBCInstance)-[]->(i:StudyBCItem)-[]->(dt:StudyBCDataType)-[:HAS_STUDY_BC_DATA_TYPE_PROPERTY *1..]->(dtp:StudyBCDataTypeProperty) WHERE i.collect=True AND dtp.collect=true
         WITH a.activityName as activity, v.encounterName as visit, bc.name as bc_name, bc.reference_uri as bc_uri, i.name as item, dt.name as data_type, dtp.name as property, dtp.uri as data_uri 
         RETURN DISTINCT activity, visit, bc_name, bc_uri, data_uri, item, data_type, property ORDER BY visit, activity, bc_name, item %s""" % (uuid, skip_offset_clause)
-      print(f"QUERY 2: {query}")
+      #print(f"QUERY 2: {query}")
       result = session.run(query)
       results = []
       for record in result:

@@ -105,7 +105,7 @@ class StudyFile(Node):
       query = "MATCH (n:StudyFile {uuid: '%s'}) RETURN n.status as status, n.percentage as percent, n.stage as stage" % (self.uuid)
       result = session.run(query)
       for record in result:
-        print(f"RECORD: {record}")
+        #print(f"RECORD: {record}")
         return {'status': record['status'], 'percentage': record['percent'], 'stage': record['stage'] }
     return ""
     
