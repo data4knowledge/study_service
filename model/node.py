@@ -74,7 +74,7 @@ class Node(BaseModel):
           %s %s RETURN n %s %s
           }
         """ % (base_query, parent_filter_clause, order_clause, skip_offset_clause)
-      print(f"LIST: {query}")
+      #print(f"LIST: {query}")
       query_results = session.run(query)
       for query_result in query_results:
         rel = dict(query_result['n'])
@@ -88,7 +88,7 @@ class Node(BaseModel):
       query = """
         %s RETURN COUNT(n) as count 
       """ % (base_query)
-      print(f"FULL COUNT: {query}")
+      #print(f"FULL COUNT: {query}")
       query_results = session.run(query)
       for result in query_results:
         return result['count']
@@ -102,7 +102,7 @@ class Node(BaseModel):
       query = """
           %s %s RETURN n
       """ % (base_query, parent_filter_clause)
-      print(f"FILTER COUNT: {query}")
+      #print(f"FILTER COUNT: {query}")
       query_results = session.run(query)
       return len(query_results.data())
 
