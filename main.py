@@ -96,7 +96,7 @@ async def list_study_versions(request: Request, page: int = 0, size: int = 0, fi
 @app.get("/v1/studyVersions/{uuid}/studyDesigns", 
   summary="Get the study design",
   description="Provides the basic data for the study design for a study version (currently limited to one desing only).",
-  response_model=list[dict])
+  response_model=list[StudyDesign])
 async def get_study_design(uuid: str):
   item = StudyVersion.find(uuid)
   if item:
@@ -110,7 +110,7 @@ async def get_study_design(uuid: str):
 @app.get("/v1/studyDesigns/{uuid}", 
   summary="Get the study design",
   description="Provides the details for a given study design.",
-  response_model=dict)
+  response_model=StudyDesign)
 async def get_study_design_soa(uuid: str):
   study_design = StudyDesign.find(uuid)
   if study_design:

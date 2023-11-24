@@ -6,6 +6,7 @@ requests
 uvicorn
 neo4j
 pandas
-usdm==0.38
+usdm==0.39
 python-multipart
 pygithub
+stringcase
