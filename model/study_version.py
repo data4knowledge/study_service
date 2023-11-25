@@ -46,7 +46,7 @@ class StudyVersion(NodeId):
   @staticmethod
   def _study_designs(tx, uuid):
     results = []
-    query = "MATCH (s:StudyVersion {uuid: $uuid})-[:STUDY_DESIGNS]->(sd:StudyDesign) RETURN sd"
+    query = "MATCH (s:StudyVersion {uuid: $uuid})-[]->(sd:StudyDesign) RETURN sd"
     result = tx.run(query, uuid=uuid)
     for row in result:
       print(f"ROW: {row}")
