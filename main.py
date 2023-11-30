@@ -93,19 +93,16 @@ async def list_study_versions(request: Request, page: int = 0, size: int = 0, fi
   uuid = request.path_params['uuid']
   return StudyVersion.list(uuid, page, size, filter)
 
-@app.get("/v1/studyVersions/{uuid}/studyDesigns", 
-  summary="Get the study design",
-  description="Provides the basic data for the study design for a study version (currently limited to one desing only).",
-  response_model=list[StudyDesign])
-async def get_study_design(uuid: str):
-  item = StudyVersion.find(uuid)
-  if item:
-    return item.study_designs()
-  else:
-    raise HTTPException(status_code=404, detail="The requested study cannot be found")
-
 # Study Designs
 # =============
+
+@app.get("/v1/studyVersions/{uuid}/studyDesigns", 
+  summary="Get the study designs for a study version",
+  description="Provides the basic data for the study designs for a study version (currently limited to one design only).",
+  response_model=dict)
+async def list_study_designs(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  return StudyDesign.list(uuid, page, size, filter)
 
 @app.get("/v1/studyDesigns/{uuid}", 
   summary="Get the study design",

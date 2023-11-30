@@ -38,20 +38,6 @@ class StudyVersion(NodeId):
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:Study {uuid: '%s'})-[]->(n:StudyVersion)" % (uuid), "ORDER BY n.studyTitle ASC", page, size, filter)
 
-  def study_designs(self):
-    db = Neo4jConnection()
-    with db.session() as session:
-      return session.execute_read(self._study_designs, self.uuid)
-
-  @staticmethod
-  def _study_designs(tx, uuid):
-    results = []
-    query = "MATCH (s:StudyVersion {uuid: $uuid})-[]->(sd:StudyDesign) RETURN sd"
-    result = tx.run(query, uuid=uuid)
-    for row in result:
-      print(f"ROW: {row}")
-      results.append(StudyDesign.wrap(row['sd']))
-    return results
 
   #   @classmethod
 #   def exists(cls, identifier):

@@ -44,6 +44,10 @@ class StudyDesign(NodeNameLabelDesc):
   # studyEligibilityCritieria: List[EligibilityCriteria] = []    
   # dictionaries: List[SyntaxTemplateDictionary] = []
 
+  @classmethod
+  def list(cls, uuid, page, size, filter):
+    return cls.base_list("MATCH (m:StudyVersion {uuid: '%s'})-[]->(n:StudyDesign)" % (uuid), "ORDER BY n.name ASC", page, size, filter)
+
   def soa(self):
     return StudyDesignSOA.read(self.uuid)
 
