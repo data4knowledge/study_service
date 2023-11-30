@@ -7,7 +7,7 @@ from .scheduled_instance import ScheduledActivityInstance, ScheduledDecisionInst
 class ScheduleTimeline(NodeNameLabelDesc):
   mainTimeline: bool
   entryCondition: str
-  entryId: str
+  entry: ScheduledActivityInstance = None
   exits: List[ScheduleTimelineExit] = []
   instances: List[Union[ScheduledActivityInstance, ScheduledDecisionInstance]] = []
 
@@ -24,12 +24,25 @@ class ScheduleTimeline(NodeNameLabelDesc):
       epoch_visits = {}
       epoch_count = 0
 
-      # Epochs and Visits
-      query = """
-        MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(v:Encounter)-[r:NEXT *0..]->()
+      # Encounter order
+      query = """MATCH path=(st:ScheduleTimeline {uuid: '%s'})<-[]-(sd:StudyDesign)-[]->(v:Encounter)-[r:NEXT *0..]->()
         WITH v ORDER BY LENGTH(path) DESC
-        MATCH (e:StudyEpoch)<-[]-(sai:ScheduledActivityInstance)-[]->(v)
-        WITH e.name as epoch,v.name as visit 
+        RETURN DISTINCT v.name as name, v.label as label, v.uuid as uuid
+      """ % (self.uuid)
+      print(f"EPOCH Q: {query}")
+      result = session.run(query)
+      visits_new = []
+      for record in result:
+        visits_new.append({'name': record['name'], 'label': record['label'], 'uuid': record['uuid']})
+      print(f"VISITS: {visits_new}")
+
+      # Epochs and Visits
+      # -[r:NEXT *0..]->()
+      query = """
+        MATCH (st:ScheduleTimeline {uuid: '%s'})-[]->(sai:ScheduledActivityInstance) 
+        WITH sai
+        MATCH (e:StudyEpoch)<-[]-(sai)-[]->(v:Encounter)
+        WITH e.label as epoch,v.label as visit 
         RETURN DISTINCT epoch, visit
       """ % (self.uuid)
       print(f"SOA1: {query}")
@@ -41,7 +54,7 @@ class ScheduleTimeline(NodeNameLabelDesc):
         epoch_visits[record["epoch"]].append(record["visit"])
         visits[record["visit"]] = record["epoch"]
         visit_row[record["visit"]] = ""
-      print(f"SOA2: {epoch_visits} {visits} {visit_row}")
+      print(f"EV: {epoch_visits}\nV: {visits}\nVR: {visit_row}")
 
       # Visit Rules
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)<-[]-(sai:ScheduledActivityInstance)-[]->(v:Encounter)
@@ -59,11 +72,11 @@ class ScheduleTimeline(NodeNameLabelDesc):
       print(f"SOA4: {visit_rule}")
 
       # Activities
-      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)<-[]-(sai:ScheduledActivityInstance)
-          WITH sai
-          MATCH (v:Encounter)<-[]-(sai)-[]->(a:Activity) 
-          WITH a.name as activity, v.name as visit
-          RETURN DISTINCT activity, visit""" % (self.uuid)
+      query = """MATCH (st:ScheduleTimeline {uuid: '%s'})-[]->(sai:ScheduledActivityInstance) 
+        WITH sai
+        MATCH (v:Encounter)<-[]-(sai)-[]->(a:Activity) 
+        WITH a.name as activity, v.name as visit
+        RETURN DISTINCT activity, visit""" % (self.uuid)
       print(f"SOA5: {query}")
       result = session.run(query)
       activities = {}
@@ -76,7 +89,7 @@ class ScheduleTimeline(NodeNameLabelDesc):
       # Activity Order
       activity_order = []
       query = """
-        MATCH path=(sd:StudyDesign {uuid: '%s'})-[]->(a:Activity)-[r:NEXT *0..]->()
+        MATCH path=(st:ScheduleTimeline {uuid: '%s'})<-[]-(sd:StudyDesign)-[]->(a:Activity)-[r:NEXT *0..]->()
         WITH a ORDER BY LENGTH(path) DESC
         RETURN DISTINCT a.name as name, a.uuid as uuid
       """  % (self.uuid)

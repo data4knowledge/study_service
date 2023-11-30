@@ -133,6 +133,17 @@ async def list_timelines(request: Request, page: int = 0, size: int = 0, filter:
   uuid = request.path_params['uuid']
   return ScheduleTimeline.list(uuid, page, size, filter)
 
+@app.get("/v1/timelines/{uuid}", 
+  summary="Get a timeline",
+  description="Provides the details for a given timeline.",
+  response_model=list)
+async def get_timeline_soa(uuid: str):
+  timeline = ScheduleTimeline.find(uuid)
+  if timeline:
+    return timeline
+  else:
+    raise HTTPException(status_code=404, detail="The requested timeline cannot be found")
+
 @app.get("/v1/timelines/{uuid}/soa", 
   summary="Get the SoA for a timeline",
   description="Provides the Schedule of Activities for a given timeline.",
