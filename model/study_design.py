@@ -16,6 +16,7 @@ from model.objective import Objective
 from model.estimand import Estimand
 from model.activity import Activity
 from model.encounter import Encounter
+from model.schedule_timeline import ScheduleTimeline
 from model.neo4j_connection import Neo4jConnection
 
 class StudyDesign(NodeNameLabelDesc):
@@ -39,7 +40,7 @@ class StudyDesign(NodeNameLabelDesc):
   studyInvestigationalInterventions: List[InvestigationalIntervention] = []
   studyObjectives: List[Objective] = []
   studyPopulations: List[StudyDesignPopulation] = []
-  # studyScheduleTimelines: List[ScheduleTimeline] = []
+  studyScheduleTimelines: List[ScheduleTimeline] = []
   # documentVersion: Union[StudyProtocolDocumentVersion, None] = None
   # studyEligibilityCritieria: List[EligibilityCriteria] = []    
   # dictionaries: List[SyntaxTemplateDictionary] = []

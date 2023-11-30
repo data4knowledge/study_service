@@ -5,6 +5,7 @@ from model.study import Study
 from model.study_version import StudyVersion
 from model.study_design import StudyDesign
 from model.neo4j_connection import Neo4jConnection
+from model.schedule_timeline import ScheduleTimeline
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
 # from model.study_domain_instance import StudyDomainInstance
@@ -114,6 +115,14 @@ async def get_study_design_soa(uuid: str):
     return study_design
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
+@app.get("/v1/studyDesigns/{uuid}/timelines", 
+  summary="Get the timelines for a study design",
+  description="Gets a list of timeliens for a study design.",
+  response_model=dict)
+async def list_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  return ScheduleTimeline.list(uuid, page, size, filter)
 
 @app.get("/v1/studyDesigns/{uuid}/soa", 
   summary="Get the SoA for a study design",
