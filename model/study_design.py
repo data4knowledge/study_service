@@ -4,7 +4,6 @@ from model.node import *
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_subject_data import StudyDesignSubjectData
 from model.study_design_sdtm import StudyDesignSDTM
-from model.study_design_soa import StudyDesignSOA
 from model.code import Code
 from model.study_cell import StudyCell
 from model.study_epoch import StudyEpoch
@@ -48,9 +47,6 @@ class StudyDesign(NodeNameLabelDesc):
   @classmethod
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:StudyVersion {uuid: '%s'})-[]->(n:StudyDesign)" % (uuid), "ORDER BY n.name ASC", page, size, filter)
-
-  def soa(self):
-    return StudyDesignSOA.read(self.uuid)
 
 #   def arms(self):
 #     db = Neo4jConnection()

@@ -78,6 +78,9 @@ async def get_study_file_status(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study file cannot be found")
 
+# Studies
+# =======
+
 @app.get("/v1/studies", 
   summary="List of studies",
   description="Provide a list of all studies.",
@@ -85,6 +88,9 @@ async def get_study_file_status(uuid: str):
   response_model=dict)
 async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   return Study.list(page, size, filter)
+
+# Study Versions
+# =============≠
 
 @app.get("/v1/studies/{uuid}/studyVersions", 
   summary="Get the study versions for a study",
@@ -116,6 +122,9 @@ async def get_study_design_soa(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
+# Timelines
+# =========
+
 @app.get("/v1/studyDesigns/{uuid}/timelines", 
   summary="Get the timelines for a study design",
   description="Gets a list of timeliens for a study design.",
@@ -124,14 +133,14 @@ async def list_timelines(request: Request, page: int = 0, size: int = 0, filter:
   uuid = request.path_params['uuid']
   return ScheduleTimeline.list(uuid, page, size, filter)
 
-@app.get("/v1/studyDesigns/{uuid}/soa", 
-  summary="Get the SoA for a study design",
-  description="Provides the Schedule of Activities for a given study design.",
+@app.get("/v1/timelines/{uuid}/soa", 
+  summary="Get the SoA for a timeline",
+  description="Provides the Schedule of Activities for a given timeline.",
   response_model=list)
-async def get_study_design_soa(uuid: str):
-  study_design = StudyDesign.find(uuid)
-  if study_design:
-    return study_design.soa()
+async def get_timeline_soa(uuid: str):
+  timeline = ScheduleTimeline.find(uuid)
+  if timeline:
+    return timeline.soa()
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
