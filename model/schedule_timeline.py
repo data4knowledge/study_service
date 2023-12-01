@@ -57,15 +57,15 @@ class ScheduleTimeline(NodeNameLabelDesc):
           'visit': {'name': record['visit_name'], 'label': record['visit_label'], 'window': record['window']}
         }
         ai.append(entry)
-      print(f"ACTIVITY INSTANCES: {ai}")
-      print("")
-      print("")
+      #print(f"ACTIVITY INSTANCES: {ai}")
+      #print("")
+      #print("")
       visit_row = {}
       for item in ai:
         visit_row[item['instance']['uuid']] = ''
-      print(f"VISIT ROW: {visit_row}")
-      print("")
-      print("")
+      #print(f"VISIT ROW: {visit_row}")
+      #print("")
+      #print("")
       
       # Activities
       query = """
