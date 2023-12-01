@@ -90,17 +90,17 @@ async def get_study_file_status(uuid: str):
 async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   return Study.list(page, size, filter)
 
-# @app.post("/v1/studies", 
-#   summary="Create a new study",
-#   description="Creates a study. If succesful the uuid of the created resource is returned.",
-#   status_code=201,
-#   response_model=str)
-# async def create_study(study: StudyIn):
-#   result = Study.create(study.identifier, study.title)
-#   if result == None:
-#     raise HTTPException(status_code=409, detail="Trying to create a duplicate study")
-#   else:
-#     return result
+@app.post("/v1/studies", 
+  summary="Create a new study",
+  description="Creates a study. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=dict)
+async def create_study(name: str, description: str="", label: str=""):
+  result = Study.create(name, description, label)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
 
 # @app.delete("/v1/studies/{uuid}", 
 #   summary="Delete a study",
