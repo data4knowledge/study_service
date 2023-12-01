@@ -42,29 +42,30 @@ class ScheduleTimeline(NodeNameLabelDesc):
         WITH sai1
         MATCH path=(sai1)-[:DEFAULT_CONDITION_REL *0..]->(sai)
         WITH sai ORDER BY LENGTH(path) ASC
-        MATCH (e:StudyEpoch)<-[]-(sai)-[]->(v:Encounter)
+        OPTIONAL MATCH (e:StudyEpoch)<-[]-(sai)
+        OPTIONAL MATCH (sai)-[]->(v:Encounter)
         OPTIONAL MATCH (v)-[]->(t:Timing)
         RETURN DISTINCT e.name as epoch_name, e.label as epoch_label, v.name as visit_name, v.label as visit_label, t.window as window, sai.uuid as uuid 
       """ % (self.uuid)
-      #print(f"ACTIVITY INSTANCES QUERY: {query}")
+      print(f"ACTIVITY INSTANCES QUERY: {query}")
       result = session.run(query)
       ai = []
-      for record in result:
+      for index, record in enumerate(result):
         entry = {
-          'uuid': record['uuid'], 
+          'instance': {'uuid': record['uuid'], 'name': f'SAI{index+1}', 'label': f'Instance {index+1}'},
           'epoch': {'name': record['epoch_name'], 'label': record['epoch_label']},
           'visit': {'name': record['visit_name'], 'label': record['visit_label'], 'window': record['window']}
         }
         ai.append(entry)
-      #print(f"ACTIVITY INSTANCES: {ai}")
-      #print("")
-      #print("")
+      print(f"ACTIVITY INSTANCES: {ai}")
+      print("")
+      print("")
       visit_row = {}
       for item in ai:
-        visit_row[item['uuid']] = ''
-      #print(f"VISIT ROW: {visit_row}")
-      #print("")
-      #print("")
+        visit_row[item['instance']['uuid']] = ''
+      print(f"VISIT ROW: {visit_row}")
+      print("")
+      print("")
       
       # Activities
       query = """
@@ -73,7 +74,7 @@ class ScheduleTimeline(NodeNameLabelDesc):
         RETURN sai.uuid as uuid, a.name as name, a.label as label
       """
       #print(f"ACTIVITIES QUERY: {query}")
-      instances = [item['uuid'] for item in ai]
+      instances = [item['instance']['uuid'] for item in ai]
       #print(f"INSTANCES: {instances}")
       result = session.run(query, instances=instances)
       activities = {}
@@ -86,9 +87,13 @@ class ScheduleTimeline(NodeNameLabelDesc):
       #print("")
       
       # Return the results
+      labels = []
+      for item in ai:
+        label = item['visit']['label'] if item['visit']['label'] else item['instance']['label']
+        labels.append(label)
       results = []
       results.append([""] + [item['epoch']['label'] for item in ai])
-      results.append([""] + [item['visit']['label'] for item in ai])
+      results.append([""] + labels)
       results.append([""] + [item['visit']['window'] for item in ai])
       for activity in activity_order:
         if activity['name'] in activities:
