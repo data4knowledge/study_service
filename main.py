@@ -94,11 +94,11 @@ async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   summary="Create a new study",
   description="Creates a study. If succesful the uuid of the created resource is returned.",
   status_code=201,
-  response_model=dict)
+  response_model=str)
 async def create_study(name: str, description: str="", label: str=""):
   result = Study.create(name, description, label)
   if not 'error' in result:
-    return result
+    return result['uuid']
   else:
     raise HTTPException(status_code=409, detail=result['error'])
 
