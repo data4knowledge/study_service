@@ -18,107 +18,81 @@ class ScheduleTimeline(NodeNameLabelDesc):
   def soa(self):
     db = Neo4jConnection()
     with db.session() as session:
-      visits = {}
-      visit_row = {}
-      visit_rule = {}
-      epoch_visits = {}
-
-      # Encounter order
-      query = """MATCH (st:ScheduleTimeline {uuid: '%s'})<-[]-(sd:StudyDesign)-[]->(v:Encounter)
-        WHERE NOT (v)-[:PREVIOUS_REL]->()
-        WITH v
-        MATCH path=(v)-[:NEXT_REL *0..]->(x)
-        RETURN DISTINCT x.name as name, x.label as label, x.uuid as uuid
-      """ % (self.uuid)
-      print(f"EPOCH Q: {query}")
-      result = session.run(query)
-      visits_order = []
-      for record in result:
-        visits_order.append({'name': record['name'], 'label': record['label'], 'uuid': record['uuid']})
-      print(f"VISIT ORDER: {visits_order}")
 
       # Activity order
-      query = """MATCH (st:ScheduleTimeline {uuid: '%s'})<-[]-(sd:StudyDesign)-[]->(v:Activity)
-        WHERE NOT (v)-[:PREVIOUS_REL]->()
-        WITH v
-        MATCH path=(v)-[:NEXT_REL *0..]->(x)
-        RETURN DISTINCT x.name as name, x.label as label, x.uuid as uuid
+      query = """MATCH (st:ScheduleTimeline {uuid: '%s'})<-[]-(sd:StudyDesign)-[]->(a1:Activity)
+        WHERE NOT (a1)-[:PREVIOUS_REL]->()
+        WITH a1 
+        MATCH path=(a1)-[:NEXT_REL *0..]->(a)
+        WITH a ORDER BY LENGTH(path) ASC
+        RETURN DISTINCT a.name as name, a.label as label, a.uuid as uuid
       """ % (self.uuid)
-      print(f"EPOCH Q: {query}")
+      #print(f"ACTIVITY Q: {query}")
       result = session.run(query)
       activity_order = []
       for record in result:
         activity_order.append({'name': record['name'], 'label': record['label'], 'uuid': record['uuid']})
-      print(f"ACTIVITY ORDER: {activity_order}")
+      #print(f"ACTIVITY ORDER: {activity_order}")
+      #print("")
+      #print("")
 
       # Epochs and Visits
       query = """
-        MATCH (st:ScheduleTimeline {uuid: '%s'})-[]->(sai:ScheduledActivityInstance) 
-        WITH sai
+        MATCH (st:ScheduleTimeline {uuid: '%s'})-[:ENTRY_REL]->(sai1:ScheduledActivityInstance)
+        WITH sai1
+        MATCH path=(sai1)-[:DEFAULT_CONDITION_REL *0..]->(sai)
+        WITH sai ORDER BY LENGTH(path) ASC
         MATCH (e:StudyEpoch)<-[]-(sai)-[]->(v:Encounter)
-        WITH e.name as epoch,v.name as visit 
-        RETURN DISTINCT epoch, visit
+        OPTIONAL MATCH (v)-[]->(t:Timing)
+        RETURN DISTINCT e.name as epoch_name, e.label as epoch_label, v.name as visit_name, v.label as visit_label, t.window as window, sai.uuid as uuid 
       """ % (self.uuid)
-      print(f"SOA1: {query}")
+      #print(f"ACTIVITY INSTANCES QUERY: {query}")
       result = session.run(query)
+      ai = []
       for record in result:
-        if not record["epoch"] in epoch_visits:
-          epoch_visits[record["epoch"]] = []    
-        epoch_visits[record["epoch"]].append(record["visit"])
-        visits[record["visit"]] = record["epoch"]
-        visit_row[record["visit"]] = ""
-      print(f"EV: {epoch_visits}\nV: {visits}\nVR: {visit_row}")
-
-      # Visit Rules
-      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[]->(sc:StudyCell)-[]->(e:StudyEpoch)<-[]-(sai:ScheduledActivityInstance)-[]->(v:Encounter)
-          WITH v 
-          RETURN v.name as visit""" % (self.uuid)
-      print(f"SOA3: {query}")
-      result = session.run(query)
-      for visit in visits.keys():
-          visit_rule[visit] = ""
-      for record in result:
-          #if record["start_rule"] == record["end_rule"]:
-          #    visit_rule[record["visit"]] = "%s" % (record["start_rule"])
-          #else:
-        visit_rule[record["visit"]] =  "not set" #"%s to %s" % (record["start_rule"], record["end_rule"])
-      print(f"SOA4: {visit_rule}")
-
+        entry = {
+          'uuid': record['uuid'], 
+          'epoch': {'name': record['epoch_name'], 'label': record['epoch_label']},
+          'visit': {'name': record['visit_name'], 'label': record['visit_label'], 'window': record['window']}
+        }
+        ai.append(entry)
+      #print(f"ACTIVITY INSTANCES: {ai}")
+      #print("")
+      #print("")
+      visit_row = {}
+      for item in ai:
+        visit_row[item['uuid']] = ''
+      #print(f"VISIT ROW: {visit_row}")
+      #print("")
+      #print("")
+      
       # Activities
-      query = """MATCH (st:ScheduleTimeline {uuid: '%s'})-[]->(sai:ScheduledActivityInstance) 
-        WITH sai
-        MATCH (v:Encounter)<-[]-(sai)-[]->(a:Activity) 
-        WITH a.name as activity, v.name as visit
-        RETURN DISTINCT activity, visit""" % (self.uuid)
-      print(f"SOA5: {query}")
-      result = session.run(query)
+      query = """
+        UNWIND $instances AS uuid
+          MATCH (sai:ScheduledActivityInstance {uuid: uuid})-[]->(a:Activity) 
+        RETURN sai.uuid as uuid, a.name as name, a.label as label
+      """
+      #print(f"ACTIVITIES QUERY: {query}")
+      instances = [item['uuid'] for item in ai]
+      #print(f"INSTANCES: {instances}")
+      result = session.run(query, instances=instances)
       activities = {}
       for record in result:
-        if not record["activity"] in activities:
-          activities[record["activity"]] = visit_row.copy()
-        activities[record["activity"]][record["visit"]] = "X" 
-      print(f"SOA6: {activities}")
+        if not record["name"] in activities:
+          activities[record["name"]] = visit_row.copy()
+        activities[record["name"]][record["uuid"]] = "X" 
+      #print(f"ACTIVITIES: {activities}")
+      #print("")
+      #print("")
       
-      # # Activity Order
-      # activity_order = []
-      # query = """
-      #   MATCH path=(st:ScheduleTimeline {uuid: '%s'})<-[]-(sd:StudyDesign)-[]->(a:Activity)-[r:NEXT *0..]->()
-      #   WITH a ORDER BY LENGTH(path) DESC
-      #   RETURN DISTINCT a.name as name, a.uuid as uuid
-      # """  % (self.uuid)
-      # print(f"SOA7: {query}")
-      # result = session.run(query)
-      # for record in result:
-      #   activity_order.append({ 'name': record["name"], 'uuid': record['uuid'] })
-      # print(f"SOA8: {activity_order}")
-
       # Return the results
       results = []
-      results.append([""] + list(visits.values()))
-      results.append([""] + list(visits.keys()))
-      results.append([""] + list(visit_rule.values()))
+      results.append([""] + [item['epoch']['label'] for item in ai])
+      results.append([""] + [item['visit']['label'] for item in ai])
+      results.append([""] + [item['visit']['window'] for item in ai])
       for activity in activity_order:
         if activity['name'] in activities:
           data = activities[activity['name']]
-          results.append([activity] + list(data.values()))
+          label = activity['label'] if activity['label'] else activity['name'] 
+          results.append([{'name': label, 'uuid': activity['uuid']}] + list(data.values()))
     return results
