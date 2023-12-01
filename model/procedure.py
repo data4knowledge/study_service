@@ -1,17 +1,11 @@
 from typing import Union
-from pydantic import BaseModel
+from .node import *
 from .code import Code
-from uuid import UUID
+#from .study_intervention import StudyIntervention
 
-class PreviousProcedure(BaseModel):
-  procedureName: str
-  procedureCode: Union[Code, UUID]
-
-class Procedure(BaseModel):
-  uuid: Union[UUID, None] = None
+class Procedure(NodeNameLabelDesc):
   procedureType: str
-  procedureCode: Union[Code, UUID]
-  
-  @classmethod
-  def scope_reuse(cls):
-    return True
+  code: Code
+  isConditional: bool
+  isConditionalReason: Union[str, None] = None
+  #studyInterventionId: Union[str, None] = None

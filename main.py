@@ -6,6 +6,7 @@ from model.study_version import StudyVersion
 from model.study_design import StudyDesign
 from model.neo4j_connection import Neo4jConnection
 from model.schedule_timeline import ScheduleTimeline
+from model.activity import Activity
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
 # from model.study_domain_instance import StudyDomainInstance
@@ -89,72 +90,6 @@ async def get_study_file_status(uuid: str):
 async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   return Study.list(page, size, filter)
 
-# Study Versions
-# =============≠
-
-@app.get("/v1/studies/{uuid}/studyVersions", 
-  summary="Get the study versions for a study",
-  description="Provides a list of study versions that exisit for a specified study.",
-  response_model=dict)
-async def list_study_versions(request: Request, page: int = 0, size: int = 0, filter: str=""):
-  uuid = request.path_params['uuid']
-  return StudyVersion.list(uuid, page, size, filter)
-
-# Study Designs
-# =============
-
-@app.get("/v1/studyVersions/{uuid}/studyDesigns", 
-  summary="Get the study designs for a study version",
-  description="Provides the basic data for the study designs for a study version (currently limited to one design only).",
-  response_model=dict)
-async def list_study_designs(request: Request, page: int = 0, size: int = 0, filter: str=""):
-  uuid = request.path_params['uuid']
-  return StudyDesign.list(uuid, page, size, filter)
-
-@app.get("/v1/studyDesigns/{uuid}", 
-  summary="Get the study design",
-  description="Provides the details for a given study design.",
-  response_model=StudyDesign)
-async def get_study_design_soa(uuid: str):
-  study_design = StudyDesign.find(uuid)
-  if study_design:
-    return study_design
-  else:
-    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
-
-# Timelines
-# =========
-
-@app.get("/v1/studyDesigns/{uuid}/timelines", 
-  summary="Get the timelines for a study design",
-  description="Gets a list of timeliens for a study design.",
-  response_model=dict)
-async def list_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
-  uuid = request.path_params['uuid']
-  return ScheduleTimeline.list(uuid, page, size, filter)
-
-@app.get("/v1/timelines/{uuid}", 
-  summary="Get a timeline",
-  description="Provides the details for a given timeline.",
-  response_model=list)
-async def get_timeline_soa(uuid: str):
-  timeline = ScheduleTimeline.find(uuid)
-  if timeline:
-    return timeline
-  else:
-    raise HTTPException(status_code=404, detail="The requested timeline cannot be found")
-
-@app.get("/v1/timelines/{uuid}/soa", 
-  summary="Get the SoA for a timeline",
-  description="Provides the Schedule of Activities for a given timeline.",
-  response_model=list)
-async def get_timeline_soa(uuid: str):
-  timeline = ScheduleTimeline.find(uuid)
-  if timeline:
-    return timeline.soa()
-  else:
-    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
-
 # @app.post("/v1/studies", 
 #   summary="Create a new study",
 #   description="Creates a study. If succesful the uuid of the created resource is returned.",
@@ -184,6 +119,17 @@ async def get_timeline_soa(uuid: str):
 #     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 #   else:
 #     return study
+
+# Study Versions
+# =============≠
+
+@app.get("/v1/studies/{uuid}/studyVersions", 
+  summary="Get the study versions for a study",
+  description="Provides a list of study versions that exisit for a specified study.",
+  response_model=dict)
+async def list_study_versions(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  return StudyVersion.list(uuid, page, size, filter)
 
 # @app.get("/v1/studies/{uuid}/studyDesigns", 
 #   summary="Get the study designs for a study",
@@ -242,17 +188,28 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return study.add_ct_dot_gov_identifier(params.identifier)
 
+# Study Designs
+# =============
 
-# @app.get("/v1/studyDesigns/{uuid}/workflows", 
-#   summary="Get the workflows for a study design",
-#   description="Provides a list of uuids for the workflows that exisit for a specified study.",
-#   response_model=List[Workflow])
-# async def get_study_design_epochs(uuid: str):
-#   study_design = StudyDesign.find(uuid)
-#   if study_design == None:
-#     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
-#   else:
-#     return study_design.workflows()
+@app.get("/v1/studyVersions/{uuid}/studyDesigns", 
+  summary="Get the study designs for a study version",
+  description="Provides the basic data for the study designs for a study version (currently limited to one design only).",
+  response_model=dict)
+async def list_study_designs(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  return StudyDesign.list(uuid, page, size, filter)
+
+@app.get("/v1/studyDesigns/{uuid}", 
+  summary="Get the study design",
+  description="Provides the details for a given study design.",
+  response_model=StudyDesign)
+async def get_study_design_soa(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
 
 # @app.get("/v1/studyDesigns/{uuid}/dataContract", 
 #   summary="Get the data contract for a study design",
@@ -287,17 +244,38 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return study_design.subject_data(page, size, filter)
 
-# @app.post("/v1/studyDesigns/{uuid}/workflows", 
-#   summary="Creates a new workflow within a study design",
-#   description="Creates an workflow withn a study design.",
-#   status_code=201,
-#   response_model=str)
-# async def create_workflow(uuid: str, wf: WorkflowIn):
-#   result = Encounter.create(uuid, wf.name, wf.description)
-#   if result == None:
-#     raise HTTPException(status_code=409, detail="Trying to create a duplicate workflow within the study")
-#   else:
-#     return result
+# Timelines
+# =========
+
+@app.get("/v1/studyDesigns/{uuid}/timelines", 
+  summary="Get the timelines for a study design",
+  description="Gets a list of timeliens for a study design.",
+  response_model=dict)
+async def list_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  return ScheduleTimeline.list(uuid, page, size, filter)
+
+@app.get("/v1/timelines/{uuid}", 
+  summary="Get a timeline",
+  description="Provides the details for a given timeline.",
+  response_model=list)
+async def get_timeline_soa(uuid: str):
+  timeline = ScheduleTimeline.find(uuid)
+  if timeline:
+    return timeline
+  else:
+    raise HTTPException(status_code=404, detail="The requested timeline cannot be found")
+
+@app.get("/v1/timelines/{uuid}/soa", 
+  summary="Get the SoA for a timeline",
+  description="Provides the Schedule of Activities for a given timeline.",
+  response_model=list)
+async def get_timeline_soa(uuid: str):
+  timeline = ScheduleTimeline.find(uuid)
+  if timeline:
+    return timeline.soa()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
 # # Arms
 # # ====
@@ -390,9 +368,6 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return epoch.add_encounter(encounter.uuid)
 
-# # Encounters
-# # ==========
-
 # @app.get("/v1/encounters/{uuid}", 
 #   summary="Returns an encounter",
 #   description="Returns the details about an encounter.",
@@ -404,8 +379,8 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return activity
 
-# # Activities
-# # ==========
+# Activities
+# ==========
 
 # @app.post("/v1/studyDesigns/{uuid}/activities", 
 #   summary="Create a new activity within a study",
@@ -419,16 +394,16 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return result
 
-# @app.get("/v1/activities/{uuid}", 
-#   summary="Returns an activity",
-#   description="Returns the details about an activity.",
-#   response_model=Activity)
-# async def find_activity(uuid: str):
-#   activity = Activity.find(uuid)
-#   if activity == None:
-#     raise HTTPException(status_code=404, detail="The requested activity cannot be found")
-#   else:
-#     return activity
+@app.get("/v1/activities/{uuid}", 
+  summary="Returns an activity",
+  description="Returns the details about an activity.",
+  response_model=Activity)
+async def find_activity(uuid: str):
+  activity = Activity.find(uuid)
+  if activity:
+    return activity
+  else:
+    raise HTTPException(status_code=404, detail="The requested activity cannot be found")
 
 # @app.post("/v1/activities/{uuid}/studyData", 
 #   summary="Creates a new study data item within an activity",
@@ -440,29 +415,18 @@ async def get_timeline_soa(uuid: str):
 #   result = activity.add_study_data(study_data.name, study_data.description, study_data.link)
 #   return result
 
-# @app.get("/v1/activities/{uuid}/studyData", 
-#   summary="Returns the study data for an activity",
-#   description="Returns the set of study data children related to the specified activity.",
-#   response_model=List[StudyData])
-# async def find_activity_study_data(uuid: str):
-#   activity = Activity.find(uuid)
-#   if activity == None:
-#     raise HTTPException(status_code=404, detail="The requested activity cannot be found")
-#   else:
-#     return activity.study_data()
-
-# # Workflow
-# # ========
-
-# @app.post("/v1/workflows/{uuid}/workflowItems", 
-#   summary="Creates an encounter and an activity to a workflow",
-#   description="Creates an encounter and an activity to a workflow",
-#   status_code=201,
-#   response_model=str)
-# async def create_workflow_item(uuid: str, wfi: WorkflowItemIn):
-#   workflow = Workflow.find(uuid)
-#   result = workflow.add_workflow_item(wfi.description, wfi.encounter_uuid, wfi.activity_uuid)
-#   return result
+@app.get("/v1/activities/{uuid}/children", 
+  summary="Returns the children of an activity",
+  description="Returns the set of children related to the specified activity.",
+  response_model=list)
+async def find_activity_study_data(uuid: str):
+  activity = Activity.find(uuid)
+  if activity:
+    result = activity.children()
+    print(f"RESULT: {result}")
+    return result
+  else:
+    raise HTTPException(status_code=404, detail="The requested activity cannot be found")
 
 # # Domains
 # # =======
