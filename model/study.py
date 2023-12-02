@@ -1,3 +1,5 @@
+import logging
+import traceback
 from .node import NodeNameLabelDesc
 from .study_protocol_document_version import StudyProtocolDocumentVersion
 from .neo4j_connection import Neo4jConnection
@@ -19,7 +21,9 @@ class Study(NodeNameLabelDesc):
           return {'error': "Failed to create study, operation failed"}
         return {'uuid': result}  
     except Exception as e:
-      return {'error': f"Exception '{e}'. Failed to create study"}
+      logging.error(f"Exception raised while creating study")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to create study"}
 
   def protocol(self):
     try:
@@ -32,7 +36,9 @@ class Study(NodeNameLabelDesc):
             return {'error': "Failed to create protocol, operation failed"}
         return {'uuid': result}  
     except Exception as e:
-      return {'error': f"Exception '{e}'. Failed to find or create protocol document"}
+      logging.error(f"Exception raised while creating protocol")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to find or create protocol document"}
 
   @staticmethod
   def _create_study(tx, name, description, label):
@@ -68,15 +74,18 @@ class Study(NodeNameLabelDesc):
     query = """
       MATCH (s:Study {uuid: $uuid})
       WITH s
-      CREATE (spd:StudyProtocolDocument {id: $spd_id, name: $spd_name, description: $spd_description, label: $spd_label, uuid: $uuid1})
+      CREATE (spd:StudyProtocolDocument {id: $spd_id, name: $spd_name, description: $spd_description, label: $spd_label, uuid: $spd_uuid})
       CREATE (spdv:StudyProtocolDocumentVersion {id: $spdv_id, name: $spdv_name, description: $spdv_description, label: $spdv_label, 
-        protocolVersion: $sv_version, briefTitle: $brief_title, officialTitle: $official_title=, $publicTitle=public_title,
-        scientificTitle: $scientific_title, uuid: $uuid2})
-      CREATE (s)-DOCUMENTED_BY_REL->(spd)
+        protocolVersion: $spdv_version, briefTitle: $spdv_brief_title, officialTitle: $spdv_official_title, publicTitle: $spdv_public_title,
+        scientificTitle: $spdv_scientific_title, uuid: $spdv_uuid})
+      CREATE (c:Code {id: $c_id, code: 'C85255', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Draft', uuid: $c_uuid})
+      CREATE (s)-[:DOCUMENTED_BY_REL]->(spd)
       CREATE (spd)-[:VERSIONS_REL]->(spdv)
+      CREATE (spdv)-[:PROTOCOL_STATUS_REL]->(c)
       RETURN spdv.uuid as uuid
     """
     result = tx.run(query, 
+      uuid=uuid,
       spd_id='STUDY_PROTOCOL',
       spd_name="PROTOCOL", 
       spd_description="The protocol document for the study", 
@@ -86,12 +95,14 @@ class Study(NodeNameLabelDesc):
       spdv_description="The protocol document for the study", 
       spdv_label="Protocol document", 
       spdv_version="0.1",
-      briefTitle="<To Be provided>",
-      officialTitle="<To Be provided>",
-      publicTitle="<To Be provided>",
-      scientificTitle="<To Be provided>",
-      uuid1=str(uuid4()), 
-      uuid2=str(uuid4())
+      spdv_brief_title="<To Be provided>",
+      spdv_official_title="<To Be provided>",
+      spdv_public_title="<To Be provided>",
+      spdv_scientific_title="<To Be provided>",
+      c_id='STUDY_PROTOCOL_STATUS_1',
+      spd_uuid=str(uuid4()), 
+      c_uuid=str(uuid4()), 
+      spdv_uuid=str(uuid4())
     )
     for row in result:
       return row['uuid']

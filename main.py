@@ -130,23 +130,34 @@ async def create_study(name: str, description: str="", label: str=""):
   response_model=str)
 async def get_create_protocol(uuid: str):
   study = Study.find(uuid)
-  if not 'error' in result:
+  if not 'error' in study:
     result = study.protocol()
     if not 'error' in result:
-      return result
+      return result['uuid']
     else:
       raise HTTPException(status_code=409, detail=result['error'])
   else:
     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 
-@app.get("/v1/protocolDocumentVersions/{uuid}/sections", 
-  summary="Get the protocol document version sections",
-  description="Get the protococl document sections for a study.",
+@app.get("/v1/protocolDocumentVersions/{uuid}/section_list", 
+  summary="Get the protocol document version section list",
+  description="Get the protococl document section list for a study.",
   response_model=dict)
 async def get_create_protocol(uuid: str):
   result = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in result:
-    return result.sections()
+    return result.section_list()
+  else:
+    raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
+
+@app.get("/v1/protocolDocumentVersions/{uuid}/section/{name}", 
+  summary="Get the protocol document version section",
+  description="Get the protococl document section for a study.",
+  response_model=dict)
+async def get_create_protocol(uuid: str):
+  result = StudyProtocolDocumentVersion.find(uuid)
+  if not 'error' in result:
+    return {'text': "Dummy text"}
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
