@@ -143,7 +143,7 @@ async def get_create_protocol(uuid: str):
   summary="Get the protocol document version section list",
   description="Get the protococl document section list for a study.",
   response_model=dict)
-async def get_create_protocol(uuid: str):
+async def get_protocol_section_list(uuid: str):
   result = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in result:
     return result.section_list()
@@ -154,7 +154,7 @@ async def get_create_protocol(uuid: str):
   summary="Get the protocol document version section",
   description="Get the protococl document section for a study.",
   response_model=dict)
-async def get_create_protocol(uuid: str):
+async def get_section(uuid: str):
   result = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in result:
     return {'text': "Dummy text"}
