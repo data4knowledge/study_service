@@ -7,6 +7,7 @@ from model.study_design import StudyDesign
 from model.neo4j_connection import Neo4jConnection
 from model.schedule_timeline import ScheduleTimeline
 from model.activity import Activity
+from model.study_protocol_document_version import StudyProtocolDocumentVersion
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
 # from model.study_domain_instance import StudyDomainInstance
@@ -119,6 +120,35 @@ async def create_study(name: str, description: str="", label: str=""):
 #     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 #   else:
 #     return study
+
+# Protocol Document Versions
+# ==========================
+
+@app.get("/v1/studies/{uuid}/protocolDocumentVersions", 
+  summary="Get the protocol document for a study",
+  description="Get the protococl document for a study. If not present will create the instance and return the section structure for the document.",
+  response_model=str)
+async def get_create_protocol(uuid: str):
+  study = Study.find(uuid)
+  if not 'error' in result:
+    result = study.protocol()
+    if not 'error' in result:
+      return result
+    else:
+      raise HTTPException(status_code=409, detail=result['error'])
+  else:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+
+@app.get("/v1/protocolDocumentVersions/{uuid}/sections", 
+  summary="Get the protocol document version sections",
+  description="Get the protococl document sections for a study.",
+  response_model=dict)
+async def get_create_protocol(uuid: str):
+  result = StudyProtocolDocumentVersion.find(uuid)
+  if not 'error' in result:
+    return result.sections()
+  else:
+    raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
 # Study Versions
 # =============≠

@@ -1,0 +1,1642 @@
+'0':
+  data_elements:
+    amendment_identifier:
+      name: Amendment Identifier
+      usdm:
+        image: ''
+        items:
+        - attribute: number
+          klass: StudyAmendment
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    amendment_scope:
+      name: Amendment Scope
+      usdm:
+        image: ''
+        items:
+        - attribute: type
+          klass: GeographicScope
+          xpath: ''
+        - attribute: type
+          klass: GeographicScope
+          xpath: ''
+        notes: Overall scope will be drived from the scope type(s)
+        status: Set
+      use: true
+    country_identifier:
+      name: Country Identifier
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    enter_approval_date_or_state_location_where_information_can_be_found:
+      name: Enter Approval Date or state location where information can be found
+      usdm:
+        image: ''
+        items:
+        - attribute: dateValue
+          klass: GovernanceDate
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    enter_compound_code(s):
+      name: Enter Compound Code(s)
+      usdm:
+        image: ''
+        items: []
+        notes: ''
+        status: Not-In-USDM
+      use: true
+    enter_full_title:
+      name: Enter Full Title
+      usdm:
+        image: ''
+        items:
+        - attribute: officialTitle
+          klass: StudyProtocolDocumentVersion
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    enter_nonproprietary_name(s):
+      name: Enter Nonproprietary Name(s)
+      usdm:
+        image: ''
+        items: []
+        notes: ''
+        status: Not-In-USDM
+      use: true
+    enter_proprietary_name(s):
+      name: Enter Proprietary Name(s)
+      usdm:
+        image: ''
+        items: []
+        notes: ''
+        status: Not-In-USDM
+      use: true
+    enter_protocol_identifier:
+      name: Enter Protocol Identifier
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    enter_sponsor_confidentiality_statement:
+      name: Enter Sponsor Confidentiality Statement
+      usdm:
+        image: ''
+        items:
+        - attribute: ''
+          klass: ''
+          xpath: ''
+        notes: ''
+        status: Not-In-USDM
+      use: true
+    enter_sponsor_legal_address:
+      name: Enter Sponsor Legal Address
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Address
+          xpath: StudyIdentifier[Organization/@type/@code=C70793]/Organization/Address/@text
+        notes: ''
+        status: Set
+      use: true
+    enter_sponsor_name:
+      name: Enter Sponsor Name
+      usdm:
+        image: ''
+        items:
+        - attribute: name
+          klass: Organization
+          xpath: StudyIdentifier[Organization/@type/@code=C70793]/Organization/@name
+        notes: ''
+        status: Set
+      use: true
+    enter_trial_acronym:
+      name: Enter Trial Acronym
+      usdm:
+        image: ''
+        items:
+        - attribute: studyAcronym
+          klass: StudyVersion
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    enter_trial_short_title:
+      name: Enter Trial Short Title
+      usdm:
+        image: ''
+        items:
+        - attribute: briefTitle
+          klass: StudyProtocolDocumentVersion
+          xpath: StudyProtocolDocumentVersion/@briefTitle
+        notes: ''
+        status: Set
+      use: true
+    enter_version_date:
+      name: Enter Version Date
+      usdm:
+        image: ''
+        items:
+        - attribute: dateValue
+          klass: GovernanceDate
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    enter_version_number:
+      name: Enter Version Number
+      usdm:
+        image: ''
+        items:
+        - attribute: versionIdentifier
+          klass: StudyVersion
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    eu_ct_number:
+      name: EU CT Number
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    fda_ind_number:
+      name: FDA IND Number
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    globally/locally/cohort:
+      name: Globally/Locally/Cohort
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    ide_number:
+      name: IDE Number
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    jrct_number:
+      name: JRCT Number
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    nct_number:
+      name: NCT Number
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    nmpa_ind_number:
+      name: NMPA IND Number
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    original_protocol:
+      name: Original protocol
+      usdm:
+        image: ''
+        items: []
+        notes: ''
+        status: Not-Set
+      use: true
+    other_regulatory_agency_identifier_number:
+      name: Other Regulatory Agency Identifier Number
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+    primary_reason_for_amendment:
+      name: Primary Reason for Amendment
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    region_identifier:
+      name: Region Identifier
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    secondary_reason_for_amendment:
+      name: Secondary Reason for Amendment
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    trial_phase:
+      name: Trial Phase
+      usdm:
+        image: ''
+        items:
+        - attribute: studyPhase
+          klass: StudyVersion
+          xpath: StudyVersion/@studyPhase
+        - attribute: decode
+          klass: Code
+          xpath: StudyVersion/@studyPhase/@standardCode/@decode
+        notes: ''
+        status: Set
+      use: true
+    who/utn_number:
+      name: WHO/UTN Number
+      usdm:
+        image: ''
+        items:
+        - attribute: studyIdentifier
+          klass: StudyIdentifier
+          xpath: ''
+        notes: ''
+        status: Set
+      use: true
+  header_only: false
+  section: '0'
+  text_definitions:
+    '#/%': '#/%'
+    amendment_eendment_summaryamuuusummstnent_ementmmdmentmddndndmendment_summary: Amendment
+      eendment SummaryamuuuSummStnent ementmmdmentmddndndmendment Summary
+    describe_method: describe method
+    enter_"original": Enter "Original"
+    enter_co-sponsor_legal_address: Enter Co-Sponsor Legal Address
+    enter_co-sponsor_name: Enter Co-Sponsor Name
+    enter_description_of_amendment_change: Enter Description of Amendment Change
+    enter_description_of_trial_phase_other: Enter Description of Trial Phase Other
+    enter_device_manufacturer_address: Enter Device Manufacturer Address
+    enter_device_manufacturer_name: Enter Device Manufacturer Name
+    enter_expedited_safety_information_contact_method(s): Enter expedited safety information
+      contact method(s)
+    enter_local_sponsor_address: Enter Local Sponsor Address
+    enter_local_sponsor_name: Enter Local Sponsor Name
+    enter_location_of_amendmen_tchange: Enter Location of Amendmen tChange
+    enter_rationale_for_amendment_change: Enter Rationale for Amendment Change
+    enter_section_of_amendment_change: Enter Section of Amendment Change
+    enter_site_identifier: Enter Site Identifier
+    enter_sponsor_signature_block_(name_and_title_of_sponsor_signatory_and_signature_date): Enter
+      sponsor signature block (name and title of sponsor signatory and signature date)
+  title: Title Sheet
+'1':
+  data_elements: {}
+  header_only: true
+  section: '1'
+  text_definitions: {}
+  title: Protocol Summary
+'1.1':
+  data_elements: {}
+  header_only: true
+  section: '1.1'
+  text_definitions: {}
+  title: Protocol Synopsis
+1.1.1:
+  data_elements: {}
+  header_only: false
+  section: 1.1.1
+  text_definitions:
+    enter_primary_and_secondary_objectives_and_endpoints_here: Enter Primary and Secondary
+      Objectives and Endpoints here
+  title: Primary and Secondary Objectives and Endpoints
+1.1.2:
+  data_elements:
+    blinded_roles:
+      name: blinded roles
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    control_type:
+      name: control type
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    inn:
+      name: INN
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    intervention_assignment_method:
+      name: intervention assignment method
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    intervention_model:
+      name: intervention model
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    nonproprietary_name:
+      name: Nonproprietary name
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    number_of_arms:
+      name: Number of Arms
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    population_diagnosis_or_condition:
+      name: population diagnosis or condition
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    population_type:
+      name: population type
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    randomly_assigned_to_trial_intervention/_enrolled:
+      name: randomly assigned to trial intervention/ enrolled
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    site_distribution:
+      name: site distribution
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    site_geographic_scope:
+      name: site geographic scope
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    target/_maximum:
+      name: Target/ Maximum
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    trial_blind_schema:
+      name: Trial Blind Schema
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    unit_of_time:
+      name: unit of time
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    units_of_age:
+      name: units of age
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+  header_only: false
+  section: 1.1.2
+  text_definitions:
+    enter_"n/a": Enter "N/A"
+    enter_alternate_description_of_planned_duration_of_trial_intervention_if_duration_will_vary: Enter
+      alternate description of planned duration of trial intervention if duration
+      will vary
+    enter_alternate_description_of_planned_duration_of_trial_participation_if_duration_will_vary: Enter
+      alternate description of planned duration of trial participation if duration
+      will vary
+    enter_description_of_duration: Enter Description of Duration
+    enter_independent_committees: Enter Independent Committees
+    enter_number: Enter number
+    enter_number_of_participants: Enter Number of Participants
+    enter_other_committees: Enter Other Committees
+    numeric: numeric
+  title: Overall Design
+'1.2':
+  data_elements:
+    for_example,_randomisation,_cross-over,_end_of_treatment:
+      name: for example, randomisation, cross-over, end of treatment
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+  header_only: false
+  section: '1.2'
+  text_definitions:
+    enter_schema_notes: Enter Schema Notes
+    enter_trial_schema: Enter Trial Schema
+  title: Trial Schema
+'1.3':
+  data_elements: {}
+  header_only: false
+  section: '1.3'
+  text_definitions:
+    enter_schedule_of_activities: Enter Schedule of Activities
+  title: Schedule of Activities
+'10':
+  data_elements: {}
+  header_only: false
+  section: '10'
+  text_definitions:
+    statistical_considerations: Statistical Considerations
+  title: Statistical Considerations
+'10.1':
+  data_elements: {}
+  header_only: false
+  section: '10.1'
+  text_definitions:
+    analysis_datasets: Analysis Datasets
+  title: Analysis Sets
+'10.2':
+  data_elements: {}
+  header_only: false
+  section: '10.2'
+  text_definitions:
+    analysis_supporting_primary_objectives: Analysis Supporting Primary Objectives
+  title: Analyses Supporting Primary Objective(s)
+10.2.1:
+  data_elements: {}
+  header_only: false
+  section: 10.2.1
+  text_definitions:
+    statistical_model,_hypothesis,_and_method_of_analysis: Statistical Model, Hypothesis,
+      and Method of Analysis
+  title: Statistical Model, Hypothesis, and Method of Analysis
+10.2.2:
+  data_elements:
+    s:
+      name: s
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+  header_only: false
+  section: 10.2.2
+  text_definitions:
+    handling_of_intercurrent_events_of_primary_estimand: Handling of Intercurrent
+      Events of Primary Estimand
+  title: Handling of Intercurrent Events of Primary Estimand(s)
+10.2.3:
+  data_elements: {}
+  header_only: false
+  section: 10.2.3
+  text_definitions:
+    handling_of_missing_data: Handling of Missing Data
+  title: Handling of Missing Data
+10.2.4:
+  data_elements: {}
+  header_only: false
+  section: 10.2.4
+  text_definitions:
+    sensitivity_analysis: Sensitivity Analysis
+  title: Sensitivity Analysis
+10.2.5:
+  data_elements: {}
+  header_only: false
+  section: 10.2.5
+  text_definitions:
+    supplementary_analysis: Supplementary Analysis
+  title: Supplementary Analysis
+'10.3':
+  data_elements: {}
+  header_only: false
+  section: '10.3'
+  text_definitions:
+    analyses_supporting_secondary_objectives: Analyses Supporting Secondary Objectives
+  title: Analysis Supporting Secondary Objective(s)
+'10.4':
+  data_elements: {}
+  header_only: false
+  section: '10.4'
+  text_definitions:
+    analyses_supporting_tertiary/exploratory_objective(s): Analyses Supporting Tertiary/Exploratory
+      Objective(s)
+  title: Analysis of Exploratory Objective(s)
+'10.5':
+  data_elements: {}
+  header_only: false
+  section: '10.5'
+  text_definitions:
+    safety_analyses: Safety Analyses
+  title: Safety Analyses
+'10.6':
+  data_elements: {}
+  header_only: false
+  section: '10.6'
+  text_definitions:
+    other_analyses: Other Analyses
+  title: Other Analyses
+'10.7':
+  data_elements: {}
+  header_only: false
+  section: '10.7'
+  text_definitions:
+    interim_analyses: Interim Analyses
+  title: Interim Analyses
+'10.8':
+  data_elements: {}
+  header_only: false
+  section: '10.8'
+  text_definitions:
+    sample_size_determination: Sample Size Determination
+  title: Sample Size Determination
+'10.9':
+  data_elements: {}
+  header_only: false
+  section: '10.9'
+  text_definitions:
+    protocol_deviations_plans: Protocol Deviations Plans
+  title: Protocol Deviations
+'11':
+  data_elements: {}
+  header_only: true
+  section: '11'
+  text_definitions: {}
+  title: 'General Considerations: Regulatory, Ethical, And trial Oversight'
+'11.1':
+  data_elements: {}
+  header_only: false
+  section: '11.1'
+  text_definitions: {}
+  title: Regulatory and Ethical Considerations
+'11.2':
+  data_elements: {}
+  header_only: false
+  section: '11.2'
+  text_definitions: {}
+  title: Trial Oversight
+11.2.1:
+  data_elements: {}
+  header_only: false
+  section: 11.2.1
+  text_definitions:
+    enter_investigator_responsibilities: Enter Investigator Responsibilities
+  title: Investigator Responsibilities
+11.2.2:
+  data_elements: {}
+  header_only: false
+  section: 11.2.2
+  text_definitions:
+    enter_sponsor_responsibilities: Enter Sponsor Responsibilities
+  title: Sponsor Responsibilities
+'11.3':
+  data_elements: {}
+  header_only: false
+  section: '11.3'
+  text_definitions:
+    enter_committees_structure_or_state_not_applicable.: Enter Committees Structure
+      or state Not Applicable.
+  title: Committees
+'11.4':
+  data_elements: {}
+  header_only: false
+  section: '11.4'
+  text_definitions:
+    enter_description_of_assent_process: Enter Description of Assent Process
+    enter_description_of_emergency_consent_process: Enter Description of Emergency
+      Consent Process
+    enter_description_of_informed_consent_process: Enter Description of Informed Consent
+      Process
+  title: Informed Consent Process
+11.4.1:
+  data_elements: {}
+  header_only: false
+  section: 11.4.1
+  text_definitions:
+    enter_consent_requirements_for_rescreening: Enter Consent Requirements for Rescreening
+  title: Informed Consent for Rescreening
+11.4.2:
+  data_elements: {}
+  header_only: false
+  section: 11.4.2
+  text_definitions:
+    enter_additional_icf_text_for_use_of_remaining_samples_in_exploratory_research: Enter
+      Additional ICF text for Use of Remaining Samples in Exploratory Research
+  title: Informed Consent for Use of Remaining Samples in Exploratory Research
+'11.5':
+  data_elements: {}
+  header_only: false
+  section: '11.5'
+  text_definitions:
+    enter_insurance_and_indemnity: Enter Insurance and Indemnity
+  title: Insurance and Indemnity
+'11.6':
+  data_elements: {}
+  header_only: false
+  section: '11.6'
+  text_definitions:
+    enter_criteria_for_early_closure: Enter Criteria for Early Closure
+    enter_decision_rights_for_site_closure: Enter Decision Rights for Site Closure
+    enter_responsibilities_following_early_site_closure: Enter Responsibilities Following
+      Early Site Closure
+  title: Early Site Closure
+'12':
+  data_elements: {}
+  header_only: true
+  section: '12'
+  text_definitions: {}
+  title: 'General Considerations: Risk Management and Data Governance'
+'12.1':
+  data_elements: {}
+  header_only: false
+  section: '12.1'
+  text_definitions:
+    enter_risk_management: Enter Risk Management
+  title: Risk Management
+'12.2':
+  data_elements: {}
+  header_only: false
+  section: '12.2'
+  text_definitions:
+    enter_data_governance: Enter Data Governance
+  title: Data Governance
+'12.3':
+  data_elements: {}
+  header_only: false
+  section: '12.3'
+  text_definitions:
+    enter_definition_of_source_data: Enter Definition of Source Data
+    enter_investigator_expectations_for_source_data: Enter Investigator Expectations
+      for Source Data
+    enter_source_data_introduction: Enter Source Data Introduction
+    enter_trial_monitor_expectations_for_source_data: Enter Trial Monitor Expectations
+      for Source Data
+  title: Source Data
+'13':
+  data_elements: {}
+  header_only: true
+  section: '13'
+  text_definitions: {}
+  title: 'Appendix: Definitions and Supporting Operational Details'
+'13.1':
+  data_elements: {}
+  header_only: false
+  section: '13.1'
+  text_definitions:
+    enter_clinical_laboratory_tests: Enter Clinical Laboratory Tests
+  title: Clinical Laboratory Tests
+'13.2':
+  data_elements: {}
+  header_only: false
+  section: '13.2'
+  text_definitions:
+    enter_country/region-specific_differences: Enter Country/Region-specific Differences
+  title: Country/Region-Specific Differences
+'13.3':
+  data_elements: {}
+  header_only: false
+  section: '13.3'
+  text_definitions:
+    enter_#_or_%_enrolled_globally/locally/per_cohort: 'Enter # or % enrolled globally/locally/per
+      cohort'
+    enter_amendment_date: Enter Amendment Date
+    enter_amendment_number: Enter Amendment Number
+    enter_description_of_change: Enter Description of Change
+    enter_location_of_change: Enter Location of Change
+    enter_original_protocol_date: Enter Original Protocol Date
+    enter_rationale_for_amendment_change: Enter Rationale for Amendment Change
+  title: Prior Protocol Amendment(s)
+'14':
+  data_elements: {}
+  header_only: false
+  section: '14'
+  text_definitions:
+    enter_abbreviations_and_definitions: Enter Abbreviations and Definitions
+  title: 'Appendix:  Glossary of Terms and Abbreviations'
+'15':
+  data_elements: {}
+  header_only: false
+  section: '15'
+  text_definitions:
+    enter_references: Enter References
+  title: 'Appendix:  References'
+'2':
+  data_elements: {}
+  header_only: true
+  section: '2'
+  text_definitions: {}
+  title: Introduction
+'2.1':
+  data_elements: {}
+  header_only: false
+  section: '2.1'
+  text_definitions:
+    enter_description_of_purpose_of_trial: Enter Description of Purpose of Trial
+  title: Purpose of Trial
+'2.2':
+  data_elements: {}
+  header_only: false
+  section: '2.2'
+  text_definitions: {}
+  title: Summary of Benefits and Risks
+2.2.1:
+  data_elements: {}
+  header_only: false
+  section: 2.2.1
+  text_definitions:
+    enter_benefit_summary: Enter Benefit Summary
+  title: Benefit Summary
+2.2.2:
+  data_elements: {}
+  header_only: false
+  section: 2.2.2
+  text_definitions:
+    enter_trial-specific_intervention_risks_and_mitigations: Enter Trial-specific
+      Intervention Risks and Mitigations
+    enter_trial-specific_other_risks_and_mitigations: Enter Trial-specific Other Risks
+      and Mitigations
+    enter_trial-specific_procedure_risks_and_mitigations: Enter Trial-specific Procedure
+      Risks and Mitigations
+  title: Risk Summary and Mitigation Strategy
+2.2.3:
+  data_elements: {}
+  header_only: false
+  section: 2.2.3
+  text_definitions:
+    enter_overall_benefit:risk_conclusion: Enter Overall Benefit:Risk Conclusion
+  title: Overall Benefit:Risk Conclusion
+'3':
+  data_elements: {}
+  header_only: true
+  section: '3'
+  text_definitions: {}
+  title: Trial Objectives, Endpoints and Estimands
+'3.1':
+  data_elements: {}
+  header_only: false
+  section: '3.1'
+  text_definitions:
+    endpoint: Endpoint
+    objective: Objective
+  title: '{Primary/Secondary/Exploratory} Objective + Associated Endpoint {and Estimand}'
+3.1.1:
+  data_elements: {}
+  header_only: false
+  section: 3.1.1
+  text_definitions:
+    enter_primary_estimand_description: Enter Primary Estimand Description
+  title: '{Primary/Secondary/Exploratory} Estimand'
+'4':
+  data_elements: {}
+  header_only: true
+  section: '4'
+  text_definitions: {}
+  title: Trial Design
+'4.1':
+  data_elements:
+    fixed_dose/titration:
+      name: fixed dose/titration
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    including_sponsor_unblinded:
+      name: including sponsor unblinded
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    uncontrolled:
+      name: uncontrolled
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+  header_only: false
+  section: '4.1'
+  text_definitions:
+    enter_additional_description_of_trial_design: Enter Additional Description of
+      Trial Design
+    enter_description_of_intervention_model: Enter Description of Intervention Model
+    enter_description_of_trial_duration: Enter Description of Trial Duration
+    enter_method_of_assignment_to_trial_intervention: Enter Method of Assignment to
+      Trial Intervention
+  title: Description of Trial Design
+4.1.1:
+  data_elements: {}
+  header_only: false
+  section: 4.1.1
+  text_definitions:
+    enter_stakeholder_input: Enter Stakeholder Input
+  title: Stakeholder Input into Design
+'4.2':
+  data_elements: {}
+  header_only: false
+  section: '4.2'
+  text_definitions: {}
+  title: Rationale for Trial Design
+4.2.1:
+  data_elements: {}
+  header_only: false
+  section: 4.2.1
+  text_definitions:
+    enter_rationale_for_trial_intervention_model: Enter rationale for Trial intervention
+      model
+  title: Rationale for Intervention Model
+4.2.2:
+  data_elements: {}
+  header_only: false
+  section: 4.2.2
+  text_definitions:
+    enter_rationale_for_trial_duration: Enter rationale for Trial duration
+  title: Rationale for Duration
+4.2.3:
+  data_elements: {}
+  header_only: false
+  section: 4.2.3
+  text_definitions:
+    enter_rationale_for_endpoints: Enter rationale for endpoints
+  title: Rationale for Endpoints
+4.2.4:
+  data_elements: {}
+  header_only: false
+  section: 4.2.4
+  text_definitions:
+    enter_rationale_for_interim_analysis: Enter rationale for interim analysis
+  title: Rationale for Interim Analysis
+4.2.5:
+  data_elements: {}
+  header_only: false
+  section: 4.2.5
+  text_definitions:
+    enter_rationale_for_comparator: Enter rationale for comparator
+  title: Rationale for Comparator
+4.2.6:
+  data_elements: {}
+  header_only: false
+  section: 4.2.6
+  text_definitions:
+    enter_rationale_for_adaptive_or_novel_design: Enter Rationale for Adaptive or
+      Novel Design
+  title: Rationale for Adaptive or Novel Trial Design
+4.2.7:
+  data_elements: {}
+  header_only: false
+  section: 4.2.7
+  text_definitions:
+    enter_rationale_for_other_design_aspects: Enter Rationale for Other Design Aspects
+  title: Rationale for Other Trial Design Aspects
+'4.3':
+  data_elements: {}
+  header_only: false
+  section: '4.3'
+  text_definitions:
+    enter_trial_stopping_rules: Enter Trial Stopping Rules
+  title: Trial Stopping Rules
+4.3.1:
+  data_elements: {}
+  header_only: false
+  section: 4.3.1
+  text_definitions:
+    enter_temporary_trial_halt: Enter Temporary Trial Halt
+  title: '{Temporary Trial Halt}'
+'4.4':
+  data_elements: {}
+  header_only: false
+  section: '4.4'
+  text_definitions:
+    enter_start_of_trial_and_end_of_trial: Enter Start of Trial and End of Trial
+  title: Start of Trial and End of Trial
+'4.5':
+  data_elements: {}
+  header_only: false
+  section: '4.5'
+  text_definitions:
+    enter_access_to_trial_intervention_after_end_of_trial: Enter Access to Trial Intervention
+      after End of Trial
+  title: Access to Trial Intervention After End of Trial
+'5':
+  data_elements: {}
+  header_only: true
+  section: '5'
+  text_definitions: {}
+  title: Trial Population
+'5.1':
+  data_elements: {}
+  header_only: false
+  section: '5.1'
+  text_definitions:
+    enter_description_of_trial_population_and_rationale: Enter description of trial
+      population and rationale
+  title: Description of Trial Population and Rationale
+'5.2':
+  data_elements: {}
+  header_only: false
+  section: '5.2'
+  text_definitions:
+    inclusion_criterion: Inclusion Criterion
+  title: Inclusion Criteria
+'5.3':
+  data_elements: {}
+  header_only: false
+  section: '5.3'
+  text_definitions:
+    exclusion_criterion: Exclusion Criterion
+  title: Exclusion Criteria
+'5.4':
+  data_elements: {}
+  header_only: false
+  section: '5.4'
+  text_definitions:
+    enter_contraception_or_state_not_applicable.: Enter Contraception or state Not
+      Applicable.
+  title: Contraception
+'5.5':
+  data_elements: {}
+  header_only: false
+  section: '5.5'
+  text_definitions:
+    enter_lifestyle_restrictions: Enter Lifestyle Restrictions
+  title: Lifestyle Restrictions
+5.5.1:
+  data_elements: {}
+  header_only: false
+  section: 5.5.1
+  text_definitions:
+    enter_meals_and_dietary_restrictions: Enter Meals and Dietary Restrictions
+  title: Meals and Dietary Restrictions
+5.5.2:
+  data_elements: {}
+  header_only: false
+  section: 5.5.2
+  text_definitions:
+    enter_caffeine,_alcohol,_tobacco,_and_other_restrictions: Enter Caffeine, Alcohol,
+      Tobacco, and Other Restrictions
+  title: Caffeine, Alcohol, Tobacco, and Other Restrictions
+5.5.3:
+  data_elements: {}
+  header_only: false
+  section: 5.5.3
+  text_definitions:
+    enter_physical_activity_restrictions: Enter Physical Activity Restrictions
+  title: Physical Activity Restrictions
+5.5.4:
+  data_elements: {}
+  header_only: false
+  section: 5.5.4
+  text_definitions:
+    enter_other_activity_restrictions: Enter Other Activity Restrictions
+  title: Other Activity Restrictions
+'5.6':
+  data_elements: {}
+  header_only: false
+  section: '5.6'
+  text_definitions:
+    enter_text_for_rescreening: Enter text for Rescreening
+    enter_text_for_screen_failure: Enter text for Screen Failure
+  title: Screen Failure and Rescreening
+'6':
+  data_elements: {}
+  header_only: true
+  section: '6'
+  text_definitions: {}
+  title: Trial Intervention And Concomitant Therapy
+'6.1':
+  data_elements: {}
+  header_only: false
+  section: '6.1'
+  text_definitions:
+    enter_additional_text,_if_needed: Enter Additional Text, if Needed
+    enter_description_of_investigational_trial_intervention: Enter Description of
+      Investigational Trial Intervention
+  title: Description of Investigational Trial Intervention
+'6.2':
+  data_elements: {}
+  header_only: false
+  section: '6.2'
+  text_definitions:
+    enter_rationale_for_investigational_trial_intervention_dose_and_regimen: Enter
+      Rationale for Investigational Trial Intervention Dose and Regimen
+  title: Rationale for Investigational Trial Intervention Dose and Regimen
+'6.3':
+  data_elements: {}
+  header_only: false
+  section: '6.3'
+  text_definitions:
+    enter_investigational_trial_intervention_administration: Enter Investigational
+      Trial Intervention Administration
+  title: Investigational Trial Intervention Administration
+6.3.1:
+  data_elements: {}
+  header_only: false
+  section: 6.3.1
+  text_definitions:
+    enter_investigational_trial_intervention_dose_modification: Enter Investigational
+      Trial Intervention Dose Modification
+  title: Investigational Trial Intervention Dose Modification
+'6.4':
+  data_elements: {}
+  header_only: false
+  section: '6.4'
+  text_definitions:
+    enter_management_of_investigational_trial_intervention_overdose: Enter Management
+      of Investigational Trial Intervention Overdose
+  title: Management of Investigational Trial Intervention Overdose
+'6.5':
+  data_elements: {}
+  header_only: true
+  section: '6.5'
+  text_definitions: {}
+  title: Preparation, Storage, Handling and Accountability of Investigational Trial
+    Intervention(s)
+6.5.1:
+  data_elements: {}
+  header_only: false
+  section: 6.5.1
+  text_definitions:
+    enter_preparation_of_investigational_trial_intervention: Enter Preparation of
+      Investigational Trial Intervention
+  title: Preparation of Investigational Trial Intervention(s)
+6.5.2:
+  data_elements: {}
+  header_only: false
+  section: 6.5.2
+  text_definitions:
+    enter_storage_and_handling_of_investigational_trial_intervention: Enter Storage
+      and Handling of Investigational Trial Intervention
+  title: Storage and Handling of Investigational Trial Intervention
+6.5.3:
+  data_elements: {}
+  header_only: false
+  section: 6.5.3
+  text_definitions:
+    enter_accountability_of_investigational_trial_intervention: Enter Accountability
+      of Investigational Trial Intervention
+  title: Accountability of Investigational Trial Intervention
+'6.6':
+  data_elements: {}
+  header_only: true
+  section: '6.6'
+  text_definitions: {}
+  title: Investigational Trial Intervention Assignment, Randomisation and Blinding
+6.6.1:
+  data_elements: {}
+  header_only: false
+  section: 6.6.1
+  text_definitions:
+    enter_participant_assignment_to_investigational_trial_intervention: Enter Participant
+      Assignment to Investigational Trial Intervention
+  title: Participant Assignment to Investigational Trial Intervention
+6.6.2:
+  data_elements: {}
+  header_only: false
+  section: 6.6.2
+  text_definitions:
+    enter_randomisation: Enter Randomisation
+  title: Randomisation
+6.6.3:
+  data_elements: {}
+  header_only: false
+  section: 6.6.3
+  text_definitions:
+    enter_blinding: Enter Blinding
+  title: '{Blinding}'
+6.6.4:
+  data_elements: {}
+  header_only: false
+  section: 6.6.4
+  text_definitions:
+    enter_emergency_unblinding_at_the_site: Enter Emergency Unblinding at the Site
+  title: '{Emergency Unblinding at the Site}'
+'6.7':
+  data_elements: {}
+  header_only: false
+  section: '6.7'
+  text_definitions:
+    enter_investigational_trial_intervention_compliance: Enter Investigational Trial
+      Intervention Compliance
+  title: Investigational Trial Intervention Compliance
+'6.8':
+  data_elements: {}
+  header_only: false
+  section: '6.8'
+  text_definitions:
+    enter_description_of_non-investigational_trial_intervention: Enter Description
+      of Non-Investigational Trial Intervention
+  title: Description of Non-Investigational Trial Intervention(s)
+6.8.1:
+  data_elements: {}
+  header_only: false
+  section: 6.8.1
+  text_definitions:
+    enter_background_interventions: Enter Background Interventions
+  title: '{Background Intervention}'
+6.8.2:
+  data_elements: {}
+  header_only: false
+  section: 6.8.2
+  text_definitions:
+    enter_rescue_therapy: Enter Rescue Therapy
+  title: '{Rescue Therapy}'
+6.8.3:
+  data_elements: {}
+  header_only: false
+  section: 6.8.3
+  text_definitions:
+    enter_other_therapy: Enter Other Therapy
+  title: '{Other Therapy}'
+'6.9':
+  data_elements: {}
+  header_only: false
+  section: '6.9'
+  text_definitions:
+    enter_concomitant_therapy: Enter Concomitant Therapy
+  title: Concomitant Therapy
+6.9.1:
+  data_elements: {}
+  header_only: false
+  section: 6.9.1
+  text_definitions:
+    enter_prohibited_concomitant_therapy: Enter Prohibited Concomitant Therapy
+  title: '{Prohibited Concomitant Therapy}'
+6.9.2:
+  data_elements: {}
+  header_only: false
+  section: 6.9.2
+  text_definitions:
+    enter_permitted_concomitant_therapy: Enter Permitted Concomitant Therapy
+  title: '{Permitted Concomitant Therapy}'
+'7':
+  data_elements: {}
+  header_only: true
+  section: '7'
+  text_definitions: {}
+  title: Participant Discontinuation of Trial Intervention and Withdrawal From trial
+'7.1':
+  data_elements: {}
+  header_only: true
+  section: '7.1'
+  text_definitions: {}
+  title: Discontinuation of Trial Intervention for Individual Participants
+7.1.1:
+  data_elements: {}
+  header_only: false
+  section: 7.1.1
+  text_definitions:
+    enter_criteria_for_permanent_discontinuation_of_trial_intervention: Enter Criteria
+      for Permanent Discontinuation of Trial Intervention
+  title: Permanent Discontinuation of Trial Intervention
+7.1.2:
+  data_elements: {}
+  header_only: false
+  section: 7.1.2
+  text_definitions:
+    enter_temporary_discontinuation_of_trial_intervention: Enter Temporary Discontinuation
+      of Trial Intervention
+  title: Temporary Discontinuation of Trial Intervention
+7.1.3:
+  data_elements: {}
+  header_only: false
+  section: 7.1.3
+  text_definitions:
+    enter_rechallenge: Enter Rechallenge
+  title: Rechallenge
+'7.2':
+  data_elements: {}
+  header_only: false
+  section: '7.2'
+  text_definitions:
+    enter_participant_withdrawal_from_trial: Enter Participant Withdrawal from Trial
+  title: Withdrawal from the Trial
+'7.3':
+  data_elements: {}
+  header_only: false
+  section: '7.3'
+  text_definitions:
+    enter_lost_to_follow-up: Enter Lost to Follow-Up
+  title: Lost to Follow-Up
+'7.4':
+  data_elements: {}
+  header_only: false
+  section: '7.4'
+  text_definitions:
+    enter_participant_stopping_rules: Enter Participant Stopping Rules
+  title: Participant Stopping Rules
+'8':
+  data_elements: {}
+  header_only: false
+  section: '8'
+  text_definitions:
+    enter_general_trial_assessments_and_procedures_text,_if_needed: Enter general
+      trial assessments and procedures text, if needed
+  title: Trial Assessments and Procedures
+'8.1':
+  data_elements: {}
+  header_only: false
+  section: '8.1'
+  text_definitions:
+    enter_baseline_assessments_and_procedures: Enter Baseline Assessments and Procedures
+    enter_screening_assessments_and_procedures: Enter Screening Assessments and Procedures
+  title: Screening/Baseline Assessments and Procedures
+'8.2':
+  data_elements: {}
+  header_only: false
+  section: '8.2'
+  text_definitions:
+    enter_efficacy_assessments_and_procedures: Enter Efficacy Assessments and Procedures
+  title: Efficacy Assessments and Procedures
+'8.3':
+  data_elements: {}
+  header_only: true
+  section: '8.3'
+  text_definitions: {}
+  title: Safety Assessments and Procedures
+8.3.1:
+  data_elements: {}
+  header_only: false
+  section: 8.3.1
+  text_definitions:
+    enter_physical_examination: Enter Physical Examination
+  title: Physical Examination
+8.3.2:
+  data_elements: {}
+  header_only: false
+  section: 8.3.2
+  text_definitions:
+    enter_vital_signs: Enter Vital Signs
+  title: Vital Signs
+8.3.3:
+  data_elements: {}
+  header_only: false
+  section: 8.3.3
+  text_definitions:
+    enter_electrocardiograms: Enter Electrocardiograms
+  title: Electrocardiograms
+8.3.4:
+  data_elements: {}
+  header_only: false
+  section: 8.3.4
+  text_definitions:
+    enter_clinical_safety_laboratory_assessments: Enter Clinical Safety Laboratory
+      Assessments
+  title: Clinical Laboratory Assessments
+8.3.5:
+  data_elements: {}
+  header_only: false
+  section: 8.3.5
+  text_definitions:
+    enter_pregnancy_testing: Enter Pregnancy Testing
+  title: Pregnancy Testing
+8.3.6:
+  data_elements: {}
+  header_only: false
+  section: 8.3.6
+  text_definitions:
+    enter_suicidal_ideation_and_behaviour_risk_monitoring: Enter Suicidal Ideation
+      and Behaviour Risk Monitoring
+  title: Suicidal Ideation and Behaviour Risk Monitoring
+'8.4':
+  data_elements: {}
+  header_only: false
+  section: '8.4'
+  text_definitions:
+    enter_pharmacokinetics: Enter Pharmacokinetics
+  title: Pharmacokinetics
+'8.5':
+  data_elements: {}
+  header_only: false
+  section: '8.5'
+  text_definitions:
+    enter_genetics: Enter Genetics
+  title: Genetic Testing
+'8.6':
+  data_elements: {}
+  header_only: false
+  section: '8.6'
+  text_definitions:
+    enter_biomarkers: Enter Biomarkers
+  title: Biomarkers
+'8.7':
+  data_elements: {}
+  header_only: false
+  section: '8.7'
+  text_definitions:
+    enter_immunogenicity_assessments: Enter Immunogenicity Assessments
+  title: Immunogenicity Assessments
+'8.8':
+  data_elements: {}
+  header_only: false
+  section: '8.8'
+  text_definitions:
+    enter_medical_resource_utilisation_and_health_economics: Enter Medical Resource
+      Utilisation and Health Economics
+  title: Medical Resource Utilisation and Health Economics
+'9':
+  data_elements: {}
+  header_only: false
+  section: '9'
+  text_definitions: {}
+  title: Adverse Events, Serious Adverse Events, Product Complaints, Pregnancy and
+    Postpartum Information
+'9.1':
+  data_elements: {}
+  header_only: true
+  section: '9.1'
+  text_definitions: {}
+  title: Definitions
+9.1.1:
+  data_elements: {}
+  header_only: false
+  section: 9.1.1
+  text_definitions:
+    enter_ae_definition: Enter AE definition
+  title: Definitions of Adverse Events
+9.1.2:
+  data_elements: {}
+  header_only: false
+  section: 9.1.2
+  text_definitions:
+    enter_sae_definition: Enter SAE definition
+  title: Definitions of Serious Adverse Events
+9.1.3:
+  data_elements: {}
+  header_only: false
+  section: 9.1.3
+  text_definitions:
+    enter_definitions_related_to_childbearing_potential_or_state_not_applicable: Enter
+      Definitions Related to Childbearing Potential or state Not Applicable
+  title: Definitions Related to Childbearing Potential
+9.1.4:
+  data_elements: {}
+  header_only: false
+  section: 9.1.4
+  text_definitions:
+    enter_definition_of_medical_device_product_complaints: Enter Definition of Medical
+      Device Product Complaints
+  title: '{Definition of Medical Device Product Complaints}'
+'9.2':
+  data_elements: {}
+  header_only: false
+  section: '9.2'
+  text_definitions:
+    enter_time_period_and/or_frequency_for_collection_and_reporting_of_aes,_saes,_pregnancy,_and_product_complaints: Enter
+      Time period and/or frequency for collection and reporting of AEs, SAEs, pregnancy,
+      and product complaints
+  title: Timing and Mechanism for Collection and Reporting
+'9.3':
+  data_elements: {}
+  header_only: false
+  section: '9.3'
+  text_definitions:
+    enter_identification,_recording_and_follow-up_of_aes,_saes,_product_complaints,_and_pregnancy_and_postpartum_information: Enter
+      Identification, Recording and Follow-Up of AEs, SAEs, product complaints, and
+      pregnancy and postpartum information
+  title: Identification, Recording and Follow-Up
+9.3.1:
+  data_elements: {}
+  header_only: false
+  section: 9.3.1
+  text_definitions:
+    enter_identification: Enter Identification
+  title: Identification
+9.3.2:
+  data_elements: {}
+  header_only: false
+  section: 9.3.2
+  text_definitions:
+    enter_severity: Enter Severity
+  title: Intensity
+9.3.3:
+  data_elements: {}
+  header_only: false
+  section: 9.3.3
+  text_definitions:
+    enter_causality: Enter Causality
+  title: Causality
+9.3.4:
+  data_elements: {}
+  header_only: false
+  section: 9.3.4
+  text_definitions:
+    enter_follow-up_of_aes_and_saes: Enter Follow-up of AEs and SAEs
+  title: Follow-up
+'9.4':
+  data_elements: {}
+  header_only: false
+  section: '9.4'
+  text_definitions:
+    enter_reporting_of_saes: Enter Reporting of SAEs
+  title: Reporting
+9.4.1:
+  data_elements: {}
+  header_only: false
+  section: 9.4.1
+  text_definitions:
+    enter_regulatory_reporting_requirements_for_saes: Enter Regulatory Reporting Requirements
+      for SAEs
+  title: Regulatory Reporting Requirements
+9.4.2:
+  data_elements: {}
+  header_only: false
+  section: 9.4.2
+  text_definitions:
+    enter_adverse_events_of_special_interest_or_state_not_applicable: Enter Adverse
+      Events of Special Interest or state Not Applicable
+  title: Adverse Events of Special Interest
+9.4.3:
+  data_elements: {}
+  header_only: false
+  section: 9.4.3
+  text_definitions:
+    enter_disease-related_events_or_outcomes_not_qualifying_as_aes_or_saes: Enter
+      Disease-related Events or Outcomes not Qualifying as AEs or SAEs
+  title: Disease-related Events or Outcomes Not Qualifying as AEs or SAEs
+'9.5':
+  data_elements: {}
+  header_only: true
+  section: '9.5'
+  text_definitions: {}
+  title: Pregnancy and Postpartum Information
+9.5.1:
+  data_elements: {}
+  header_only: false
+  section: 9.5.1
+  text_definitions:
+    enter_participants_who_become_pregnant_during_the_trial: Enter Participants Who
+      Become Pregnant During the Trial
+  title: '{Participants Who Become Pregnant During the Trial}'
+9.5.2:
+  data_elements: {}
+  header_only: false
+  section: 9.5.2
+  text_definitions:
+    enter_participants_whose_partners_become_pregnant: Enter Participants Whose Partners
+      Become Pregnant
+  title: '{Participants Whose Partners Become Pregnant}'

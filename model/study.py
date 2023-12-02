@@ -1,4 +1,5 @@
 from .node import NodeNameLabelDesc
+from .study_protocol_document_version import StudyProtocolDocumentVersion
 from .neo4j_connection import Neo4jConnection
 from uuid import UUID, uuid4
 
@@ -14,13 +15,24 @@ class Study(NodeNameLabelDesc):
       db = Neo4jConnection()
       with db.session() as session:
         result = session.execute_write(cls._create_study, name, description, label)
-        if result:
-          return {'uuid': result}
-        else:
+        if not result:
           return {'error': "Failed to create study, operation failed"}
+        return {'uuid': result}  
     except Exception as e:
       return {'error': f"Exception '{e}'. Failed to create study"}
 
+  def protocol(self):
+    try:
+      db = Neo4jConnection()
+      with db.session() as session:
+        result = session.execute_read(self._protocol_exists, self.uuid)
+        if not result:
+          result = session.execute_write(self._create_protocol, self.uuid)
+          if not result:
+            return {'error': "Failed to create protocol, operation failed"}
+        return {'uuid': result}  
+    except Exception as e:
+      return {'error': f"Exception '{e}'. Failed to find or create protocol document"}
 
   @staticmethod
   def _create_study(tx, name, description, label):
@@ -51,6 +63,51 @@ class Study(NodeNameLabelDesc):
       return row["uuid"]
     return None
 
+  @staticmethod
+  def _create_protocol(tx, uuid):
+    query = """
+      MATCH (s:Study {uuid: $uuid})
+      WITH s
+      CREATE (spd:StudyProtocolDocument {id: $spd_id, name: $spd_name, description: $spd_description, label: $spd_label, uuid: $uuid1})
+      CREATE (spdv:StudyProtocolDocumentVersion {id: $spdv_id, name: $spdv_name, description: $spdv_description, label: $spdv_label, 
+        protocolVersion: $sv_version, briefTitle: $brief_title, officialTitle: $official_title=, $publicTitle=public_title,
+        scientificTitle: $scientific_title, uuid: $uuid2})
+      CREATE (s)-DOCUMENTED_BY_REL->(spd)
+      CREATE (spd)-[:VERSIONS_REL]->(spdv)
+      RETURN spdv.uuid as uuid
+    """
+    result = tx.run(query, 
+      spd_id='STUDY_PROTOCOL',
+      spd_name="PROTOCOL", 
+      spd_description="The protocol document for the study", 
+      spd_label="Protocol document", 
+      spdv_id='STUDY_PROTOCOL_1',
+      spdv_name="PROTOCOL_1", 
+      spdv_description="The protocol document for the study", 
+      spdv_label="Protocol document", 
+      spdv_version="0.1",
+      briefTitle="<To Be provided>",
+      officialTitle="<To Be provided>",
+      publicTitle="<To Be provided>",
+      scientificTitle="<To Be provided>",
+      uuid1=str(uuid4()), 
+      uuid2=str(uuid4())
+    )
+    for row in result:
+      return row['uuid']
+    return None
+
+  @staticmethod
+  def _protocol_exists(tx, uuid):
+    query = """
+      MATCH (s:Study {uuid: $uuid})-[:DOCUMENTED_BY_REL]->(pd:StudyProtocolDocument)-[:VERSIONS_REL]->(pdv:StudyProtocolDocumentVersion)
+      RETURN pdv.uuid as uuid
+    """
+    result = tx.run(query, uuid=uuid)
+    if result.peek():
+      for row in result:
+        return row['uuid']
+    return None      
 
   # @classmethod
   # def delete(cls, uuid):
