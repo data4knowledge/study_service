@@ -16,9 +16,18 @@ class StudyProtocolDocumentVersion(NodeId):
   contents: List[NarrativeContent] = []
   childrenIds: List[str] = []
 
+  def section(self, key):
+    return self._read_section_definition(key)
+
   def section_list(self):
     return {'root': self._read_section_list()}
 
+  def _read_section_definition(self, key):
+    print(f"KEY: {key}")
+    data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
+    print(f"DATA: {data[key]}")
+    return data[key]
+  
   def _read_section_list(self):
     return self._read_as_yaml_file("data/m11_sections.yaml")
   
