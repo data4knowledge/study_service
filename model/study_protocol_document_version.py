@@ -9,6 +9,7 @@ from .node import *
 from .code import Code
 from .governance_date import GovernanceDate
 from .narrative_content import NarrativeContent
+from uuid import uuid4
 
 class StudyProtocolDocumentVersion(NodeId):
   briefTitle: str
@@ -27,8 +28,20 @@ class StudyProtocolDocumentVersion(NodeId):
       with doc.tag('body'):
         #doc.asis(front_sheet)    
         items = self._narrative_content()
-        for section in self.section_list()['root']:
-          content = items[section['key']]
+        for section in self.section_list_flat():
+          try:
+            content = items[section['key']]
+          except Exception as e:
+            logging.warning(f"Protocol document section {section['key']} not found")
+            uuid = str(uuid4())
+            content = NarrativeContent(
+              id=uuid, 
+              uuid=uuid, 
+              name=f"SECTION_{section['section_number']}", 
+              sectionNumber=section['section_number'], 
+              sectionTitle=section['section_title'], 
+              text=""
+            )
           self._content_to_html(content, doc)
       return doc.getvalue()
     except Exception as e:
@@ -38,6 +51,15 @@ class StudyProtocolDocumentVersion(NodeId):
 
   def section(self, key):
     return self._read_section_definition(key)
+
+  def section_list_flat(self):
+    items = self._read_section_list()
+    results = []
+    for item in items:
+      results.append(item)
+      if not item['items'] == []:
+        results += item['items']
+    return results
 
   def section_list(self):
     return {'root': self._read_section_list()}
@@ -79,7 +101,7 @@ class StudyProtocolDocumentVersion(NodeId):
     heading_id = f"section-{content.sectionNumber}"
     with doc.tag('div', klass=klass):
       if (level == 1 and int(content.sectionNumber) > 0) or (level > 1):
-        with doc.tag(f'h{level}', id=heading_id):
+        with doc.tag(f'h{level + 4}', id=heading_id):
           doc.asis(f"{content.sectionNumber}&nbsp{content.sectionTitle}")
       if self._standard_section(content.text):
         name = self._standard_section_name(content.text)
