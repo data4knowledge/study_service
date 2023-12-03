@@ -90,7 +90,16 @@ class StudyProtocolDocumentVersion(NodeId):
   def _narrative_content_post(self, section, text):
     db = Neo4jConnection()
     with db.session() as session:
-      return session.execute_write(self._narrative_content_write, self.uuid, section, text)
+      if session.execute_read(self._section_exists, self.uuid, section):
+        return session.execute_write(self._narrative_content_write, self.uuid, section, text)
+      else:
+        print(f"NC POST: Section {section} missing")
+        return None
+
+  def _all_narrative_content(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(self._all_narrative_content_read, self.uuid)
 
   @staticmethod
   def _narrative_content_read(tx, uuid, section):
@@ -105,17 +114,16 @@ class StudyProtocolDocumentVersion(NodeId):
 
   @staticmethod
   def _narrative_content_write(tx, uuid, section, text):
+    print(f"NC WRITE {uuid}, {section} {text}")
     query = """
       MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent {sectionNumber: $section})
       SET nc.text = $text
+      RETURN nc.uuid as uuid
     """
-    tx.run(query, uuid1=uuid, section=section, text=text)
+    rows = tx.run(query, uuid1=uuid, section=section, text=text)
+    for row in rows:
+      print(f"NC WRITE {uuid}, {section} {row['uuid']}")
   
-  def _all_narrative_content(self):
-    db = Neo4jConnection()
-    with db.session() as session:
-      return session.execute_read(self._all_narrative_content_read, self.uuid)
-
   @staticmethod
   def _all_narrative_content_read(tx, uuid):
     query = """
@@ -128,18 +136,27 @@ class StudyProtocolDocumentVersion(NodeId):
       results[nc.sectionNumber] = nc
     return results
   
+  @staticmethod
+  def _section_exists(tx, uuid, section):
+    query = "MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent {sectionNumber: $section}) RETURN nc"
+    result = tx.run(query, uuid1=uuid, section=section)
+    return True if result.peek() else False
+
   def _content_to_html(self, content, doc):
     level = content.level()
     klass = "page" if level == 1 else ""
     heading_id = f"section-{content.sectionNumber}"
     with doc.tag('div', klass=klass):
-      if (level == 1 and int(content.sectionNumber) > 0) or (level > 1):
-        with doc.tag(f'h{level + 4}', id=heading_id):
-          doc.asis(f"{content.sectionNumber}&nbsp{content.sectionTitle}")
-      if self._standard_section(content.text):
-        name = self._standard_section_name(content.text)
-        content.text = self._generate_standard_section(name)
-      doc.asis(self._translate_references(content.text))
+      try:
+        if (level == 1 and int(content.sectionNumber) > 0) or (level > 1):
+          with doc.tag(f'h{level + 4}', id=heading_id):
+            doc.asis(f"{content.sectionNumber}&nbsp{content.sectionTitle}")
+        if self._standard_section(content.text):
+          name = self._standard_section_name(content.text)
+          content.text = self._generate_standard_section(name)
+        doc.asis(self._translate_references(content.text))
+      except Exception as e:
+        print(f"TO HTML: Exception {e}\n{traceback.format_exc()}")
 
   def _translate_references(self, content_text):
     return content_text
