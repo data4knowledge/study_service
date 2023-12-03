@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, status, Response, Request, BackgroundTasks
+from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, status, Request, BackgroundTasks
 from model.system import SystemOut
 from model.study_file import StudyFile
 from model.study import Study
@@ -151,6 +152,23 @@ async def get_section(uuid: str, key: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
     result = doc.section(key)
+    return result
+  else:
+    raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
+
+class Section(BaseModel):
+    text: str
+
+@app.post("/v1/protocolDocumentVersions/{uuid}/section/{key}", 
+  summary="Get the protocol document version section",
+  description="Get the protococl document section for a study.",
+  status_code=201,
+  response_model=str)
+async def get_section(uuid: str, key: str, item: Section):
+  doc = StudyProtocolDocumentVersion.find(uuid)
+  if not 'error' in doc:
+    result = doc.section_write(key, item.text)
+    result = doc.document()
     return result
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
