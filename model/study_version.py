@@ -1,20 +1,16 @@
-# from pydantic import BaseModel
+import logging
+import traceback
 from typing import List, Union
-from model.code import *
-from model.alias_code import *
-from model.study_protocol_version import *
-from model.study_design import *
-from model.neo4j_connection import Neo4jConnection
-from model.node import Node
+from .code import *
+from .alias_code import *
+from .study_protocol_version import *
+from .study_design import *
+from .neo4j_connection import Neo4jConnection
+from .node import Node
 from .governance_date import GovernanceDate
 from .study_amendment import StudyAmendment
 from .study_identifier import StudyIdentifier
 from .study_protocol_document_version import StudyProtocolDocumentVersion
-
-# from service.ra_service import RAService
-# from datetime import datetime
-# from utility.utility import *
-# from uuid import UUID, uuid4
 
 class StudyVersion(NodeId):
   studyTitle: str
@@ -38,6 +34,26 @@ class StudyVersion(NodeId):
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:Study {uuid: '%s'})-[]->(n:StudyVersion)" % (uuid), "ORDER BY n.studyTitle ASC", page, size, filter)
 
+  def protocol_document(self):
+    try:
+      db = Neo4jConnection()
+      with db.session() as session:
+        result = session.execute_read(self._protocol_document, self.uuid)
+        if not result:
+          return {'error': "Failed to find protocol version, operation failed"}
+        return {'uuid': result.uuid}  
+    except Exception as e:
+      logging.error(f"Exception raised while finding protocol version")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to find protcol version"}
+
+  @staticmethod
+  def _protocol_document(tx, uuid):
+    query = "MATCH (sv:StudyVersion {uuid: $uuid})-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion) RETURN spdv as protocol"
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      return StudyProtocolDocumentVersion.wrap(row['protocol'])
+    return None
 
   #   @classmethod
 #   def exists(cls, identifier):

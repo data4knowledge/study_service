@@ -103,41 +103,34 @@ async def create_study(name: str, description: str="", label: str=""):
   else:
     raise HTTPException(status_code=409, detail=result['error'])
 
-# @app.delete("/v1/studies/{uuid}", 
-#   summary="Delete a study",
-#   description="Deletes the specified study.",
-#   status_code=204)
-# async def delete_study(uuid: str):
-#   result = Study.delete(uuid)
-
-# @app.get("/v1/studies/{uuid}", 
-#   summary="Get a study",
-#   description="Provides the detail for a specified study.",
-#   response_model=Study)
-# async def get_study(uuid: str):
-#   study = Study.find_full(uuid)
-#   if study == None:
-#     raise HTTPException(status_code=404, detail="The requested study cannot be found")
-#   else:
-#     return study
+# Study Versions
+# ==============
+  
+@app.get("/v1/studies/{uuid}/studyVersions", 
+  summary="Get the study versions for a study",
+  description="Provides a list of study versions that exisit for a specified study.",
+  response_model=dict)
+async def list_study_versions(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  return StudyVersion.list(uuid, page, size, filter)
 
 # Protocol Document Versions
 # ==========================
 
-@app.get("/v1/studies/{uuid}/protocolDocumentVersions", 
-  summary="Get the protocol document for a study",
-  description="Get the protococl document for a study. If not present will create the instance and return the section structure for the document.",
+@app.get("/v1/studyVersions/{uuid}/protocolDocument", 
+  summary="Get the protocol document for a study version",
+  description="Get the protococl document for a study version",
   response_model=str)
-async def get_create_protocol(uuid: str):
-  study = Study.find(uuid)
-  if not 'error' in study:
-    result = study.protocol()
+async def get_protocol_document(uuid: str):
+  study_version = StudyVersion.find(uuid)
+  if study_version:
+    result = study_version.protocol_document()
     if not 'error' in result:
       return result['uuid']
     else:
-      raise HTTPException(status_code=409, detail=result['error'])
+      raise HTTPException(status_code=404, detail=result['error'])
   else:
-    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+    raise HTTPException(status_code=404, detail="The requested study version cannot be found")
 
 @app.get("/v1/protocolDocumentVersions/{uuid}/section_list", 
   summary="Get the protocol document version section list",
@@ -162,16 +155,45 @@ async def get_section(uuid: str, key: str):
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
-# Study Versions
-# =============≠
+# Study Designs
+# =============
 
-@app.get("/v1/studies/{uuid}/studyVersions", 
-  summary="Get the study versions for a study",
-  description="Provides a list of study versions that exisit for a specified study.",
+@app.get("/v1/studyVersions/{uuid}/studyDesigns", 
+  summary="Get the study designs for a study version",
+  description="Provides the basic data for the study designs for a study version (currently limited to one design only).",
   response_model=dict)
-async def list_study_versions(request: Request, page: int = 0, size: int = 0, filter: str=""):
+async def list_study_designs(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
-  return StudyVersion.list(uuid, page, size, filter)
+  return StudyDesign.list(uuid, page, size, filter)
+
+@app.get("/v1/studyDesigns/{uuid}", 
+  summary="Get the study design",
+  description="Provides the details for a given study design.",
+  response_model=StudyDesign)
+async def get_study_design_soa(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
+# @app.delete("/v1/studies/{uuid}", 
+#   summary="Delete a study",
+#   description="Deletes the specified study.",
+#   status_code=204)
+# async def delete_study(uuid: str):
+#   result = Study.delete(uuid)
+
+# @app.get("/v1/studies/{uuid}", 
+#   summary="Get a study",
+#   description="Provides the detail for a specified study.",
+#   response_model=Study)
+# async def get_study(uuid: str):
+#   study = Study.find_full(uuid)
+#   if study == None:
+#     raise HTTPException(status_code=404, detail="The requested study cannot be found")
+#   else:
+#     return study
 
 # @app.get("/v1/studies/{uuid}/studyDesigns", 
 #   summary="Get the study designs for a study",
@@ -230,27 +252,6 @@ async def list_study_versions(request: Request, page: int = 0, size: int = 0, fi
 #   else:
 #     return study.add_ct_dot_gov_identifier(params.identifier)
 
-# Study Designs
-# =============
-
-@app.get("/v1/studyVersions/{uuid}/studyDesigns", 
-  summary="Get the study designs for a study version",
-  description="Provides the basic data for the study designs for a study version (currently limited to one design only).",
-  response_model=dict)
-async def list_study_designs(request: Request, page: int = 0, size: int = 0, filter: str=""):
-  uuid = request.path_params['uuid']
-  return StudyDesign.list(uuid, page, size, filter)
-
-@app.get("/v1/studyDesigns/{uuid}", 
-  summary="Get the study design",
-  description="Provides the details for a given study design.",
-  response_model=StudyDesign)
-async def get_study_design_soa(uuid: str):
-  study_design = StudyDesign.find(uuid)
-  if study_design:
-    return study_design
-  else:
-    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
 
 # @app.get("/v1/studyDesigns/{uuid}/dataContract", 

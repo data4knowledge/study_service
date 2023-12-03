@@ -11,7 +11,7 @@ class StudyProtocolDocumentVersion(NodeId):
   publicTitle: str
   scientificTitle: str
   protocolVersion: str
-  protocolStatus: Code = None # 
+  protocolStatus: Code = None
   dateValues: List[GovernanceDate] = []
   contents: List[NarrativeContent] = []
   childrenIds: List[str] = []
