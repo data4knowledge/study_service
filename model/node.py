@@ -19,10 +19,7 @@ class Node(BaseModel):
 
   @staticmethod
   def _find(tx, cls, uuid):
-    query = """
-      MATCH (a:%s { uuid: $uuid1 })
-      RETURN a
-    """ % (cls.__name__)
+    query = "MATCH (a:%s { uuid: $uuid1 }) RETURN a" % (cls.__name__)
     result = tx.run(query, uuid1=uuid)
     for row in result:
       dict = {}

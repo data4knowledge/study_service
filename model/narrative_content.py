@@ -6,3 +6,6 @@ class NarrativeContent(NodeName):
   sectionTitle: str
   text: Union[str, None] = None
   contentChildIds: List[str] = []
+
+  def level(self):
+    return len(self.sectionNumber.split('.'))

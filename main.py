@@ -155,6 +155,18 @@ async def get_section(uuid: str, key: str):
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
+@app.get("/v1/protocolDocumentVersions/{uuid}/document", 
+  summary="Get the protocol document version document",
+  description="Get the protococl document.",
+  response_model=str)
+async def get_section(uuid: str):
+  doc = StudyProtocolDocumentVersion.find(uuid)
+  if not 'error' in doc:
+    result = doc.document()
+    return result
+  else:
+    raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
+
 # Study Designs
 # =============
 
