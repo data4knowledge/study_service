@@ -27,7 +27,7 @@ class StudyProtocolDocumentVersion(NodeId):
       doc = Doc()
       with doc.tag('body'):
         #doc.asis(front_sheet)    
-        items = self._narrative_content()
+        items = self._all_narrative_content()
         for section in self.section_list_flat():
           try:
             content = items[section['key']]
@@ -50,7 +50,10 @@ class StudyProtocolDocumentVersion(NodeId):
       return {'error': f"Exception. Failed to build protocol document"}
 
   def section(self, key):
-    return self._read_section_definition(key)
+    section_def = self._read_section_definition(key)
+    nc = self._narrative_content(key)
+    section_def['text'] = nc.text if nc else ''
+    return section_def
 
   def section_list_flat(self):
     items = self._read_section_list()
@@ -76,23 +79,37 @@ class StudyProtocolDocumentVersion(NodeId):
       data = yaml.load(f, Loader=yaml.FullLoader)
     return data
   
-  def _narrative_content(self):
+  def _narrative_content(self, section):
     db = Neo4jConnection()
     with db.session() as session:
-      return session.execute_read(self._narrative_content_read, self.uuid)
+      return session.execute_read(self._narrative_content_read, self.uuid, section)
 
   @staticmethod
-  def _narrative_content_read(tx, uuid):
+  def _narrative_content_read(tx, uuid, section):
+    query = """
+      MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent {sectionNumber: $section}) RETURN nc
+    """
+    rows = tx.run(query, uuid1=uuid, section=section)
+    results = {}
+    for item in rows:
+      return NarrativeContent.wrap(item['nc'])
+    return None
+  
+  def _all_narrative_content(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(self._all_narrative_content_read, self.uuid)
+
+  @staticmethod
+  def _all_narrative_content_read(tx, uuid):
     query = """
       MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent) RETURN nc
     """
     rows = tx.run(query, uuid1=uuid)
     results = {}
     for item in rows:
-      #print(f"ITEM: {item}")
       nc = NarrativeContent.wrap(item['nc'])
       results[nc.sectionNumber] = nc
-    #print(f"RESULTS: {results}")
     return results
   
   def _content_to_html(self, content, doc):
