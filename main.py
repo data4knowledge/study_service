@@ -22,7 +22,7 @@ from utility.service_environment import ServiceEnvironment
 import logging
 import traceback
 
-VERSION = "0.5"
+VERSION = "0.7"
 SYSTEM_NAME = "d4k Study Microservice"
 
 #log = logging.getLogger(__name__)
