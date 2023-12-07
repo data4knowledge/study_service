@@ -9,6 +9,8 @@ from .node import *
 from .code import Code
 from .governance_date import GovernanceDate
 from .narrative_content import NarrativeContent
+from .section_number import SectionNumber
+
 from uuid import uuid4
 
 class StudyProtocolDocumentVersion(NodeId):
@@ -21,6 +23,7 @@ class StudyProtocolDocumentVersion(NodeId):
   dateValues: List[GovernanceDate] = []
   contents: List[NarrativeContent] = []
   childrenIds: List[str] = []
+  index: int = 0
 
   def document(self):
     try:
@@ -49,6 +52,20 @@ class StudyProtocolDocumentVersion(NodeId):
       logging.error(f"Exception {e}\n{traceback.format_exc()}")
       return {'error': f"Exception. Failed to build protocol document"}
 
+  @classmethod
+  def find_from_study(cls, uuid):
+    db = Neo4jConnection()
+    with db.session() as session:
+      return session.execute_read(cls._find_from_study, uuid)
+
+  @staticmethod
+  def _find_from_study(tx, uuid):
+    query = "MATCH (s:Study {uuid: $uuid})-[:DOCUMENTED_BY_REL]->(spd:StudyProtocolDocument)-[:VERSIONS_REL]->(spdv:StudyProtocolDocumentVersion) RETURN spdv"
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      return StudyProtocolDocumentVersion.wrap(row['spdv'])
+    return None
+  
   def section(self, key):
     section_def = self._read_section_definition(key)
     nc = self._narrative_content_get(key)
@@ -66,6 +83,30 @@ class StudyProtocolDocumentVersion(NodeId):
     result = {'root': sections}
     return result
   
+  def section_hierarchy(self):
+    section_defs = self._read_section_definitions()
+    sections = self._read_section_list()
+    parent = [{'item': {'name':	'ROOT', 'section_number': '-1', 'section_title':	'Root', 'text': ''}, 'children': []}]
+    current_level = 1
+    previous_item = None
+    for section in sections:
+      section_number = SectionNumber(section['section_number'])
+      section['header_only'] = section_defs[section['key']]['header_only']
+      item = {'item': section, 'children': []}
+      if section_number.level == current_level:
+        parent[-1]['children'].append(item)
+      elif section_number.level > current_level:
+        parent.append(previous_item)
+        parent[-1]['children'].append(item)
+        current_level = section_number.level
+      elif section_number.level < current_level:
+        parent.pop()
+        parent[-1]['children'].append(item)
+        current_level = section_number.level
+      current_level = section_number.level
+      previous_item = item
+    return parent[0]
+
   def _read_section_definition(self, key):
     data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
     return data[key]
