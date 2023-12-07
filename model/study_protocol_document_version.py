@@ -100,6 +100,9 @@ class StudyProtocolDocumentVersion(NodeId):
     section_def['text'] = nc.text if nc else ''
     return section_def
 
+  def element(self, key):
+    return self._read_element_definition(key)
+
   def section_write(self, key, text):
     try:
       result = self._narrative_content_post(key, text)
@@ -144,7 +147,11 @@ class StudyProtocolDocumentVersion(NodeId):
   def _read_section_definition(self, key):
     data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
     return data[key]
-  
+
+  def _read_element_definition(self, key):
+    data = self._read_as_yaml_file("data/m11_elements.yaml")
+    return data[key]
+
   def _read_section_definitions(self):
     return self._read_as_yaml_file("data/m11_to_usdm.yaml")
 

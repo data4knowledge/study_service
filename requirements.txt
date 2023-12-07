@@ -10,3 +10,4 @@ usdm==0.39
 python-multipart
 pygithub
 stringcase
+pyyaml

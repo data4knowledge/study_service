@@ -1,0 +1,102 @@
+sponsor_confidentiality_statement:
+  type: text
+  value: ''
+full_title:
+  type: text
+  value: ''
+trial_acronym:
+  type: text
+  value: ''
+protocol_identifier:
+  type: text
+  value: ''
+original_protocol:
+  type: text
+  value: ''
+version_number:
+  type: text
+  value: ''
+version_date:
+  type: text
+  value: ''
+amendment_identifier:
+  type: text
+  value: ''
+amendment_scope:
+  type: text
+  value: ''
+compound_code:
+  type: text
+  value: ''
+nonproprietary_name:
+  type: text
+  value: ''
+proprietary_name:
+  type: text
+  value: ''
+trial_phase:
+  type: code_list
+  value: ''
+trial_short_title:
+  type: text
+  value: ''
+sponsor_name:
+  type: text
+  value: ''
+sponsor_legal_address:
+  type: text
+  value: ''
+eu_ct_number:
+  type: text
+  value: ''
+ide_number:
+  type: text
+  value: ''
+fda_ind_number:
+  type: text
+  value: ''
+jrct_number:
+  type: text
+  value: ''
+nct_number:
+  type: text
+  value: ''
+nmpa_ind_number:
+  type: text
+  value: ''
+who_utn_number:
+  type: text
+  value: ''
+other_regulatory_agency_identifier_number:
+  type: text
+  value: ''
+approval_date_or_state_location_where_information_can_be_found:
+  type: text
+  value: ''
+sponsor_signature_block:
+  type: text
+  value: ''
+describe_method:
+  type: text
+  value: ''
+expedited_safety_information_contact_method:
+  type: text
+  value: ''
+approximate_number_or_percentage_enrolled:
+  type: text
+  value: ''
+primary_reason_for_amendment:
+  type: text
+  value: ''
+secondary_reason_for_amendment:
+  type: text
+  value: ''
+description_of_amendment_change:
+  type: text
+  value: ''
+rationale_for_amendment_change:
+  type: text
+  value: ''
+section_of_amendment_change:
+  type: text
+  value: ''
