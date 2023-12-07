@@ -8,7 +8,7 @@ from model.study_design import StudyDesign
 from model.neo4j_connection import Neo4jConnection
 from model.schedule_timeline import ScheduleTimeline
 from model.activity import Activity
-from model.study_protocol_document_version import StudyProtocolDocumentVersion
+from model.study_protocol_document_version import StudyProtocolDocumentVersion, SPDVBackground
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
 # from model.study_domain_instance import StudyDomainInstance
@@ -18,7 +18,6 @@ from model.study_protocol_document_version import StudyProtocolDocumentVersion
 # from model.study_data import StudyData, StudyDataIn
 # from model.encounter import Encounter, EncounterIn, EncounterLink
 from utility.service_environment import ServiceEnvironment
-from model.background import *
 # from typing import List
 import logging
 import traceback
@@ -102,9 +101,7 @@ async def create_study(name: str, background_tasks: BackgroundTasks, description
   result = Study.create(name, description, label)
   if not 'error' in result:
     doc = StudyProtocolDocumentVersion.find_from_study(result['uuid'])
-    sections = doc.section_hierarchy()
-    uuid = doc.uuid
-    background_tasks.add_task(add_all_sections, sections, uuid)
+    background_tasks.add_task(SPDVBackground().add_all_sections, doc.section_hierarchy(), doc.uuid)
     return result['uuid']
   else:
     raise HTTPException(status_code=409, detail=result['error'])
