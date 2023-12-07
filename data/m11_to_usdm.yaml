@@ -3,26 +3,50 @@
     amendment_identifier:
       name: Amendment Identifier
       usdm:
-        image: ''
+        image: StudyVersions.png
         items:
         - attribute: number
           klass: StudyAmendment
-          xpath: ''
+          notes: ''
+          xpath: StudyVersion/StudyAmendment/@number
         notes: ''
         status: Set
       use: true
     amendment_scope:
       name: Amendment Scope
       usdm:
-        image: ''
+        image: StudyVersions.png
         items:
         - attribute: type
           klass: GeographicScope
-          xpath: ''
-        - attribute: type
-          klass: GeographicScope
-          xpath: ''
+          notes: The type will give Global, Regional or Country scope. There may be several scopes but only be one global scope
+          xpath: StudyVersion/StudyAmendment/SubjectEnrollment/@code/@standardCode/@decode
         notes: Overall scope will be drived from the scope type(s)
+        status: Set
+      use: true
+    amendment_summary:
+      name: Amendment summary
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          notes: ''
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    approximate_number_or_percentage_enrolled:
+      name: Approximate number or percentage enrolled
+      usdm:
+        image: StudyVersions.png
+        items:
+        - attribute: quantity
+          klass: SubjectEnrollment
+          notes: ''
+          xpath: SubjectEnrollment/@quantity
+        notes: Note that M11 wants different values depending on the scope of the
+          amendment
         status: Set
       use: true
     country_identifier:
@@ -32,6 +56,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -39,11 +64,12 @@
     enter_approval_date_or_state_location_where_information_can_be_found:
       name: Enter Approval Date or state location where information can be found
       usdm:
-        image: ''
+        image: StudyVersions.png
         items:
         - attribute: dateValue
           klass: GovernanceDate
-          xpath: ''
+          notes: Want the sponsor approval date
+          xpath: StudyVersion/@dateValues/GovernanceDate/@dateValue
         notes: ''
         status: Set
       use: true
@@ -51,18 +77,23 @@
       name: Enter Compound Code(s)
       usdm:
         image: ''
-        items: []
+        items:
+        - attribute: null
+          klass: null
+          notes: ''
+          xpath: ''
         notes: ''
         status: Not-In-USDM
       use: true
     enter_full_title:
       name: Enter Full Title
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
-        - attribute: officialTitle
-          klass: StudyProtocolDocumentVersion
-          xpath: ''
+        - attribute: text
+          klass: StudyTitle
+          notes: There are many titles. Select the correct one via the 'type' attribute in StudyTitle
+          xpath: StudyVersion/studyTitles/StudyTitle/@text
         notes: ''
         status: Set
       use: true
@@ -70,7 +101,11 @@
       name: Enter Nonproprietary Name(s)
       usdm:
         image: ''
-        items: []
+        items:
+        - attribute: null
+          klass: null
+          notes: ''
+          xpath: ''
         notes: ''
         status: Not-In-USDM
       use: true
@@ -78,19 +113,24 @@
       name: Enter Proprietary Name(s)
       usdm:
         image: ''
-        items: []
+        items:
+        - attribute: null
+          klass: null
+          notes: ''
+          xpath: ''
         notes: ''
         status: Not-In-USDM
       use: true
     enter_protocol_identifier:
       name: Enter Protocol Identifier
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
-        notes: ''
+          notes: "Select the sponsor identifier. This can be identified via the 'studyIdentifierScope' attribute, teh resulting organization and its type"
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
+        notes: '' 
         status: Set
       use: true
     enter_sponsor_confidentiality_statement:
@@ -98,8 +138,9 @@
       usdm:
         image: ''
         items:
-        - attribute: ''
-          klass: ''
+        - attribute: null
+          klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-In-USDM
@@ -107,88 +148,97 @@
     enter_sponsor_legal_address:
       name: Enter Sponsor Legal Address
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: text
           klass: Address
-          xpath: StudyIdentifier[Organization/@type/@code=C70793]/Organization/Address/@text
+          notes: Select the sponsor organization
+          xpath: StudyIdentifier/@sponsorIdentifierScope/Organization/Address/@text
         notes: ''
         status: Set
       use: true
     enter_sponsor_name:
       name: Enter Sponsor Name
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: name
           klass: Organization
-          xpath: StudyIdentifier[Organization/@type/@code=C70793]/Organization/@name
+          notes: Select the sponsor organization
+          xpath: StudyIdentifier/@studyIdentifierScope/Organization/@name
         notes: ''
         status: Set
       use: true
     enter_trial_acronym:
       name: Enter Trial Acronym
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
-        - attribute: studyAcronym
-          klass: StudyVersion
-          xpath: ''
+        - attribute: text
+          klass: StudyTitle
+          notes: There are many titles. Select the acronym via the 'type' attribute
+            in StudyTitle
+          xpath: StudyVersion/studyTitles/StudyTitle/@text
         notes: ''
         status: Set
       use: true
     enter_trial_short_title:
       name: Enter Trial Short Title
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
-        - attribute: briefTitle
-          klass: StudyProtocolDocumentVersion
-          xpath: StudyProtocolDocumentVersion/@briefTitle
+        - attribute: text
+          klass: StudyTitle
+          notes: There are many titles. Select the correct one via the 'type' attribute in StudyTitle
+          xpath: StudyVersion/studyTitles/StudyTitle/@text
         notes: ''
         status: Set
       use: true
     enter_version_date:
       name: Enter Version Date
       usdm:
-        image: ''
+        image: StudyVersions.png
         items:
         - attribute: dateValue
           klass: GovernanceDate
-          xpath: ''
+          notes: The governamce data 'type' attribute should be examined and the type 'Protocol Effective Date' selected
+          xpath: StudyProtocolDocumentVersion/GovernanceDate/@dateValue
         notes: ''
         status: Set
       use: true
     enter_version_number:
       name: Enter Version Number
       usdm:
-        image: ''
+        image: StudyVersions.png
         items:
         - attribute: versionIdentifier
           klass: StudyVersion
-          xpath: ''
+          notes: ''
+          xpath: StudyVersion/@versionIdentifier
         notes: ''
         status: Set
       use: true
     eu_ct_number:
       name: EU CT Number
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
+          notes: Select where the organization is of type 'Regulatory Agency' and is the EU
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
       use: true
     fda_ind_number:
       name: FDA IND Number
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
+          notes: Select where the organization is of type 'Regulatory Agency' and is the FDA
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
       use: true
@@ -199,6 +249,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -206,76 +257,90 @@
     ide_number:
       name: IDE Number
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
-        notes: ''
+          notes: Select where the organization is of type 'Regulatory Agency' and is the FDA
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
+        notes: 'Support for devices?'
         status: Set
       use: true
     jrct_number:
       name: JRCT Number
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
+          notes: Select where the organization is of type 'Regulatory Agency' and is the MHLW (Japan)
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
       use: true
     nct_number:
       name: NCT Number
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
+          notes: Select where the organization is of type 'Clinical Study Registry' and is the ClinicalTrials.gov
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
       use: true
     nmpa_ind_number:
       name: NMPA IND Number
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
+          notes: Select where the organization is of type 'Regulatory Agency' and is the NMPA (China)
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
       use: true
     original_protocol:
       name: Original protocol
       usdm:
-        image: ''
-        items: []
+        image: Identifiers.png
+        items:
+        - attribute: amendments
+          klass: StudyVersion
+          notes: Existance of any amendments tells us this is not an original protocol. Set to 'Yes' if no amendments exist, otherwise 'No'
+          xpath: StudyVersion]/@amendments
         notes: ''
-        status: Not-Set
+        status: Set
       use: true
     other_regulatory_agency_identifier_number:
       name: Other Regulatory Agency Identifier Number
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
+          notes: Select where the organization is of type 'Regulatory Agency'
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
       use: true
     primary_reason_for_amendment:
       name: Primary Reason for Amendment
       usdm:
-        image: ''
+        image: StudyVersions.png
         items:
-        - attribute: null
-          klass: null
-          xpath: ''
-        notes: ''
-        status: Not-Set
+        - attribute: code
+          klass: StudyAmendmentReason
+          notes: ''
+          xpath: StudyVersion/@amendments/StudyAmendment/@primaryReason/StudyAmendmentReason/@code
+        - attribute: otherReason
+          klass: StudyAmendmentReason
+          notes: ''
+          xpath: StudyVersion/@amendments/StudyAmendment/@primaryReason/StudyAmendmentReason/@otherReason
+        notes: The latest amendment will need to be selected
+        status: Set
       use: true
     region_identifier:
       name: Region Identifier
@@ -284,6 +349,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -291,45 +357,46 @@
     secondary_reason_for_amendment:
       name: Secondary Reason for Amendment
       usdm:
-        image: ''
+        image: StudyVersions.pngc
         items:
-        - attribute: null
-          klass: null
-          xpath: ''
-        notes: ''
+        - attribute: code
+          klass: StudyAmendmentReason
+          notes: ''
+          xpath: StudyVersion/@amendments/StudyAmendment/@primaryReason/StudyAmendmentReason/@code
+        - attribute: otherReason
+          klass: StudyAmendmentReason
+          notes: ''
+          xpath: StudyVersion/@amendments/StudyAmendment/@primaryReason/StudyAmendmentReason/@otherReason
+        notes: The latest amendment will need to be selected
         status: Not-Set
       use: true
     trial_phase:
       name: Trial Phase
       usdm:
-        image: ''
+        image: StudyVersions.png
         items:
         - attribute: studyPhase
           klass: StudyVersion
+          notes: ''
           xpath: StudyVersion/@studyPhase
-        - attribute: decode
-          klass: Code
-          xpath: StudyVersion/@studyPhase/@standardCode/@decode
         notes: ''
         status: Set
       use: true
     who/utn_number:
       name: WHO/UTN Number
       usdm:
-        image: ''
+        image: Identifiers.png
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          xpath: ''
+          notes: ''
+          xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
       use: true
   header_only: false
   section: '0'
   text_definitions:
-    '#/%': '#/%'
-    amendment_eendment_summaryamuuusummstnent_ementmmdmentmddndndmendment_summary: Amendment
-      eendment SummaryamuuuSummStnent ementmmdmentmddndndmendment Summary
     describe_method: describe method
     enter_"original": Enter "Original"
     enter_co-sponsor_legal_address: Enter Co-Sponsor Legal Address
@@ -378,6 +445,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -389,6 +457,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -400,6 +469,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -411,6 +481,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -422,6 +493,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -433,6 +505,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -444,6 +517,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -455,6 +529,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -466,6 +541,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -477,6 +553,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -488,6 +565,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -499,6 +577,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -510,6 +589,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -521,6 +601,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -532,17 +613,7 @@
         items:
         - attribute: null
           klass: null
-          xpath: ''
-        notes: ''
-        status: Not-Set
-      use: true
-    units_of_age:
-      name: units of age
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -565,18 +636,7 @@
     numeric: numeric
   title: Overall Design
 '1.2':
-  data_elements:
-    for_example,_randomisation,_cross-over,_end_of_treatment:
-      name: for example, randomisation, cross-over, end of treatment
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
-          xpath: ''
-        notes: ''
-        status: Not-Set
-      use: true
+  data_elements: {}
   header_only: false
   section: '1.2'
   text_definitions:
@@ -628,6 +688,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -953,6 +1014,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -964,6 +1026,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set
@@ -975,6 +1038,7 @@
         items:
         - attribute: null
           klass: null
+          notes: ''
           xpath: ''
         notes: ''
         status: Not-Set

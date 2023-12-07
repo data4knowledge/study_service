@@ -28,7 +28,7 @@ class StudyProtocolDocumentVersion(NodeId):
       with doc.tag('body'):
         #doc.asis(front_sheet)    
         items = self._all_narrative_content()
-        for section in self.section_list_flat():
+        for section in self.section_list()['root']:
           try:
             content = items[section['key']]
           except Exception as e:
@@ -58,22 +58,21 @@ class StudyProtocolDocumentVersion(NodeId):
   def section_write(self, key, text):
     self._narrative_content_post(key, text)
 
-  def section_list_flat(self):
-    items = self._read_section_list()
-    results = []
-    for item in items:
-      results.append(item)
-      if not item['items'] == []:
-        results += item['items']
-    return results
-
   def section_list(self):
-    return {'root': self._read_section_list()}
-
+    section_defs = self._read_section_definitions()
+    sections = self._read_section_list()
+    for section in sections:
+      section['header_only'] = section_defs[section['key']]['header_only']
+    result = {'root': sections}
+    return result
+  
   def _read_section_definition(self, key):
     data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
     return data[key]
   
+  def _read_section_definitions(self):
+    return self._read_as_yaml_file("data/m11_to_usdm.yaml")
+
   def _read_section_list(self):
     return self._read_as_yaml_file("data/m11_sections.yaml")
   
