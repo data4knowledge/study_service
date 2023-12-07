@@ -101,7 +101,13 @@ class StudyProtocolDocumentVersion(NodeId):
     return section_def
 
   def section_write(self, key, text):
-    self._narrative_content_post(key, text)
+    try:
+      result = self._narrative_content_post(key, text)
+      return {'uuid': result}  
+    except Exception as e:
+      logging.error(f"Exception raised while creating section")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to create section"}
 
   def section_list(self):
     section_defs = self._read_section_definitions()
@@ -191,6 +197,8 @@ class StudyProtocolDocumentVersion(NodeId):
     rows = tx.run(query, uuid1=uuid, section=section, text=text)
     for row in rows:
       print(f"NC WRITE {uuid}, {section} {row['uuid']}")
+      return row['uuid']
+    return None
   
   @staticmethod
   def _all_narrative_content_read(tx, uuid):

@@ -165,7 +165,7 @@ class Section(BaseModel):
   summary="Get the protocol document version section",
   description="Get the protococl document section for a study.",
   status_code=201,
-  response_model=str)
+  response_model=dict)
 async def get_section(uuid: str, key: str, item: Section):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
