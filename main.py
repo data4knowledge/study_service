@@ -168,7 +168,6 @@ async def get_section(uuid: str, key: str, item: Section):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
     result = doc.section_write(key, item.text)
-    result = doc.document()
     return result
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
