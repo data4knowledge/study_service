@@ -209,6 +209,7 @@ class StudyProtocolDocumentVersion(NodeId):
     results = {}
     for item in rows:
       nc = NarrativeContent.wrap(item['nc'])
+      nc.sectionNumber = '0' if nc.sectionNumber == '' else nc.sectionNumber
       results[nc.sectionNumber] = nc
     return results
   
@@ -224,7 +225,8 @@ class StudyProtocolDocumentVersion(NodeId):
     heading_id = f"section-{content.sectionNumber}"
     with doc.tag('div', klass=klass):
       try:
-        if (level == 1 and int(content.sectionNumber) > 0) or (level > 1):
+        section_number = SectionNumber(content.sectionNumber)
+        if not section_number.title_sheet:
           with doc.tag(f'h{level + 4}', id=heading_id):
             doc.asis(f"{content.sectionNumber}&nbsp{content.sectionTitle}")
         if self._standard_section(content.text):
@@ -232,7 +234,9 @@ class StudyProtocolDocumentVersion(NodeId):
           content.text = self._generate_standard_section(name)
         doc.asis(self._translate_references(content.text))
       except Exception as e:
-        print(f"TO HTML: Exception {e}\n{traceback.format_exc()}")
+        logging.error(f"Exception raised while creating HTML from content")
+        logging.error(f"Exception {e}\n{traceback.format_exc()}")
+
 
   def _translate_references(self, content_text):
     return content_text
