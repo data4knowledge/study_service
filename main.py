@@ -158,15 +158,15 @@ async def get_section(uuid: str, key: str):
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
-class Section(BaseModel):
+class TextBody(BaseModel):
     text: str
 
 @app.post("/v1/protocolDocumentVersions/{uuid}/section/{key}", 
-  summary="Get the protocol document version section",
-  description="Get the protococl document section for a study.",
+  summary="Set the protocol document version section",
+  description="Set the protococl document section for a study.",
   status_code=201,
   response_model=dict)
-async def get_section(uuid: str, key: str, item: Section):
+async def get_section(uuid: str, key: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
     result = doc.section_write(key, item.text)
@@ -181,11 +181,22 @@ async def get_section(uuid: str, key: str, item: Section):
 async def get_section(uuid: str, key: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
-    study_version = StudyVersion.find_from_study_protocol_document_version(doc.uuid)
-    if not 'error' in study_version:
-      return {'uuid': study_version.uuid, 'definition': doc.element(key)}
-    else:
-      raise HTTPException(status_code=404, detail="The requested study version cannot be found")
+    return {'uuid': uuid, 'definition': doc.element(key)}
+  else:
+    raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
+
+@app.post("/v1/protocolDocumentVersions/{uuid}/element/{key}", 
+  summary="Set the protocol document version element",
+  description="Set the protococl document element for a study.",
+  status_code=201,
+  response_model=dict)
+async def get_section(uuid: str, key: str, item: TextBody):
+  doc = StudyProtocolDocumentVersion.find(uuid)
+  if not 'error' in doc:
+    #study_version = StudyVersion.find_from_study_protocol_document_version(doc.uuid)
+    data = doc.element(key)
+    data['value'] = item.text
+    return {'uuid': uuid, 'definition': data}
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 

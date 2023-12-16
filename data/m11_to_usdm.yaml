@@ -8,7 +8,7 @@
         - attribute: number
           klass: StudyAmendment
           notes: ''
-          xpath: StudyVersion/StudyAmendment/@number
+          xpath: StudyVersion/@amendments/StudyAmendment/@number
         notes: ''
         status: Set
       use: true
@@ -19,8 +19,9 @@
         items:
         - attribute: type
           klass: GeographicScope
-          notes: The type will give Global, Regional or Country scope. There may be several scopes but only be one global scope
-          xpath: StudyVersion/StudyAmendment/SubjectEnrollment/@code/@standardCode/@decode
+          notes: The type will give Global, Regional or Country scope. There may be
+            several scopes but only be one global scope
+          xpath: StudyVersion/@amendments/StudyAmendment/@enrollments/SubjectEnrollment/@code/AliasCode/@standardCode/Code/@decode
         notes: Overall scope will be drived from the scope type(s)
         status: Set
       use: true
@@ -29,12 +30,12 @@
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
+        - attribute: summary
+          klass: StudyAmendment
           notes: ''
-          xpath: ''
+          xpath: StudyVersion/@amendments/StudyAmendment/@summary
         notes: ''
-        status: Not-Set
+        status: Set
       use: true
     approximate_number_or_percentage_enrolled:
       name: Approximate number or percentage enrolled
@@ -44,7 +45,7 @@
         - attribute: quantity
           klass: SubjectEnrollment
           notes: ''
-          xpath: SubjectEnrollment/@quantity
+          xpath: StudyVersion/@amendments/StudyAmendment/@enrollments/SubjectEnrollment/@quantity
         notes: Note that M11 wants different values depending on the scope of the
           amendment
         status: Set
@@ -92,8 +93,9 @@
         items:
         - attribute: text
           klass: StudyTitle
-          notes: There are many titles. Select the correct one via the 'type' attribute in StudyTitle
-          xpath: StudyVersion/studyTitles/StudyTitle/@text
+          notes: There are many titles. Select the correct one via the 'type' attribute
+            in StudyTitle
+          xpath: StudyVersion/@studyTitles/StudyTitle/@text
         notes: ''
         status: Set
       use: true
@@ -128,22 +130,11 @@
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          notes: "Select the sponsor identifier. This can be identified via the 'studyIdentifierScope' attribute, teh resulting organization and its type"
+          notes: Select the sponsor identifier. This can be identified via the 'studyIdentifierScope'
+            attribute, teh resulting organization and its type
           xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
-        notes: '' 
-        status: Set
-      use: true
-    enter_sponsor_confidentiality_statement:
-      name: Enter Sponsor Confidentiality Statement
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
         notes: ''
-        status: Not-In-USDM
+        status: Set
       use: true
     enter_sponsor_legal_address:
       name: Enter Sponsor Legal Address
@@ -153,7 +144,7 @@
         - attribute: text
           klass: Address
           notes: Select the sponsor organization
-          xpath: StudyIdentifier/@sponsorIdentifierScope/Organization/Address/@text
+          xpath: StudyIdentifier/@studyIdentifierScope/Organization/@legalAddress/Address/@text
         notes: ''
         status: Set
       use: true
@@ -178,7 +169,7 @@
           klass: StudyTitle
           notes: There are many titles. Select the acronym via the 'type' attribute
             in StudyTitle
-          xpath: StudyVersion/studyTitles/StudyTitle/@text
+          xpath: StudyVersion/@studyTitles/StudyTitle/@text
         notes: ''
         status: Set
       use: true
@@ -189,8 +180,9 @@
         items:
         - attribute: text
           klass: StudyTitle
-          notes: There are many titles. Select the correct one via the 'type' attribute in StudyTitle
-          xpath: StudyVersion/studyTitles/StudyTitle/@text
+          notes: There are many titles. Select the correct one via the 'type' attribute
+            in StudyTitle
+          xpath: StudyVersion/@studyTitles/StudyTitle/@text
         notes: ''
         status: Set
       use: true
@@ -201,8 +193,9 @@
         items:
         - attribute: dateValue
           klass: GovernanceDate
-          notes: The governamce data 'type' attribute should be examined and the type 'Protocol Effective Date' selected
-          xpath: StudyProtocolDocumentVersion/GovernanceDate/@dateValue
+          notes: The governamce data 'type' attribute should be examined and the type
+            'Protocol Effective Date' selected
+          xpath: StudyProtocolDocumentVersion/@dateValues/GovernanceDate/@dateValue
         notes: ''
         status: Set
       use: true
@@ -225,7 +218,8 @@
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          notes: Select where the organization is of type 'Regulatory Agency' and is the EU
+          notes: Select where the organization is of type 'Regulatory Agency' and
+            is the EU
           xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
@@ -237,7 +231,8 @@
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          notes: Select where the organization is of type 'Regulatory Agency' and is the FDA
+          notes: Select where the organization is of type 'Regulatory Agency' and
+            is the FDA
           xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
@@ -261,9 +256,34 @@
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          notes: Select where the organization is of type 'Regulatory Agency' and is the FDA
+          notes: Select where the organization is of type 'Regulatory Agency' and
+            is the FDA
           xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
-        notes: 'Support for devices?'
+        notes: Support for devices?
+        status: Set
+      use: true
+    impact_on_data:
+      name: impact on data
+      usdm:
+        image: ''
+        items:
+        - attribute: null
+          klass: null
+          notes: ''
+          xpath: ''
+        notes: ''
+        status: Not-Set
+      use: true
+    impact_on_safety:
+      name: impact on safety
+      usdm:
+        image: ''
+        items:
+        - attribute: substantialImpact
+          klass: StudyAmendment
+          notes: ''
+          xpath: StudyVersion/@amendments/StudyAmendment/@substantialImpact
+        notes: ''
         status: Set
       use: true
     jrct_number:
@@ -273,7 +293,8 @@
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          notes: Select where the organization is of type 'Regulatory Agency' and is the MHLW (Japan)
+          notes: Select where the organization is of type 'Regulatory Agency' and
+            is the MHLW (Japan)
           xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
@@ -285,7 +306,8 @@
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          notes: Select where the organization is of type 'Clinical Study Registry' and is the ClinicalTrials.gov
+          notes: Select where the organization is of type 'Clinical Study Registry'
+            and is the ClinicalTrials.gov
           xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
@@ -297,7 +319,8 @@
         items:
         - attribute: studyIdentifier
           klass: StudyIdentifier
-          notes: Select where the organization is of type 'Regulatory Agency' and is the NMPA (China)
+          notes: Select where the organization is of type 'Regulatory Agency' and
+            is the NMPA (China)
           xpath: StudyVersion/@studyIdentifiers/StudyIdentifier/@studyIdentifier
         notes: ''
         status: Set
@@ -309,8 +332,9 @@
         items:
         - attribute: amendments
           klass: StudyVersion
-          notes: Existance of any amendments tells us this is not an original protocol. Set to 'Yes' if no amendments exist, otherwise 'No'
-          xpath: StudyVersion]/@amendments
+          notes: Existance of any amendments tells us this is not an original protocol.
+            Set to 'Yes' if no amendments exist, otherwise 'No'
+          xpath: StudyVersion/@amendments
         notes: ''
         status: Set
       use: true
@@ -337,7 +361,7 @@
           xpath: StudyVersion/@amendments/StudyAmendment/@primaryReason/StudyAmendmentReason/@code
         - attribute: otherReason
           klass: StudyAmendmentReason
-          notes: ''
+          notes: Allows for free text other reason
           xpath: StudyVersion/@amendments/StudyAmendment/@primaryReason/StudyAmendmentReason/@otherReason
         notes: The latest amendment will need to be selected
         status: Set
@@ -357,18 +381,18 @@
     secondary_reason_for_amendment:
       name: Secondary Reason for Amendment
       usdm:
-        image: StudyVersions.pngc
+        image: StudyVersions.png
         items:
         - attribute: code
           klass: StudyAmendmentReason
           notes: ''
-          xpath: StudyVersion/@amendments/StudyAmendment/@primaryReason/StudyAmendmentReason/@code
+          xpath: StudyVersion/@amendments/StudyAmendment/@secondaryReasons/StudyAmendmentReason/@code
         - attribute: otherReason
           klass: StudyAmendmentReason
-          notes: ''
-          xpath: StudyVersion/@amendments/StudyAmendment/@primaryReason/StudyAmendmentReason/@otherReason
+          notes: Allows for free text other reason
+          xpath: StudyVersion/@amendments/StudyAmendment/@secondaryReasons/StudyAmendmentReason/@otherReason
         notes: The latest amendment will need to be selected
-        status: Not-Set
+        status: Set
       use: true
     trial_phase:
       name: Trial Phase
@@ -413,6 +437,7 @@
     enter_rationale_for_amendment_change: Enter Rationale for Amendment Change
     enter_section_of_amendment_change: Enter Section of Amendment Change
     enter_site_identifier: Enter Site Identifier
+    enter_sponsor_confidentiality_statement: Enter Sponsor Confidentiality Statement
     enter_sponsor_signature_block_(name_and_title_of_sponsor_signatory_and_signature_date): Enter
       sponsor signature block (name and title of sponsor signatory and signature date)
   title: Title Sheet
@@ -429,7 +454,55 @@
   text_definitions: {}
   title: Protocol Synopsis
 1.1.1:
-  data_elements: {}
+  data_elements:
+    primary_endpoint:
+      name: primary endpoint
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Endpoint
+          notes: Where the endpoint level is 'primary'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@endpoints/Endpoint/@text
+        notes: ''
+        status: Set
+      use: true
+    primary_objective:
+      name: primary objective
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Objective
+          notes: Where the objective level is 'primary'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@text
+        notes: ''
+        status: Set
+      use: true
+    secondary_endpoint:
+      name: secondary endpoint
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Endpoint
+          notes: Where the endpoint level is 'secondary'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@endpoints/Endpoint/@text
+        notes: ''
+        status: Set
+      use: true
+    secondary_objective:
+      name: secondary objective
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Objective
+          notes: Where the objective level is 'secondary'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@text
+        notes: ''
+        status: Set
+      use: true
   header_only: false
   section: 1.1.1
   text_definitions:
@@ -443,24 +516,50 @@
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
+        - attribute: maskingRoles
+          klass: StudyDesign
           notes: ''
-          xpath: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@maskingRoles
         notes: ''
-        status: Not-Set
+        status: Set
       use: true
     control_type:
       name: control type
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
+        - attribute: type
+          klass: StudyArm
           notes: ''
-          xpath: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@arms/StudyArm/@type
         notes: ''
-        status: Not-Set
+        status: Set
+      use: true
+    duration_of_intervention:
+      name: duration of intervention
+      usdm:
+        image: ''
+        items:
+        - attribute: name
+          klass: StudyElement
+          notes: Can be calculated from the element link to intervention and then
+            from the timeline
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@elements/Element/@name
+        notes: Check this and improve
+        status: Set-Check
+      use: true
+    duration_of_participation:
+      name: duration of participation
+      usdm:
+        image: ''
+        items:
+        - attribute: name
+          klass: StudyEpoch
+          notes: Can be calculated from the element link to intervention and then
+            from the timeline
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@epochs/StudyEpoch/@name
+        notes: Check this and improve
+        status: Set-Check
       use: true
     inn:
       name: INN
@@ -491,60 +590,137 @@
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
+        - attribute: interventionModel
+          klass: StudyDesign
           notes: ''
-          xpath: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@interventionModel
         notes: ''
-        status: Not-Set
+        status: Set
+      use: true
+    maximum_age:
+      name: maximum age
+      usdm:
+        image: ''
+        items:
+        - attribute: plannedAge
+          klass: StudyDesignPopulation
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@plannedAge
+        - attribute: plannedAge
+          klass: StudyCohort
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@cohorts/StudyCohort/@plannedAge
+        - attribute: maxValue
+          klass: Range
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@plannedAge/Range/@maxValue
+        notes: The attribute plannedAge is the logical location but the Range class
+          holds the maximum value. Definition may be held in the overall population
+          or in the cohorts. The cohort ranges may not be contiguous.
+        status: Set
+      use: true
+    minimum_age:
+      name: minimum age
+      usdm:
+        image: ''
+        items:
+        - attribute: plannedAge
+          klass: StudyDesignPopulation
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@plannedAge
+        - attribute: plannedAge
+          klass: StudyCohort
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@cohorts/StudyCohort/@plannedAge
+        - attribute: minValue
+          klass: Range
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@plannedAge/Range/@minValue
+        notes: The attribute plannedAge is the logical location but the Range class
+          holds the minimum value. Definition may be held in the overall population
+          or in the cohorts. The cohort ranges may not be contiguous.
+        status: Set
       use: true
     nonproprietary_name:
       name: Nonproprietary name
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
+        - attribute: codes
+          klass: StudyIntervention
+          notes: Select where role is 'TBD'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@interventions/StudyIntervention/@codes
+        - attribute: role
+          klass: StudyIntervention
+          notes: null
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@interventions/StudyIntervention/@role
+        notes: Not sure USDM has the correct role attribute CT
+        status: Set-Check
       use: true
     number_of_arms:
       name: Number of Arms
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
+        - attribute: name
+          klass: StudyArm
+          notes: Count of the number of arms within the study design
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@arms/StudyArm/@name
         notes: ''
-        status: Not-Set
+        status: Set-Check
       use: true
     population_diagnosis_or_condition:
       name: population diagnosis or condition
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
+        - attribute: codes
+          klass: Indication
           notes: ''
-          xpath: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@indications/Indication/@codes
         notes: ''
-        status: Not-Set
+        status: Set
+      use: true
+    population_target_maximum:
+      name: Population Target Maximum
+      usdm:
+        image: ''
+        items:
+        - attribute: plannedEnrollmentNumber
+          klass: StudyDesignPopulation
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@plannedEnrollmentNumber
+        - attribute: plannedCompletionNumber
+          klass: StudyDesignPopulation
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@plannedCompletionNumber
+        - attribute: plannedEnrollmentNumber
+          klass: StudyCohort
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@cohorts/StudyCohort/@plannedEnrollmentNumber
+        - attribute: plannedCompletionNumber
+          klass: StudyCohort
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@cohorts/StudyCohort/@plannedCompletionNumber
+        notes: Subject enrollment and completion numnbers will be derived from the
+          overall populaton or from combined cohort definitions.
+        status: Set
       use: true
     population_type:
       name: population type
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
+        - attribute: includesHealthySubjects
+          klass: StudyDesignPopulation
           notes: ''
-          xpath: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@includesHealthySubjects
+        - attribute: includesHealthySubjects
+          klass: StudyCohort
+          notes: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@cohorts/StudyCohort/@includesHealthySubjects
         notes: ''
-        status: Not-Set
+        status: Set
       use: true
     randomly_assigned_to_trial_intervention/_enrolled:
       name: randomly assigned to trial intervention/ enrolled
@@ -563,60 +739,36 @@
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
+        - attribute: name
+          klass: StudySite
+          notes: If count is greater then one then multi-center
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@appliesTo/StudySite/@name
+        notes: Check this. Think we can handle this better
+        status: Set-Check
       use: true
     site_geographic_scope:
       name: site geographic scope
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
-      use: true
-    target/_maximum:
-      name: Target/ Maximum
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
+        - attribute: name
+          klass: StudySite
+          notes: Sites may need an address or similar mechanism
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@appliesTo/StudySite/@name
+        notes: Need a little bit more work to make this easier to extract
+        status: Set-Check
       use: true
     trial_blind_schema:
       name: Trial Blind Schema
       usdm:
         image: ''
         items:
-        - attribute: null
-          klass: null
+        - attribute: blindingSchema
+          klass: StudyDesign
           notes: ''
-          xpath: ''
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@blindingSchema
         notes: ''
-        status: Not-Set
-      use: true
-    unit_of_time:
-      name: unit of time
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
+        status: Set
       use: true
   header_only: false
   section: 1.1.2
@@ -630,10 +782,8 @@
       will vary
     enter_description_of_duration: Enter Description of Duration
     enter_independent_committees: Enter Independent Committees
-    enter_number: Enter number
     enter_number_of_participants: Enter Number of Participants
     enter_other_committees: Enter Other Committees
-    numeric: numeric
   title: Overall Design
 '1.2':
   data_elements: {}
@@ -680,19 +830,7 @@
       and Method of Analysis
   title: Statistical Model, Hypothesis, and Method of Analysis
 10.2.2:
-  data_elements:
-    s:
-      name: s
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
-      use: true
+  data_elements: {}
   header_only: false
   section: 10.2.2
   text_definitions:
@@ -985,7 +1123,79 @@
   text_definitions: {}
   title: Trial Objectives, Endpoints and Estimands
 '3.1':
-  data_elements: {}
+  data_elements:
+    exploratory_endpoint:
+      name: exploratory endpoint
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Endpoint
+          notes: Where the endpoint level is 'exploratory'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@endpoints/Endpoint/@text
+        notes: ''
+        status: Set
+      use: true
+    exploratory_objective:
+      name: exploratory objective
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Objective
+          notes: Where the objective level is 'exploratory'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@text
+        notes: ''
+        status: Set
+      use: true
+    primary_endpoint:
+      name: primary endpoint
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Endpoint
+          notes: Where the endpoint level is 'primary'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@endpoints/Endpoint/@text
+        notes: ''
+        status: Set
+      use: true
+    primary_objective:
+      name: primary objective
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Objective
+          notes: Where the objective level is 'primary'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@text
+        notes: ''
+        status: Set
+      use: true
+    secondary_endpoint:
+      name: secondary endpoint
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Endpoint
+          notes: Where the endpoint level is 'secondary'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@endpoints/Endpoint/@text
+        notes: ''
+        status: Set
+      use: true
+    secondary_objective:
+      name: secondary objective
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: Objective
+          notes: Where the objective level is 'secondary'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@objectives/Objective/@text
+        notes: ''
+        status: Set
+      use: true
   header_only: false
   section: '3.1'
   text_definitions:
@@ -1006,43 +1216,7 @@
   text_definitions: {}
   title: Trial Design
 '4.1':
-  data_elements:
-    fixed_dose/titration:
-      name: fixed dose/titration
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
-      use: true
-    including_sponsor_unblinded:
-      name: including sponsor unblinded
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
-      use: true
-    uncontrolled:
-      name: uncontrolled
-      usdm:
-        image: ''
-        items:
-        - attribute: null
-          klass: null
-          notes: ''
-          xpath: ''
-        notes: ''
-        status: Not-Set
-      use: true
+  data_elements: {}
   header_only: false
   section: '4.1'
   text_definitions:
@@ -1161,18 +1335,64 @@
       population and rationale
   title: Description of Trial Population and Rationale
 '5.2':
-  data_elements: {}
+  data_elements:
+    inclusion_criterion:
+      name: Inclusion Criterion
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: EligibilityCriteria
+          notes: Where category is 'Inclusion'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@criteria/EligibilityCriteria/@text
+        notes: ''
+        status: Set
+      use: true
+    inclusion_identifier:
+      name: Inclusion Identifier
+      usdm:
+        image: ''
+        items:
+        - attribute: identifier
+          klass: EligibilityCriteria
+          notes: Where category is 'Inclusion'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@criteria/EligibilityCriteria/@identifier
+        notes: ''
+        status: Set
+      use: true
   header_only: false
   section: '5.2'
-  text_definitions:
-    inclusion_criterion: Inclusion Criterion
+  text_definitions: {}
   title: Inclusion Criteria
 '5.3':
-  data_elements: {}
+  data_elements:
+    exclusion_criterion:
+      name: Exclusion Criterion
+      usdm:
+        image: ''
+        items:
+        - attribute: text
+          klass: EligibilityCriteria
+          notes: Where category is 'Exclusion'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@criteria/EligibilityCriteria/@text
+        notes: ''
+        status: Set
+      use: true
+    exclusion_identifier:
+      name: Exclusion Identifier
+      usdm:
+        image: ''
+        items:
+        - attribute: identifier
+          klass: EligibilityCriteria
+          notes: Where category is 'Exclusion'
+          xpath: StudyVersion/@studyDesigns/StudyDesign/@population/StudyDesignPopulation/@criteria/EligibilityCriteria/@identifier
+        notes: ''
+        status: Set
+      use: true
   header_only: false
   section: '5.3'
-  text_definitions:
-    exclusion_criterion: Exclusion Criterion
+  text_definitions: {}
   title: Exclusion Criteria
 '5.4':
   data_elements: {}
