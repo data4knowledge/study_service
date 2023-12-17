@@ -113,6 +113,15 @@ class StudyProtocolDocumentVersion(NodeId):
       logging.error(f"Exception {e}\n{traceback.format_exc()}")
       return {'error': f"Exception. Failed to write to section"}
 
+  def element_read(self, study_version, key):
+    try:
+      result = Element(study_version, key).read()
+      return result
+    except Exception as e:
+      logging.error(f"Exception raised while reading from  element")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to read from element"}
+
   def element_write(self, study_version, key, text):
     try:
       result = Element(study_version, key).write(text)
