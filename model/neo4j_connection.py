@@ -23,7 +23,7 @@ class Neo4jConnection():
     if self.__driver is not None:
       self.__driver.close()
 
-  def query(self, query, db=None):
+  def query(self, query):
     self.__error = None
     assert self.__driver is not None, "Driver not initialized!"
     session = None

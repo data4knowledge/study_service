@@ -45,9 +45,8 @@ class StudyVersion(NodeId):
     query = "MATCH (sv:StudyVersion)-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion {uuid: $uuid}) RETURN sv"
     result = tx.run(query, uuid=uuid)
     for row in result:
-      return StudyVersion.wrap(row['sv'])
-    return None
-  
+      return {'result': StudyVersion.wrap(row['sv'])}
+    return {'error': f"Exception. Failed to find study version"}
   
   def protocol_document(self):
     try:

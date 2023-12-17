@@ -10,6 +10,7 @@ from .code import Code
 from .governance_date import GovernanceDate
 from .narrative_content import NarrativeContent
 from .section_number import SectionNumber
+from .element.element import Element
 from uuid import uuid4
 
 class SPDVBackground():
@@ -108,9 +109,18 @@ class StudyProtocolDocumentVersion(NodeId):
       result = self._narrative_content_post(key, text)
       return {'uuid': result}  
     except Exception as e:
-      logging.error(f"Exception raised while creating section")
+      logging.error(f"Exception raised while writing to section")
       logging.error(f"Exception {e}\n{traceback.format_exc()}")
-      return {'error': f"Exception. Failed to create section"}
+      return {'error': f"Exception. Failed to write to section"}
+
+  def element_write(self, study_version, key, text):
+    try:
+      result = Element(study_version, key).write(text)
+      return result
+    except Exception as e:
+      logging.error(f"Exception raised while writing to element")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to write to element"}
 
   def section_list(self):
     section_defs = self._read_section_definitions()
