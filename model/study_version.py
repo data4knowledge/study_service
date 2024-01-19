@@ -5,8 +5,8 @@ from .code import *
 from .alias_code import *
 from .study_protocol_version import *
 from .study_design import *
-from .neo4j_connection import Neo4jConnection
-from .node import Node
+from d4kms_service import Neo4jConnection
+from .base_node import BaseNode
 from .governance_date import GovernanceDate
 from .study_amendment import StudyAmendment
 from .study_identifier import StudyIdentifier

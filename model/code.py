@@ -1,4 +1,4 @@
-from model.node import *
+from .base_node import *
 from typing import Union
 from uuid import UUID
 

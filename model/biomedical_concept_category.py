@@ -1,5 +1,5 @@
 from typing import List, Union
-from model.node import *
+from .base_node import *
 from .alias_code import AliasCode
 
 class BiomedicalConceptCategory(NodeNameLabelDesc):

@@ -1,15 +1,15 @@
 from typing import Union
 from pydantic import BaseModel
 from model.code import Code
-from model.node import Node
-from model.neo4j_connection import Neo4jConnection
+from model.base_node import BaseNode
+from d4kms_service import Neo4jConnection
 from uuid import UUID, uuid4
 
 class StudyArmIn(BaseModel):
   name: str
   description: str
 
-class StudyArm(Node):
+class StudyArm(BaseNode):
   uuid: Union[UUID, None] = None
   studyArmName: str
   studyArmDesc: str

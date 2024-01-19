@@ -1,10 +1,10 @@
 from uuid import UUID
 from typing import Union
-from model.node import Node
-from model.neo4j_connection import Neo4jConnection
+from d4kms_service import Neo4jConnection
 import pandas as pd
+from .base_node import BaseNode
 
-class StudyDomainInstance(Node):
+class StudyDomainInstance(BaseNode):
   uuid: Union[UUID, None] = None
   name: str
 

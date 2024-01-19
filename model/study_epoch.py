@@ -2,15 +2,15 @@ from pydantic import BaseModel
 from typing import List, Union
 from model.code import Code
 from model.encounter import Encounter
-from model.node import Node
-from model.neo4j_connection import Neo4jConnection
+from model.base_node import BaseNode
+from d4kms_service import Neo4jConnection
 from uuid import UUID, uuid4
 
 class StudyEpochIn(BaseModel):
   name: str
   description: str
   
-class StudyEpoch(Node):
+class StudyEpoch(BaseNode):
   uuid: str
   studyEpochName: str
   studyEpochDesc: str

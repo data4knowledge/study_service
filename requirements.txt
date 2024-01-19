@@ -11,3 +11,4 @@ python-multipart
 pygithub
 stringcase
 pyyaml
+d4kms

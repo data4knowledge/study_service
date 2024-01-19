@@ -1,6 +1,6 @@
 from typing import List, Union
 from pydantic import BaseModel
-from model.node import *
+from .base_node import *
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_subject_data import StudyDesignSubjectData
 from model.study_design_sdtm import StudyDesignSDTM
@@ -16,7 +16,7 @@ from model.estimand import Estimand
 from model.activity import Activity
 from model.encounter import Encounter
 from model.schedule_timeline import ScheduleTimeline
-from model.neo4j_connection import Neo4jConnection
+from d4kms_service import Neo4jConnection
 
 class StudyDesign(NodeNameLabelDesc):
   trialIntentTypes: List[Code] = []

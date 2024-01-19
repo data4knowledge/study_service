@@ -1,32 +1,7 @@
-from pydantic import BaseModel
-from model.neo4j_connection import Neo4jConnection
+from d4kms_service import Node, Neo4jConnection
 
-class Node(BaseModel):
+class BaseNode(Node):
   uuid: str
-
-  @classmethod
-  def wrap(cls, node):
-    dict = {}
-    for items in node.items():
-      dict[items[0]] = items[1]
-    return cls(**dict)
-
-  @classmethod
-  def find(cls, uuid):
-    db = Neo4jConnection()
-    with db.session() as session:
-      return session.execute_read(cls._find, cls, uuid)
-
-  @staticmethod
-  def _find(tx, cls, uuid):
-    query = "MATCH (a:%s { uuid: $uuid1 }) RETURN a" % (cls.__name__)
-    result = tx.run(query, uuid1=uuid)
-    for row in result:
-      dict = {}
-      for items in row['a'].items():
-        dict[items[0]] = items[1]
-      return cls(**dict)
-    return None
 
   @classmethod
   def build_filter_clause(cls, filter, properties):
@@ -103,7 +78,7 @@ class Node(BaseModel):
       query_results = session.run(query)
       return len(query_results.data())
 
-class NodeId(Node):
+class NodeId(BaseNode):
   id: str
 
 class NodeName(NodeId):

@@ -1,5 +1,5 @@
 from typing import Union, List
-from .node import *
+from .base_node import *
 from .study_amendment_reason import StudyAmendmentReason
 from .subject_enrollment import SubjectEnrollment
 

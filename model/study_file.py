@@ -1,5 +1,5 @@
-from .node import Node
-from .neo4j_connection import Neo4jConnection
+from .base_node import BaseNode
+from d4kms_service import Neo4jConnection
 from .study_file_nodes_and_edges import StudyFileNodesAndEdges
 from service.github_service import GithubService
 from service.aura_service import AuraService
@@ -11,7 +11,7 @@ import yaml
 import traceback
 import logging
 
-class StudyFile(Node):
+class StudyFile(BaseNode):
   uuid: str = ""
   filename: str = ""
   full_path: str = ""

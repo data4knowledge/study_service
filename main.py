@@ -5,7 +5,7 @@ from model.study_file import StudyFile
 from model.study import Study
 from model.study_version import StudyVersion
 from model.study_design import StudyDesign
-from model.neo4j_connection import Neo4jConnection
+from d4kms_service import Neo4jConnection
 from model.schedule_timeline import ScheduleTimeline
 from model.activity import Activity
 from model.study_protocol_document_version import StudyProtocolDocumentVersion, SPDVBackground
@@ -17,7 +17,7 @@ from model.study_protocol_document_version import StudyProtocolDocumentVersion, 
 # from model.study_arm import StudyArm, StudyArmIn
 # from model.study_data import StudyData, StudyDataIn
 # from model.encounter import Encounter, EncounterIn, EncounterLink
-from utility.service_environment import ServiceEnvironment
+from d4kms_generic import ServiceEnvironment
 # from typing import List
 import logging
 import traceback
@@ -219,14 +219,19 @@ async def write_element(uuid: str, key: str, item: TextBody):
     raise HTTPException(status_code=404, detail=doc['error'])
 
 @app.get("/v1/protocolDocumentVersions/{uuid}/document", 
-  summary="Get the protocol document version document",
-  description="Get the protococl document.",
+  summary="Get a view of the protocol document version",
+  description="Get the document view. Either whole document or specific section",
   response_model=str)
-async def get_section(uuid: str):
+async def get_section(uuid: str, section: str = None):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  if not 'error' in doc:
-    result = doc.document()
-    return result
+  if doc:
+    try:
+      if section: 
+        return doc.section_as_html(section)
+      else:
+        return doc.document_as_html()
+    except Exception as e:
+      raise HTTPException(status_code=500, detail=e.message)
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 

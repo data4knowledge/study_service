@@ -1,8 +1,8 @@
 from pydantic import BaseModel
-from model.node import Node
 from typing import Union
 from uuid import UUID
+from model.base_node import BaseNode
 
-class Namespace(Node):
+class Namespace(BaseNode):
   uuid: Union[UUID, None]
   namespace_uri: str

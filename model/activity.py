@@ -4,9 +4,9 @@ from .biomedical_concept import BiomedicalConcept
 from .biomedical_concept_surrogate import BiomedicalConceptSurrogate
 from .biomedical_concept_category import BiomedicalConceptCategory
 from .schedule_timeline import ScheduleTimeline
-from .neo4j_connection import Neo4jConnection
+from d4kms_service import Neo4jConnection
 #from uuid import UUID, uuid4
-from model.node import *
+from .base_node import *
 
 class Activity(NodeNameLabelDesc):
   definedProcedures: List[Procedure] = []
@@ -21,7 +21,7 @@ class Activity(NodeNameLabelDesc):
 #   name: str
 #   description: str
   
-# class Activity(Node):
+# class Activity(BaseNode):
 #   uuid: Union[UUID, None] = None
 #   activityName: str
 #   activityDesc: str

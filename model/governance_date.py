@@ -1,5 +1,5 @@
 from typing import List
-from .node import *
+from .base_node import *
 from datetime import date
 from .code import Code
 from .geographic_scope import GeographicScope

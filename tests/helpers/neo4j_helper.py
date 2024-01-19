@@ -1,4 +1,4 @@
-from utility.service_environment import ServiceEnvironment
+from d4kms_generic import ServiceEnvironment
 from neo4j import GraphDatabase
 
 class Neo4jHelper():

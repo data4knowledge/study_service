@@ -1,5 +1,5 @@
 from typing import Union
-from model.node import *
+from .base_node import *
 from .code import Code
 
 class Timing(NodeNameLabelDesc):

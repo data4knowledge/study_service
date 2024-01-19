@@ -1,5 +1,5 @@
 from typing import List, Dict, Union, Literal
-from model.node import *
+from .base_node import *
 from .timing import Timing
 
 class ScheduledInstance(NodeId):

@@ -1,6 +1,6 @@
 from typing import List, Union
-from .node import *
-from .neo4j_connection import Neo4jConnection
+from .base_node import *
+from d4kms_service import Neo4jConnection
 from .schedule_timeline_exit import ScheduleTimelineExit
 from .scheduled_instance import ScheduledActivityInstance, ScheduledDecisionInstance
 

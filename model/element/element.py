@@ -1,6 +1,6 @@
 import logging
 import traceback
-from model.neo4j_connection import Neo4jConnection
+from d4kms_service import Neo4jConnection
 
 class Element():
 

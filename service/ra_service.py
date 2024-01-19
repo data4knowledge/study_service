@@ -1,5 +1,5 @@
 import requests
-from utility.service_environment import ServiceEnvironment
+from d4kms_generic import ServiceEnvironment
 from urllib.parse import urlparse, urlunparse
 
 class RAService():

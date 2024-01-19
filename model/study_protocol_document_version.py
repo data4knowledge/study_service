@@ -1,16 +1,16 @@
 import re
-import traceback
 import yaml
-import logging
 from yattag import Doc
 from bs4 import BeautifulSoup   
 from typing import List
-from .node import *
+from .base_node import *
 from .code import Code
 from .governance_date import GovernanceDate
 from .narrative_content import NarrativeContent
 from .section_number import SectionNumber
 from .element.element import Element
+from d4kms_generic import *
+from d4kms_service import *
 from uuid import uuid4
 
 class SPDVBackground():
@@ -54,17 +54,17 @@ class StudyProtocolDocumentVersion(NodeId):
   childrenIds: List[str] = []
   index: int = 0
 
-  def document(self):
+  def document_as_html(self):
     try:
       doc = Doc()
       with doc.tag('body'):
-        #doc.asis(front_sheet)    
+        #doc.asis(self._front_sheet(self.briefTitle))    
         items = self._all_narrative_content()
         for section in self.section_list()['root']:
           try:
             content = items[section['key']]
           except Exception as e:
-            logging.warning(f"Protocol document section {section['key']} not found")
+            application_logger.warning(f"Protocol document section {section['key']} not found")
             uuid = str(uuid4())
             content = NarrativeContent(
               id=uuid, 
@@ -77,9 +77,30 @@ class StudyProtocolDocumentVersion(NodeId):
           self._content_to_html(content, doc)
       return doc.getvalue()
     except Exception as e:
-      logging.error(f"Exception raised while building protocol document")
-      logging.error(f"Exception {e}\n{traceback.format_exc()}")
-      return {'error': f"Exception. Failed to build protocol document"}
+      application_logger.exception(f"Exception raised while building protocol document", e, UnexpectedError)
+
+  def section_as_html(self, section_number):
+    try:
+      doc = Doc()
+      items = self._all_narrative_content()
+      section = self.section_list()['root'][section_number]
+      try:
+        content = items[section['key']]
+      except Exception as e:
+        application_logger.warning(f"Protocol document section {section['key']} not found")
+        uuid = str(uuid4())
+        content = NarrativeContent(
+          id=uuid, 
+          uuid=uuid, 
+          name=f"SECTION_{section['section_number']}", 
+          sectionNumber=section['section_number'], 
+          sectionTitle=section['section_title'], 
+          text=""
+        )
+      self._content_to_html(content, doc)
+      return doc.getvalue()
+    except Exception as e:
+      application_logger.exception(f"Exception raised while building protocol document section", e, UnexpectedError)
 
   @classmethod
   def find_from_study(cls, uuid):
@@ -109,27 +130,21 @@ class StudyProtocolDocumentVersion(NodeId):
       result = self._narrative_content_post(key, text)
       return {'uuid': result}  
     except Exception as e:
-      logging.error(f"Exception raised while writing to section")
-      logging.error(f"Exception {e}\n{traceback.format_exc()}")
-      return {'error': f"Exception. Failed to write to section"}
+      application_logger.exception(f"Exception raised while writing to section", e, UnexpectedError)
 
   def element_read(self, study_version, key):
     try:
       result = Element(study_version, key).read()
       return result
     except Exception as e:
-      logging.error(f"Exception raised while reading from  element")
-      logging.error(f"Exception {e}\n{traceback.format_exc()}")
-      return {'error': f"Exception. Failed to read from element"}
+      application_logger.exception(f"Exception raised while reading from  element", e, UnexpectedError)
 
   def element_write(self, study_version, key, text):
     try:
       result = Element(study_version, key).write(text)
       return result
     except Exception as e:
-      logging.error(f"Exception raised while writing to element")
-      logging.error(f"Exception {e}\n{traceback.format_exc()}")
-      return {'error': f"Exception. Failed to write to element"}
+      application_logger.exception(f"Exception raised while writing to element", e, UnexpectedError)
 
   def section_list(self):
     section_defs = self._read_section_definitions()
@@ -193,7 +208,7 @@ class StudyProtocolDocumentVersion(NodeId):
       if session.execute_read(self._section_exists, self.uuid, section):
         return session.execute_write(self._narrative_content_write, self.uuid, section, text)
       else:
-        print(f"NC POST: Section {section} missing")
+        application_logger.warning(f"Missing section {section} detected")
         return None
 
   def _all_narrative_content(self):
@@ -260,8 +275,7 @@ class StudyProtocolDocumentVersion(NodeId):
           content.text = self._generate_standard_section(name)
         doc.asis(self._translate_references(content.text))
       except Exception as e:
-        logging.error(f"Exception raised while creating HTML from content")
-        logging.error(f"Exception {e}\n{traceback.format_exc()}")
+        application_logger.exception(f"Exception raised while creating HTML from content", UnexpectedError)
 
 
   def _translate_references(self, content_text):
@@ -278,7 +292,7 @@ class StudyProtocolDocumentVersion(NodeId):
     #     translated_text = self._translate_references(value)
     #     ref.replace_with(translated_text)
     #   except Exception as e:
-    #     logging.error(f"Failed to translate reference, attributes {attributes}\n{traceback.format_exc()}")
+    #     application_logger.error(f"Failed to translate reference, attributes {attributes}\n{traceback.format_exc()}")
     #     error_manager.add(None, None, None, f"Failed to translate a reference {attributes} while generating the HTML document")
     #     ref.replace_with('Missing content')
     # return str(soup)
@@ -543,3 +557,22 @@ class StudyProtocolDocumentVersion(NodeId):
       return ", ".join([f'<usdm:ref klass="{item["klass"]}" id="{item["instance"].id}" attribute="{item["attribute"]}" path="{item["path"]}"/>' for item in items])
     else:
       return ""
+
+  def _front_sheet(title):
+    return f"""
+      <div id="title-page" class="page">
+        <h1>{title}</h1>
+        <div id="header-and-footer">
+          <span id="page-number"></span>
+        </div>
+      </div>
+    """
+    #   <div id="toc-page" class="page">
+    #     <div id="table-of-contents">
+    #       {''.join(chapters)}
+    #     </div>
+    #     <div id="header-and-footer">
+    #       <span id="page-number"></span>
+    #     </div>
+    #   </div>
+    # """

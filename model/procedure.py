@@ -1,5 +1,5 @@
 from typing import Union
-from .node import *
+from .base_node import *
 from .code import Code
 #from .study_intervention import StudyIntervention
 

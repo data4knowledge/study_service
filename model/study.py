@@ -1,7 +1,7 @@
 import logging
 import traceback
-from .node import NodeNameLabelDesc
-from .neo4j_connection import Neo4jConnection
+from .base_node import NodeNameLabelDesc
+from d4kms_service import Neo4jConnection
 from uuid import uuid4
 
 class Study(NodeNameLabelDesc):

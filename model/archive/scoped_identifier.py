@@ -1,9 +1,9 @@
 from typing import List, Union
-from model.node import Node
+from model.base_node import BaseNode
 from model.namespace import Namespace
 from uuid import UUID
 
-class ScopedIdentifier(Node):
+class ScopedIdentifier(BaseNode):
   uuid: UUID
   identifier: str
   version: int

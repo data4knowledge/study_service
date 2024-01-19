@@ -1,10 +1,10 @@
 from typing import List, Union
-from model.node import Node
+from model.base_node import BaseNode
 from datetime import datetime
 from model.registration_authority import RegistrationAuthority
 from uuid import UUID
 
-class RegistrationStatus(Node):
+class RegistrationStatus(BaseNode):
   uuid: Union[UUID, None]
   registration_status: str = ""
   effective_date: str = ""
