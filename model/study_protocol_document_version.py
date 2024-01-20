@@ -32,7 +32,7 @@ class SPDVBackground():
     node_label = f"nc{self.index}"
     self.index += 1
     query = """
-      CREATE (%s:NarrativeContent {id: '%s', name: '%s', description: '', label: '', sectionNumber: '%s', sectionTitle: '%s', text: %s, uuid: '%s'})
+      CREATE (%s:NarrativeContent {id: '%s', name: '%s', description: '', label: '', sectionNumber: '%s', sectionTitle: '%s', text: '%s', uuid: '%s'})
       CREATE (spdv)-[:CONTENTS_REL]->(%s)
     """ % (node_label, f"SECTION_{section['item']['section_number']}", f"SECTION_{section['item']['section_number']}", section['item']['section_number'], section['item']['section_title'], section['item']['text'], uuid, node_label)
     cypher.append(query)
@@ -60,8 +60,10 @@ class StudyProtocolDocumentVersion(NodeId):
       with doc.tag('body'):
         #doc.asis(self._front_sheet(self.briefTitle))    
         items = self._all_narrative_content()
+        print(f"ITEMS: {items}")
         for section in self.section_list()['root']:
           try:
+            print(f"SECTION: {section}")
             content = items[section['key']]
           except Exception as e:
             application_logger.warning(f"Protocol document section {section['key']} not found")
@@ -229,7 +231,6 @@ class StudyProtocolDocumentVersion(NodeId):
 
   @staticmethod
   def _narrative_content_write(tx, uuid, section, text):
-    print(f"NC WRITE {uuid}, {section} {text}")
     query = """
       MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent {sectionNumber: $section})
       SET nc.text = $text
@@ -243,6 +244,7 @@ class StudyProtocolDocumentVersion(NodeId):
   
   @staticmethod
   def _all_narrative_content_read(tx, uuid):
+    print(f"NC ALL {uuid}")
     query = """
       MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent) RETURN nc
     """
@@ -278,40 +280,37 @@ class StudyProtocolDocumentVersion(NodeId):
         application_logger.exception(f"Exception raised while creating HTML from content", UnexpectedError)
 
   def _translate_references(self, content_text):
-    return content_text
-    # soup = BeautifulSoup(content_text, 'html.parser')
-    # for ref in soup(['usdm:ref']):
-    #   attributes = ref.attrs
-    #   if 'namexref' in attributes:
-    #     instance = cross_references.get(attributes['klass'], attributes['namexref'])
-    #   else:
-    #     instance = cross_references.get_by_id(attributes['klass'], attributes['id'])
-    #   try:
-    #     value = str(getattr(instance, attributes['attribute']))
-    #     translated_text = self._translate_references(value)
-    #     ref.replace_with(translated_text)
-    #   except Exception as e:
-    #     application_logger.error(f"Failed to translate reference, attributes {attributes}\n{traceback.format_exc()}")
-    #     error_manager.add(None, None, None, f"Failed to translate a reference {attributes} while generating the HTML document")
-    #     ref.replace_with('Missing content')
-    # return str(soup)
+    soup = BeautifulSoup(content_text, 'html.parser')
+    for ref in soup(['usdm:ref']):
+      attributes = ref.attrs
+      if 'namexref' in attributes:
+        application_logger.error(f"Xref reference detected {attributes}", e)
+      else:
+        instance = Node.find(attributes['uuid'], True)
+      try:
+        value = str(instance[attributes['attribute']])
+        translated_text = self._translate_references(value)
+        ref.replace_with(translated_text)
+      except Exception as e:
+        application_logger.exception(f"Failed to translate reference, attributes {attributes}", e)
+        ref.replace_with('Missing content')
+    return str(soup)
   
-  # def _standard_section(self, text):
-  #   return False
-  #   # soup = BeautifulSoup(text, 'html.parser')
-  #   # for section in soup(['usdm:section']):
-  #   #   return True
-  #   # return False
+  def _standard_section(self, text):
+    soup = BeautifulSoup(text, 'html.parser')
+    for section in soup(['usdm:section']):
+      return True
+    return False
   
-  # def _standard_section_name(self, text):  
-  #   soup = BeautifulSoup(text, 'html.parser')
-  #   for section in soup(['usdm:section']):
-  #     attributes = section.attrs
-  #     if 'name' in attributes:
-  #       return attributes['name'].upper()
-  #     else:
-  #       return None
-  #   return None
+  def _standard_section_name(self, text):  
+    soup = BeautifulSoup(text, 'html.parser')
+    for section in soup(['usdm:section']):
+      attributes = section.attrs
+      if 'name' in attributes:
+        return attributes['name'].upper()
+      else:
+        return None
+    return None
 
   def _generate_standard_section(self, name):
     #print(f"GSS: {name}")   
@@ -327,25 +326,25 @@ class StudyProtocolDocumentVersion(NodeId):
       return f"Unrecognized standard content name {name}"
 
   def _generate_m11_title_page(self):
-    #print(f"M11 TP:")
+    print(f"M11 TP:")
     doc = Doc()
     with doc.tag('table'):
-      self._generate_m11_title_page_entry(doc, 'Sponsor Confidentiality Statement:', '', 'Enter Sponsor Confidentiality Statement')
-      self._generate_m11_title_page_entry(doc, 'Full Title:', f'{self._study_full_title()}', 'Enter Full Title')
-      self._generate_m11_title_page_entry(doc, 'Trial Acronym:', f'{self._study_acronym()}', 'Enter trial Acronym')
-      self._generate_m11_title_page_entry(doc, 'Protocol Identifier:', f'{self._study_identifier()}', 'Enter Protocol Identifier')
-      self._generate_m11_title_page_entry(doc, 'Original Protocol:', '', 'Original protocol')
-      self._generate_m11_title_page_entry(doc, 'Version Number:', f'{self._study_version()}', 'Enter Version Number')
-      self._generate_m11_title_page_entry(doc, 'Version Date:', f'{self._study_date()}', 'Enter Version Date')
-      self._generate_m11_title_page_entry(doc, 'Amendment Identifier:', f'{self._amendment()}', 'Amendment Identifier')
-      self._generate_m11_title_page_entry(doc, 'Amendment Scope:', f'{self._amendment_scopes()}', 'Amendment Scope')
-      self._generate_m11_title_page_entry(doc, 'Compound Codes(s):', '', 'Enter Compound Code(s)')
-      self._generate_m11_title_page_entry(doc, 'Compound Name(s):', '', 'Enter Nonproprietary Name(s), Enter Proprietary Name(s)')
-      self._generate_m11_title_page_entry(doc, 'Trial Phase:', f'{self._study_phase()}', 'Trial Phase')
-      self._generate_m11_title_page_entry(doc, 'Short Title:', f'{self._study_short_title()}', 'Enter Trial Short Title')
-      self._generate_m11_title_page_entry(doc, 'Sponsor Name and Address:', f'{self._organization_name_and_address()}', 'Enter Sponsor Name, Enter Sponsor Legal Address')
-      self._generate_m11_title_page_entry(doc, 'Regulatory Agency Identifier Number(s):', f'{self._study_regulatory_identifiers()}', 'EU CT Number, IDE Number, FDA IND Number, JRCT Number, NCT Number, NMPA IND Number, WHO/UTN Number, Other Regulatory Agency Identifier Number')
-      self._generate_m11_title_page_entry(doc, 'Spondor Approval Date:', f'{self._approval_date()}', 'Enter Approval Date or state location where information can be found')
+      self._generate_m11_title_page_entry(doc, 'Sponsor Confidentiality Statement:', '')
+      self._generate_m11_title_page_entry(doc, 'Full Title:', f'{self._study_full_title()}')
+      self._generate_m11_title_page_entry(doc, 'Trial Acronym:', f'{self._study_acronym()}')
+      self._generate_m11_title_page_entry(doc, 'Protocol Identifier:', f'{self._study_identifier()}')
+      self._generate_m11_title_page_entry(doc, 'Original Protocol:', '')
+      self._generate_m11_title_page_entry(doc, 'Version Number:', f'{self._study_version()}')
+      self._generate_m11_title_page_entry(doc, 'Version Date:', f'{self._study_date()}')
+      self._generate_m11_title_page_entry(doc, 'Amendment Identifier:', f'{self._amendment()}')
+      self._generate_m11_title_page_entry(doc, 'Amendment Scope:', f'{self._amendment_scopes()}')
+      self._generate_m11_title_page_entry(doc, 'Compound Codes(s):', '')
+      self._generate_m11_title_page_entry(doc, 'Compound Name(s):', '')
+      self._generate_m11_title_page_entry(doc, 'Trial Phase:', f'{self._study_phase()}')
+      self._generate_m11_title_page_entry(doc, 'Short Title:', f'{self._study_short_title()}')
+      self._generate_m11_title_page_entry(doc, 'Sponsor Name and Address:', f'{self._organization_name_and_address()}')
+      self._generate_m11_title_page_entry(doc, 'Regulatory Agency Identifier Number(s):', f'{self._study_regulatory_identifiers()}')
+      self._generate_m11_title_page_entry(doc, 'Spondor Approval Date:', f'{self._approval_date()}')
 
       # Enter Nonproprietary Name(s)
       # Enter Proprietary Name(s)
@@ -399,7 +398,7 @@ class StudyProtocolDocumentVersion(NodeId):
           with doc.tag('p'):
             doc.asis(endpoint)
 
-  def _generate_m11_title_page_entry(self, doc, title, entry, m11_reference=''):
+  def _generate_m11_title_page_entry(self, doc, title, entry):
     with doc.tag('tr'):
       with doc.tag('th', style="vertical-align: top; text-align: left"):
         with doc.tag('p'):
@@ -436,7 +435,7 @@ class StudyProtocolDocumentVersion(NodeId):
     return self._set_of_references(results)
 
   def _study_full_title(self):
-    results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'officialTitle', 'path': 'StudyProtocolDocumentVersion/@officialTitle'}]
+    results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'officialTitle'}]
     return self._set_of_references(results)
 
   def _study_acronym(self):
