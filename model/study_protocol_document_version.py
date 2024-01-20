@@ -84,7 +84,7 @@ class StudyProtocolDocumentVersion(NodeId):
       doc = Doc()
       try:
         content = self._narrative_content_get(section_number)
-        print(f"SECTION: {content}, {section_number}")
+        #print(f"SECTION: {content}, {section_number}")
       except Exception as e:
         application_logger.warning(f"Protocol document section {section_number} not found")
         uuid = str(uuid4())
@@ -277,7 +277,6 @@ class StudyProtocolDocumentVersion(NodeId):
       except Exception as e:
         application_logger.exception(f"Exception raised while creating HTML from content", UnexpectedError)
 
-
   def _translate_references(self, content_text):
     return content_text
     # soup = BeautifulSoup(content_text, 'html.parser')
@@ -297,22 +296,22 @@ class StudyProtocolDocumentVersion(NodeId):
     #     ref.replace_with('Missing content')
     # return str(soup)
   
-  def _standard_section(self, text):
-    return False
-    # soup = BeautifulSoup(text, 'html.parser')
-    # for section in soup(['usdm:section']):
-    #   return True
-    # return False
+  # def _standard_section(self, text):
+  #   return False
+  #   # soup = BeautifulSoup(text, 'html.parser')
+  #   # for section in soup(['usdm:section']):
+  #   #   return True
+  #   # return False
   
-  def _standard_section_name(self, text):  
-    soup = BeautifulSoup(text, 'html.parser')
-    for section in soup(['usdm:section']):
-      attributes = section.attrs
-      if 'name' in attributes:
-        return attributes['name'].upper()
-      else:
-        return None
-    return None
+  # def _standard_section_name(self, text):  
+  #   soup = BeautifulSoup(text, 'html.parser')
+  #   for section in soup(['usdm:section']):
+  #     attributes = section.attrs
+  #     if 'name' in attributes:
+  #       return attributes['name'].upper()
+  #     else:
+  #       return None
+  #   return None
 
   def _generate_standard_section(self, name):
     #print(f"GSS: {name}")   
@@ -408,17 +407,17 @@ class StudyProtocolDocumentVersion(NodeId):
       with doc.tag('td', style="vertical-align: top; text-align: left"):
         with doc.tag('p'):
           doc.asis(entry)
-    with doc.tag('tr', bgcolor="#F2F4F4"):
-      with doc.tag('td', colspan="2", style="vertical-align: top; text-align: left; font-size: 12px"):
-        #with doc.tag('span', style="vertical-align: top; text-align: left; font-size: 12px"):
-        with doc.tag('i'):
-          with doc.tag('span', style="color: #2AAA8A"):
-            m11_reference = "Not set" if not m11_reference else m11_reference
-            doc.text(f"M11: {m11_reference}")  
-          with doc.tag('br'):
-            pass
-          with doc.tag('span', style="color: #FA8072"):
-            doc.text(f"USDM: {', '.join(self._list_references(entry))}")  
+    # with doc.tag('tr', bgcolor="#F2F4F4"):
+    #   with doc.tag('td', colspan="2", style="vertical-align: top; text-align: left; font-size: 12px"):
+    #     #with doc.tag('span', style="vertical-align: top; text-align: left; font-size: 12px"):
+    #     with doc.tag('i'):
+    #       with doc.tag('span', style="color: #2AAA8A"):
+    #         m11_reference = "Not set" if not m11_reference else m11_reference
+    #         doc.text(f"M11: {m11_reference}")  
+    #       with doc.tag('br'):
+    #         pass
+    #       with doc.tag('span', style="color: #FA8072"):
+    #         doc.text(f"USDM: {', '.join(self._list_references(entry))}")  
 
   def _sponsor_identifier(self):
     identifiers = self.study_version.studyIdentifiers
