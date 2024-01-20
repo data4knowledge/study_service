@@ -427,11 +427,11 @@ class StudyProtocolDocumentVersion(NodeId):
   
   def _study_phase(self):
     phase = self.study_version.studyPhase.standardCode
-    results = [{'instance': phase, 'klass': 'Code', 'attribute': 'decode', 'path': 'StudyVersion/@studyPhase/@standardCode/@decode'}]
+    results = [{'instance': phase, 'klass': 'Code', 'attribute': 'decode'}]
     return self._set_of_references(results)
   
   def _study_short_title(self):
-    results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'briefTitle', 'path': 'StudyProtocolDocumentVersion/@briefTitle'}]
+    results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'briefTitle'}]
     return self._set_of_references(results)
 
   def _study_full_title(self):
@@ -439,16 +439,16 @@ class StudyProtocolDocumentVersion(NodeId):
     return self._set_of_references(results)
 
   def _study_acronym(self):
-    results = [{'instance': self.study_version, 'klass': 'StudyVersion', 'attribute': 'studyAcronym', 'path': 'StudyVersion/@studyAcronym'}]
+    results = [{'instance': self.study_version, 'klass': 'StudyVersion', 'attribute': 'studyAcronym'}]
     return self._set_of_references(results)
 
   def _study_version(self):
-    results = [{'instance': self.study_version, 'klass': 'StudyVersion', 'attribute': 'versionIdentifier', 'path': 'StudyVersion/@versionIdentifier'}]
+    results = [{'instance': self.study_version, 'klass': 'StudyVersion', 'attribute': 'versionIdentifier'}]
     return self._set_of_references(results)
 
   def _study_identifier(self):
     identifier = self._sponsor_identifier()
-    results = [{'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier', 'path': 'StudyIdentifier[Organization/@type/@code=C70793]/@studyIdentifier'}]
+    results = [{'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier'}]
     return self._set_of_references(results)
 
   def _study_regulatory_identifiers(self):
@@ -456,7 +456,7 @@ class StudyProtocolDocumentVersion(NodeId):
     identifiers = self.study_version.studyIdentifiers
     for identifier in identifiers:
       if identifier.studyIdentifierScope.type.code == 'C188863' or identifier.studyIdentifierScope.type.code == 'C93453':
-        item = {'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier', 'path': 'StudyIdentifier[Organization/@type/@code=C188863|C93453]/@studyIdentifier'}
+        item = {'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier'}
         results.append(item)
     return self._set_of_references(results)
 
@@ -464,7 +464,7 @@ class StudyProtocolDocumentVersion(NodeId):
     dates = self.protocol_document_version.dateValues
     for date in dates:
       if date.type.code == 'C99903x1':
-        results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue', 'path': 'StudyProtocolDocumentVersion/GovernanceDate[@type/@code=C99903x1]/@dateValue'}]
+        results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue'}]
         return self._set_of_references(results)
     return None
   
@@ -472,21 +472,21 @@ class StudyProtocolDocumentVersion(NodeId):
     dates = self.study_version.dateValues
     for date in dates:
       if date.type.code == 'C132352':
-        results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue', 'path': 'StudyVersion/GovernanceDate[@type/@code=C132352]/@dateValue'}]
+        results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue'}]
         return self._set_of_references(results)
     return None
 
   def _organization_name_and_address(self):
     identifier = self._sponsor_identifier()
     results = [
-      {'instance': identifier.studyIdentifierScope, 'klass': 'Organization', 'attribute': 'name', 'path': 'StudyIdentifier[Organization/@type/@code=C70793]/Organization/@name'},
-      {'instance': identifier.studyIdentifierScope.legalAddress, 'klass': 'Address', 'attribute': 'text', 'path': 'StudyIdentifier[Organization/@type/@code=C70793]/Organization/Address/@text'},
+      {'instance': identifier.studyIdentifierScope, 'klass': 'Organization', 'attribute': 'name'},
+      {'instance': identifier.studyIdentifierScope.legalAddress, 'klass': 'Address', 'attribute': 'text'},
     ]
     return self._set_of_references(results)
 
   def _amendment(self):
     amendments = self.study_version.amendments
-    results = [{'instance': amendments[-1], 'klass': 'StudyAmendment', 'attribute': 'number', 'path': 'StudyVersion/StudyAmendment/@number'}]
+    results = [{'instance': amendments[-1], 'klass': 'StudyAmendment', 'attribute': 'number'}]
     return self._set_of_references(results)
 
   def _amendment_scopes(self):
@@ -494,10 +494,10 @@ class StudyProtocolDocumentVersion(NodeId):
     amendment = self.study_version.amendments[-1]
     for item in amendment.enrollments:
       if item.type.code == "C68846":
-        results = [{'instance': item.type, 'klass': 'Code', 'attribute': 'decode', 'path': 'StudyVersion/StudyAmendment/SubjectEnrollment[@type/@code=C68846]/Code/@decode'}]
+        results = [{'instance': item.type, 'klass': 'Code', 'attribute': 'decode'}]
         return self._set_of_references(results)
       else:
-        entry = {'instance': item.code.standardCode, 'klass': 'Code', 'attribute': 'decode', 'path': 'StudyVersion/StudyAmendment/SubjectEnrollment/@code/@standardCode/@decode'}
+        entry = {'instance': item.code.standardCode, 'klass': 'Code', 'attribute': 'decode'}
         results.append(entry)
     return self._set_of_references(results)
   
@@ -537,18 +537,18 @@ class StudyProtocolDocumentVersion(NodeId):
           text = text.replace(f"[{tag}]", f'<usdm:ref klass="{map["klass"]}" id="{map["id"]}" attribute="{map["attribute"]}"/>')
       return text
 
-  def _list_references(self, content_text):
-    references = []
-    soup = BeautifulSoup(content_text, 'html.parser')
-    for ref in soup(['usdm:ref']):
-      attributes = ref.attrs
-      if 'path' in attributes:
-        path = f"{attributes['path']}"
-      else:
-        path = f"{attributes['klass']}/@{attributes['attribute']}"
-      if path not in references:
-        references.append(path)
-    return references if references else ['No mapping path']
+  # def _list_references(self, content_text):
+  #   references = []
+  #   soup = BeautifulSoup(content_text, 'html.parser')
+  #   for ref in soup(['usdm:ref']):
+  #     attributes = ref.attrs
+  #     if 'path' in attributes:
+  #       path = f"{attributes['path']}"
+  #     else:
+  #       path = f"{attributes['klass']}/@{attributes['attribute']}"
+  #     if path not in references:
+  #       references.append(path)
+  #   return references if references else ['No mapping path']
   
   def _set_of_references(self, items):
     if items:
