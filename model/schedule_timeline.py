@@ -1,6 +1,6 @@
 from typing import List, Union
-from .base_node import *
 from d4kms_service import Neo4jConnection
+from .base_node import *
 from .schedule_timeline_exit import ScheduleTimelineExit
 from .scheduled_instance import ScheduledActivityInstance, ScheduledDecisionInstance
 
@@ -47,7 +47,7 @@ class ScheduleTimeline(NodeNameLabelDesc):
         OPTIONAL MATCH (v)-[]->(t:Timing)
         RETURN DISTINCT e.name as epoch_name, e.label as epoch_label, v.name as visit_name, v.label as visit_label, t.window as window, sai.uuid as uuid 
       """ % (self.uuid)
-      print(f"ACTIVITY INSTANCES QUERY: {query}")
+      #print(f"ACTIVITY INSTANCES QUERY: {query}")
       result = session.run(query)
       ai = []
       for index, record in enumerate(result):
