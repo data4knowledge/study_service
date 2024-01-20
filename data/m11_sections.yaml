@@ -2,576 +2,719 @@
   level: 1
   section_number: ''
   section_title: Title Sheet
+  text: '<usdm:section name="M11-title-page"/>'
 - key: '1'
   level: 1
   section_number: '1'
   section_title: Protocol Summary
+  text: ''
 - key: '1.1'
   level: 2
   section_number: '1.1'
   section_title: Protocol Synopsis
+  text: ''
 - key: 1.1.1
   level: 3
   section_number: 1.1.1
   section_title: Primary and Secondary Objectives and Endpoints
+  text: ''
 - key: 1.1.2
   level: 3
   section_number: 1.1.2
   section_title: Overall Design
+  text: ''
 - key: '1.2'
   level: 2
   section_number: '1.2'
   section_title: Trial Schema
+  text: ''
 - key: '1.3'
   level: 2
   section_number: '1.3'
   section_title: Schedule of Activities
+  text: ''
 - key: '2'
   level: 1
   section_number: '2'
   section_title: Introduction
+  text: ''
 - key: '2.1'
   level: 2
   section_number: '2.1'
   section_title: Purpose of Trial
+  text: ''
 - key: '2.2'
   level: 2
   section_number: '2.2'
   section_title: Summary of Benefits and Risks
+  text: ''
 - key: 2.2.1
   level: 3
   section_number: 2.2.1
   section_title: Benefit Summary
+  text: ''
 - key: 2.2.2
   level: 3
   section_number: 2.2.2
   section_title: Risk Summary and Mitigation Strategy
+  text: ''
 - key: 2.2.3
   level: 3
   section_number: 2.2.3
   section_title: Overall Benefit:Risk Conclusion
+  text: ''
 - key: '3'
   level: 1
   section_number: '3'
   section_title: Trial Objectives, Endpoints and Estimands
+  text: ''
 - key: '3.1'
   level: 2
   section_number: '3.1'
   section_title: '{Primary/Secondary/Exploratory} Objective + Associated Endpoint
     {and Estimand}'
+  text: ''
 - key: 3.1.1
   level: 3
   section_number: 3.1.1
   section_title: '{Primary/Secondary/Exploratory} Estimand'
+  text: ''
 - key: '4'
   level: 1
   section_number: '4'
   section_title: Trial Design
+  text: ''
 - key: '4.1'
   level: 2
   section_number: '4.1'
   section_title: Description of Trial Design
+  text: ''
 - key: 4.1.1
   level: 3
   section_number: 4.1.1
   section_title: Stakeholder Input into Design
+  text: ''
 - key: '4.2'
   level: 2
   section_number: '4.2'
   section_title: Rationale for Trial Design
+  text: ''
 - key: 4.2.1
   level: 3
   section_number: 4.2.1
   section_title: Rationale for Intervention Model
+  text: ''
 - key: 4.2.2
   level: 3
   section_number: 4.2.2
   section_title: Rationale for Duration
+  text: ''
 - key: 4.2.3
   level: 3
   section_number: 4.2.3
   section_title: Rationale for Endpoints
+  text: ''
 - key: 4.2.4
   level: 3
   section_number: 4.2.4
   section_title: Rationale for Interim Analysis
+  text: ''
 - key: 4.2.5
   level: 3
   section_number: 4.2.5
   section_title: Rationale for Comparator
+  text: ''
 - key: 4.2.6
   level: 3
   section_number: 4.2.6
   section_title: Rationale for Adaptive or Novel Trial Design
+  text: ''
 - key: 4.2.7
   level: 3
   section_number: 4.2.7
   section_title: Rationale for Other Trial Design Aspects
+  text: ''
 - key: '4.3'
   level: 2
   section_number: '4.3'
   section_title: Trial Stopping Rules
+  text: ''
 - key: 4.3.1
   level: 3
   section_number: 4.3.1
   section_title: '{Temporary Trial Halt}'
+  text: ''
 - key: '4.4'
   level: 2
   section_number: '4.4'
   section_title: Start of Trial and End of Trial
+  text: ''
 - key: '4.5'
   level: 2
   section_number: '4.5'
   section_title: Access to Trial Intervention After End of Trial
+  text: ''
 - key: '5'
   level: 1
   section_number: '5'
   section_title: Trial Population
+  text: ''
 - key: '5.1'
   level: 2
   section_number: '5.1'
   section_title: Description of Trial Population and Rationale
+  text: ''
 - key: '5.2'
   level: 2
   section_number: '5.2'
   section_title: Inclusion Criteria
+  text: ''
 - key: '5.3'
   level: 2
   section_number: '5.3'
   section_title: Exclusion Criteria
+  text: ''
 - key: '5.4'
   level: 2
   section_number: '5.4'
   section_title: Contraception
+  text: ''
 - key: '5.5'
   level: 2
   section_number: '5.5'
   section_title: Lifestyle Restrictions
+  text: ''
 - key: 5.5.1
   level: 3
   section_number: 5.5.1
   section_title: Meals and Dietary Restrictions
+  text: ''
 - key: 5.5.2
   level: 3
   section_number: 5.5.2
   section_title: Caffeine, Alcohol, Tobacco, and Other Restrictions
+  text: ''
 - key: 5.5.3
   level: 3
   section_number: 5.5.3
   section_title: Physical Activity Restrictions
+  text: ''
 - key: 5.5.4
   level: 3
   section_number: 5.5.4
   section_title: Other Activity Restrictions
+  text: ''
 - key: '5.6'
   level: 2
   section_number: '5.6'
   section_title: Screen Failure and Rescreening
+  text: ''
 - key: '6'
   level: 1
   section_number: '6'
   section_title: Trial Intervention And Concomitant Therapy
+  text: ''
 - key: '6.1'
   level: 2
   section_number: '6.1'
   section_title: Description of Investigational Trial Intervention
+  text: ''
 - key: '6.2'
   level: 2
   section_number: '6.2'
   section_title: Rationale for Investigational Trial Intervention Dose and Regimen
+  text: ''
 - key: '6.3'
   level: 2
   section_number: '6.3'
   section_title: Investigational Trial Intervention Administration
+  text: ''
 - key: 6.3.1
   level: 3
   section_number: 6.3.1
   section_title: Investigational Trial Intervention Dose Modification
+  text: ''
 - key: '6.4'
   level: 2
   section_number: '6.4'
   section_title: Management of Investigational Trial Intervention Overdose
+  text: ''
 - key: '6.5'
   level: 2
   section_number: '6.5'
   section_title: Preparation, Storage, Handling and Accountability of Investigational
     Trial Intervention(s)
+  text: ''
 - key: 6.5.1
   level: 3
   section_number: 6.5.1
   section_title: Preparation of Investigational Trial Intervention(s)
+  text: ''
 - key: 6.5.2
   level: 3
   section_number: 6.5.2
   section_title: Storage and Handling of Investigational Trial Intervention
+  text: ''
 - key: 6.5.3
   level: 3
   section_number: 6.5.3
   section_title: Accountability of Investigational Trial Intervention
+  text: ''
 - key: '6.6'
   level: 2
   section_number: '6.6'
   section_title: Investigational Trial Intervention Assignment, Randomisation and
     Blinding
+  text: ''
 - key: 6.6.1
   level: 3
   section_number: 6.6.1
   section_title: Participant Assignment to Investigational Trial Intervention
+  text: ''
 - key: 6.6.2
   level: 3
   section_number: 6.6.2
   section_title: Randomisation
+  text: ''
 - key: 6.6.3
   level: 3
   section_number: 6.6.3
   section_title: '{Blinding}'
+  text: ''
 - key: 6.6.4
   level: 3
   section_number: 6.6.4
   section_title: '{Emergency Unblinding at the Site}'
+  text: ''
 - key: '6.7'
   level: 2
   section_number: '6.7'
   section_title: Investigational Trial Intervention Compliance
+  text: ''
 - key: '6.8'
   level: 2
   section_number: '6.8'
   section_title: Description of Non-Investigational Trial Intervention(s)
+  text: ''
 - key: 6.8.1
   level: 3
   section_number: 6.8.1
   section_title: '{Background Intervention}'
+  text: ''
 - key: 6.8.2
   level: 3
   section_number: 6.8.2
   section_title: '{Rescue Therapy}'
+  text: ''
 - key: 6.8.3
   level: 3
   section_number: 6.8.3
   section_title: '{Other Therapy}'
+  text: ''
 - key: '6.9'
   level: 2
   section_number: '6.9'
   section_title: Concomitant Therapy
+  text: ''
 - key: 6.9.1
   level: 3
   section_number: 6.9.1
   section_title: '{Prohibited Concomitant Therapy}'
+  text: ''
 - key: 6.9.2
   level: 3
   section_number: 6.9.2
   section_title: '{Permitted Concomitant Therapy}'
+  text: ''
 - key: '7'
   level: 1
   section_number: '7'
   section_title: Participant Discontinuation of Trial Intervention and Withdrawal
     From trial
+  text: ''
 - key: '7.1'
   level: 2
   section_number: '7.1'
   section_title: Discontinuation of Trial Intervention for Individual Participants
+  text: ''
 - key: 7.1.1
   level: 3
   section_number: 7.1.1
   section_title: Permanent Discontinuation of Trial Intervention
+  text: ''
 - key: 7.1.2
   level: 3
   section_number: 7.1.2
   section_title: Temporary Discontinuation of Trial Intervention
+  text: ''
 - key: 7.1.3
   level: 3
   section_number: 7.1.3
   section_title: Rechallenge
+  text: ''
 - key: '7.2'
   level: 2
   section_number: '7.2'
   section_title: Withdrawal from the Trial
+  text: ''
 - key: '7.3'
   level: 2
   section_number: '7.3'
   section_title: Lost to Follow-Up
+  text: ''
 - key: '7.4'
   level: 2
   section_number: '7.4'
   section_title: Participant Stopping Rules
+  text: ''
 - key: '8'
   level: 1
   section_number: '8'
   section_title: Trial Assessments and Procedures
+  text: ''
 - key: '8.1'
   level: 2
   section_number: '8.1'
   section_title: Screening/Baseline Assessments and Procedures
+  text: ''
 - key: '8.2'
   level: 2
   section_number: '8.2'
   section_title: Efficacy Assessments and Procedures
+  text: ''
 - key: '8.3'
   level: 2
   section_number: '8.3'
   section_title: Safety Assessments and Procedures
+  text: ''
 - key: 8.3.1
   level: 3
   section_number: 8.3.1
   section_title: Physical Examination
+  text: ''
 - key: 8.3.2
   level: 3
   section_number: 8.3.2
   section_title: Vital Signs
+  text: ''
 - key: 8.3.3
   level: 3
   section_number: 8.3.3
   section_title: Electrocardiograms
+  text: ''
 - key: 8.3.4
   level: 3
   section_number: 8.3.4
   section_title: Clinical Laboratory Assessments
+  text: ''
 - key: 8.3.5
   level: 3
   section_number: 8.3.5
   section_title: Pregnancy Testing
+  text: ''
 - key: 8.3.6
   level: 3
   section_number: 8.3.6
   section_title: Suicidal Ideation and Behaviour Risk Monitoring
+  text: ''
 - key: '8.4'
   level: 2
   section_number: '8.4'
   section_title: Pharmacokinetics
+  text: ''
 - key: '8.5'
   level: 2
   section_number: '8.5'
   section_title: Genetic Testing
+  text: ''
 - key: '8.6'
   level: 2
   section_number: '8.6'
   section_title: Biomarkers
+  text: ''
 - key: '8.7'
   level: 2
   section_number: '8.7'
   section_title: Immunogenicity Assessments
+  text: ''
 - key: '8.8'
   level: 2
   section_number: '8.8'
   section_title: Medical Resource Utilisation and Health Economics
+  text: ''
 - key: '9'
   level: 1
   section_number: '9'
   section_title: Adverse Events, Serious Adverse Events, Product Complaints, Pregnancy
     and Postpartum Information
+  text: ''
 - key: '9.1'
   level: 2
   section_number: '9.1'
   section_title: Definitions
+  text: ''
 - key: 9.1.1
   level: 3
   section_number: 9.1.1
   section_title: Definitions of Adverse Events
+  text: ''
 - key: 9.1.2
   level: 3
   section_number: 9.1.2
   section_title: Definitions of Serious Adverse Events
+  text: ''
 - key: 9.1.3
   level: 3
   section_number: 9.1.3
   section_title: Definitions Related to Childbearing Potential
+  text: ''
 - key: 9.1.4
   level: 3
   section_number: 9.1.4
   section_title: '{Definition of Medical Device Product Complaints}'
+  text: ''
 - key: '9.2'
   level: 2
   section_number: '9.2'
   section_title: Timing and Mechanism for Collection and Reporting
+  text: ''
 - key: '9.3'
   level: 2
   section_number: '9.3'
   section_title: Identification, Recording and Follow-Up
+  text: ''
 - key: 9.3.1
   level: 3
   section_number: 9.3.1
   section_title: Identification
+  text: ''
 - key: 9.3.2
   level: 3
   section_number: 9.3.2
   section_title: Intensity
+  text: ''
 - key: 9.3.3
   level: 3
   section_number: 9.3.3
   section_title: Causality
+  text: ''
 - key: 9.3.4
   level: 3
   section_number: 9.3.4
   section_title: Follow-up
+  text: ''
 - key: '9.4'
   level: 2
   section_number: '9.4'
   section_title: Reporting
+  text: ''
 - key: 9.4.1
   level: 3
   section_number: 9.4.1
   section_title: Regulatory Reporting Requirements
+  text: ''
 - key: 9.4.2
   level: 3
   section_number: 9.4.2
   section_title: Adverse Events of Special Interest
+  text: ''
 - key: 9.4.3
   level: 3
   section_number: 9.4.3
   section_title: Disease-related Events or Outcomes Not Qualifying as AEs or SAEs
+  text: ''
 - key: '9.5'
   level: 2
   section_number: '9.5'
   section_title: Pregnancy and Postpartum Information
+  text: ''
 - key: 9.5.1
   level: 3
   section_number: 9.5.1
   section_title: '{Participants Who Become Pregnant During the Trial}'
+  text: ''
 - key: 9.5.2
   level: 3
   section_number: 9.5.2
   section_title: '{Participants Whose Partners Become Pregnant}'
+  text: ''
 - key: '10'
   level: 1
   section_number: '10'
   section_title: Statistical Considerations
+  text: ''
 - key: '10.1'
   level: 2
   section_number: '10.1'
   section_title: Analysis Sets
+  text: ''
 - key: '10.2'
   level: 2
   section_number: '10.2'
   section_title: Analyses Supporting Primary Objective(s)
+  text: ''
 - key: 10.2.1
   level: 3
   section_number: 10.2.1
   section_title: Statistical Model, Hypothesis, and Method of Analysis
+  text: ''
 - key: 10.2.2
   level: 3
   section_number: 10.2.2
   section_title: Handling of Intercurrent Events of Primary Estimand(s)
+  text: ''
 - key: 10.2.3
   level: 3
   section_number: 10.2.3
   section_title: Handling of Missing Data
+  text: ''
 - key: 10.2.4
   level: 3
   section_number: 10.2.4
   section_title: Sensitivity Analysis
+  text: ''
 - key: 10.2.5
   level: 3
   section_number: 10.2.5
   section_title: Supplementary Analysis
+  text: ''
 - key: '10.3'
   level: 2
   section_number: '10.3'
   section_title: Analysis Supporting Secondary Objective(s)
+  text: ''
 - key: '10.4'
   level: 2
   section_number: '10.4'
   section_title: Analysis of Exploratory Objective(s)
+  text: ''
 - key: '10.5'
   level: 2
   section_number: '10.5'
   section_title: Safety Analyses
+  text: ''
 - key: '10.6'
   level: 2
   section_number: '10.6'
   section_title: Other Analyses
+  text: ''
 - key: '10.7'
   level: 2
   section_number: '10.7'
   section_title: Interim Analyses
+  text: ''
 - key: '10.8'
   level: 2
   section_number: '10.8'
   section_title: Sample Size Determination
+  text: ''
 - key: '10.9'
   level: 2
   section_number: '10.9'
   section_title: Protocol Deviations
+  text: ''
 - key: '11'
   level: 1
   section_number: '11'
   section_title: 'General Considerations: Regulatory, Ethical, And trial Oversight'
+  text: ''
 - key: '11.1'
   level: 2
   section_number: '11.1'
   section_title: Regulatory and Ethical Considerations
+  text: ''
 - key: '11.2'
   level: 2
   section_number: '11.2'
   section_title: Trial Oversight
+  text: ''
 - key: 11.2.1
   level: 3
   section_number: 11.2.1
   section_title: Investigator Responsibilities
+  text: ''
 - key: 11.2.2
   level: 3
   section_number: 11.2.2
   section_title: Sponsor Responsibilities
+  text: ''
 - key: '11.3'
   level: 2
   section_number: '11.3'
   section_title: Committees
+  text: ''
 - key: '11.4'
   level: 2
   section_number: '11.4'
   section_title: Informed Consent Process
+  text: ''
 - key: 11.4.1
   level: 3
   section_number: 11.4.1
   section_title: Informed Consent for Rescreening
+  text: ''
 - key: 11.4.2
   level: 3
   section_number: 11.4.2
   section_title: Informed Consent for Use of Remaining Samples in Exploratory Research
+  text: ''
 - key: '11.5'
   level: 2
   section_number: '11.5'
   section_title: Insurance and Indemnity
+  text: ''
 - key: '11.6'
   level: 2
   section_number: '11.6'
   section_title: Early Site Closure
+  text: ''
 - key: '12'
   level: 1
   section_number: '12'
   section_title: 'General Considerations: Risk Management and Data Governance'
+  text: ''
 - key: '12.1'
   level: 2
   section_number: '12.1'
   section_title: Risk Management
+  text: ''
 - key: '12.2'
   level: 2
   section_number: '12.2'
   section_title: Data Governance
+  text: ''
 - key: '12.3'
   level: 2
   section_number: '12.3'
   section_title: Source Data
+  text: ''
 - key: '13'
   level: 1
   section_number: '13'
   section_title: 'Appendix: Definitions and Supporting Operational Details'
+  text: ''
 - key: '13.1'
   level: 2
   section_number: '13.1'
   section_title: Clinical Laboratory Tests
+  text: ''
 - key: '13.2'
   level: 2
   section_number: '13.2'
   section_title: Country/Region-Specific Differences
+  text: ''
 - key: '13.3'
   level: 2
   section_number: '13.3'
   section_title: Prior Protocol Amendment(s)
+  text: ''
 - key: '14'
   level: 1
   section_number: '14'
   section_title: 'Appendix:  Glossary of Terms and Abbreviations'
+  text: ''
 - key: '15'
   level: 1
   section_number: '15'
   section_title: 'Appendix:  References'
+  text: ''
