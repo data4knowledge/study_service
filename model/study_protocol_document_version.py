@@ -82,19 +82,19 @@ class StudyProtocolDocumentVersion(NodeId):
   def section_as_html(self, section_number):
     try:
       doc = Doc()
-      items = self._all_narrative_content()
-      section = self.section_list()['root'][section_number]
       try:
-        content = items[section['key']]
+        content = self._narrative_content_get(section_number)
+        print(f"SECTION: {content}, {section_number}")
       except Exception as e:
-        application_logger.warning(f"Protocol document section {section['key']} not found")
+        application_logger.warning(f"Protocol document section {section_number} not found")
         uuid = str(uuid4())
+        section_def = self._read_section_definition(section_number)
         content = NarrativeContent(
           id=uuid, 
           uuid=uuid, 
-          name=f"SECTION_{section['section_number']}", 
-          sectionNumber=section['section_number'], 
-          sectionTitle=section['section_title'], 
+          name=f"SECTION_{section_number}", 
+          sectionNumber=section_def['section_number'], 
+          sectionTitle=section_def['section_title'], 
           text=""
         )
       self._content_to_html(content, doc)

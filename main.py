@@ -231,7 +231,7 @@ async def get_section(uuid: str, section: str = None):
       else:
         return doc.document_as_html()
     except Exception as e:
-      raise HTTPException(status_code=500, detail=e.message)
+      raise HTTPException(status_code=500, detail=str(e))
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
