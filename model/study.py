@@ -1,11 +1,17 @@
 import logging
 import traceback
+from typing import List, Literal, Union
 from .base_node import NodeNameLabelDesc
+from .study_version import StudyVersion
+from .study_protocol_document import StudyProtocolDocument
 from d4kms_service import Neo4jConnection
 from uuid import uuid4
 
 class Study(NodeNameLabelDesc):
-  
+  versions: List[StudyVersion] = []
+  documentedBy: Union[StudyProtocolDocument, None] = None
+  instanceType: Literal['Study']
+
   @classmethod
   def list(cls, page, size, filter):
     return cls.base_list("MATCH (n:Study)", "ORDER BY n.name ASC", page, size, filter)

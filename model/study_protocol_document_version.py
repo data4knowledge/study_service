@@ -2,7 +2,7 @@ import re
 import yaml
 from yattag import Doc
 from bs4 import BeautifulSoup   
-from typing import List
+from typing import List, Literal
 from .base_node import *
 from .code import Code
 from .governance_date import GovernanceDate
@@ -43,16 +43,12 @@ class SPDVBackground():
     return node_label
 
 class StudyProtocolDocumentVersion(NodeId):
-  briefTitle: str
-  officialTitle: str
-  publicTitle: str
-  scientificTitle: str
   protocolVersion: str
   protocolStatus: Code = None
   dateValues: List[GovernanceDate] = []
   contents: List[NarrativeContent] = []
-  childrenIds: List[str] = []
-  index: int = 0
+  childIds: List[str] = []
+  instanceType: Literal['StudyProtocolDocumentVersion']
 
   def document_as_html(self):
     try:

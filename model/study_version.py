@@ -1,34 +1,36 @@
 import logging
 import traceback
-from typing import List, Union
+from typing import List, Union, Literal
 from .code import *
 from .alias_code import *
 from .study_protocol_version import *
 from .study_design import *
 from d4kms_service import Neo4jConnection
-from .base_node import BaseNode
+from .base_node import NodeId
 from .governance_date import GovernanceDate
 from .study_amendment import StudyAmendment
 from .study_identifier import StudyIdentifier
 from .study_protocol_document_version import StudyProtocolDocumentVersion
+from .study_title import StudyTitle
 
 class StudyVersion(NodeId):
-  studyTitle: str
   versionIdentifier: str
   rationale: str
   studyAcronym: str
-  type: Union[Code, None] = None
+  studyType: Union[Code, None] = None
   studyPhase: Union[AliasCode, None] = None
-  documentVersion: Union[StudyProtocolDocumentVersion, None] = None
+  documentVersionId: Union[str, None] = None
   dateValues: List[GovernanceDate] = []
   amendments: List[StudyAmendment] = []
   businessTherapeuticAreas: List[Code] = []
   studyIdentifiers: List[StudyIdentifier] = []
   studyDesigns: List[StudyDesign] = []
+  titles: List[StudyTitle]
+  instanceType: Literal['StudyVersion']
 
   @classmethod
   def parent_properties(cls):
-    return ["n.studyTitle", "n.studyVersion", "n.studyRationale", "n.studyAcronym"]
+    return ["n.studyVersion", "n.studyRationale", "n.studyAcronym"]
 
   @classmethod
   def list(cls, uuid, page, size, filter):
