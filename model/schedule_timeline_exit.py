@@ -1,4 +1,6 @@
+from typing import Literal
 from .base_node import *
 
 class ScheduleTimelineExit(NodeId):
-  pass
+  instanceType: Literal['ScheduleTimelineExit']
+

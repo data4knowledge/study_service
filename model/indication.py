@@ -1,9 +1,8 @@
-from typing import List, Union
-from pydantic import BaseModel
+from typing import List, Literal
+from .base_node import *
 from .code import Code
-from uuid import UUID
 
-class Indication(BaseModel):
-  uuid: Union[UUID, None] = None
-  codes: Union[List[Code], List[UUID], None]
-  indicationDesc: str
+class Indication(NodeNameLabelDesc):
+  codes: List[Code] = []
+  isRareDisease: bool
+  instanceType: Literal['Indication']

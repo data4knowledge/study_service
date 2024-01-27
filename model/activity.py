@@ -1,21 +1,21 @@
-from typing import List, Union
+from typing import List, Union, Literal
+from .base_node import *
 from .procedure import Procedure
 from .biomedical_concept import BiomedicalConcept
 from .biomedical_concept_surrogate import BiomedicalConceptSurrogate
 from .biomedical_concept_category import BiomedicalConceptCategory
 from .schedule_timeline import ScheduleTimeline
 from d4kms_service import Neo4jConnection
-#from uuid import UUID, uuid4
-from .base_node import *
 
 class Activity(NodeNameLabelDesc):
+  previous: Union[NodeId, None] = None
+  next: Union[NodeId, None] = None
   definedProcedures: List[Procedure] = []
-  isConditional: bool
-  isConditionalReason: Union[str, None] = None
   biomedicalConcepts: List[BiomedicalConcept] = []
   bcCategories: List[BiomedicalConceptCategory] = []
   bcSurrogates: List[BiomedicalConceptSurrogate] = []
   timeline: Union[ScheduleTimeline, None] = None
+  instanceType: Literal['Activity']
 
 # class ActivityIn(BaseModel):
 #   name: str

@@ -1,15 +1,15 @@
-from typing import List, Union
-from pydantic import BaseModel
+from typing import List, Literal
+from .base_node import *
 from .analysis_population import AnalysisPopulation
 from .investigational_intervention import InvestigationalIntervention
 from .endpoint import Endpoint
 from .intercurrent_event import IntercurrentEvent
 from uuid import UUID
 
-class Estimand(BaseModel):
-  uuid: Union[UUID, None] = None
+class Estimand(NodeId):
   summaryMeasure: str
-  analysisPopulation: Union[AnalysisPopulation, UUID]
-  treatment: Union[InvestigationalIntervention, UUID]
-  variableOfInterest: Union[Endpoint, UUID]
-  intercurrentEvents: Union[List[IntercurrentEvent], List[UUID]]
+  analysisPopulation: AnalysisPopulation
+  interventionId: str
+  variableOfInterestId: str
+  intercurrentEvents: List[IntercurrentEvent]
+  instanceType: Literal['Estimand']

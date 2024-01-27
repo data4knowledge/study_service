@@ -1,6 +1,6 @@
-from typing import List
-from .alias_code import AliasCode
+from typing import List, Literal
 from .base_node import *
+from .alias_code import AliasCode
 from .biomedical_concept_property import BiomedicalConceptProperty
 
 class BiomedicalConcept(NodeNameLabel):
@@ -8,3 +8,4 @@ class BiomedicalConcept(NodeNameLabel):
   reference: str
   properties: List[BiomedicalConceptProperty] = []
   code: AliasCode
+  instanceType: Literal['BiomedicalConcept']

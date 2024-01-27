@@ -1,7 +1,7 @@
-from typing import Union
+from typing import Literal
 from pydantic import BaseModel
 from uuid import UUID
 
 class TransitionRule(BaseModel):
-  uuid: Union[UUID, None] = None
-  transitionRuleDesc: str
+  text: str
+  instanceType: Literal['TransitionRule']

@@ -1,6 +1,6 @@
-from typing import List, Union
-from pydantic import BaseModel
+from typing import Literal
+from .base_node import *
 
-class AnalysisPopulation(BaseModel):
-  uuid: Union[str, None] = None
-  populationDesc: str
+class AnalysisPopulation(NodeNameLabelDesc):
+  text: str
+  instanceType: Literal['AnalysisPopulation']

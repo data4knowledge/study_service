@@ -1,15 +1,17 @@
-from typing import List, Union
-from d4kms_service import Neo4jConnection
+from typing import List, Literal, Union
 from .base_node import *
 from .schedule_timeline_exit import ScheduleTimelineExit
 from .scheduled_instance import ScheduledActivityInstance, ScheduledDecisionInstance
+from .timing import Timing
 
 class ScheduleTimeline(NodeNameLabelDesc):
   mainTimeline: bool
   entryCondition: str
-  entry: ScheduledActivityInstance = None
+  entryId: str
   exits: List[ScheduleTimelineExit] = []
+  timings: List[Timing] = []
   instances: List[Union[ScheduledActivityInstance, ScheduledDecisionInstance]] = []
+  instanceType: Literal['ScheduleTimeline']
 
   @classmethod
   def list(cls, uuid, page, size, filter):

@@ -10,12 +10,12 @@ from model.study_epoch import StudyEpoch
 from model.study_arm import StudyArm
 from model.indication import Indication
 from model.investigational_intervention import InvestigationalIntervention
-from model.study_design_population import StudyDesignPopulation
 from model.objective import Objective
 from model.estimand import Estimand
 from model.activity import Activity
 from model.encounter import Encounter
 from model.schedule_timeline import ScheduleTimeline
+from .population_definition import StudyDesignPopulation
 from d4kms_service import Neo4jConnection
 
 class StudyDesign(NodeNameLabelDesc):
@@ -34,12 +34,12 @@ class StudyDesign(NodeNameLabelDesc):
   # studyDesignRationale: str
   # studyEpochs: List[StudyEpoch]
   # studyElements: List[StudyElement] = []
-  studyEstimands: List[Estimand] = []
-  studyIndications: List[Indication] = []
-  studyInvestigationalInterventions: List[InvestigationalIntervention] = []
-  studyObjectives: List[Objective] = []
-  studyPopulations: List[StudyDesignPopulation] = []
-  studyScheduleTimelines: List[ScheduleTimeline] = []
+  estimands: List[Estimand] = []
+  indications: List[Indication] = []
+  studyInterventions: List[InvestigationalIntervention] = []
+  objectives: List[Objective] = []
+  population: Union[StudyDesignPopulation, None] = None
+  scheduleTimelines: List[ScheduleTimeline] = []
   # documentVersion: Union[StudyProtocolDocumentVersion, None] = None
   # studyEligibilityCritieria: List[EligibilityCriteria] = []    
   # dictionaries: List[SyntaxTemplateDictionary] = []

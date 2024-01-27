@@ -1,10 +1,8 @@
-from typing import List, Union
-from pydantic import BaseModel
+from typing import Literal
+from .syntax_template import SyntaxTemplate
 from .code import Code
-from uuid import UUID
 
-class Endpoint(BaseModel):
-  uuid: Union[UUID, None] = None
-  endpointDesc: str
-  endpointPurposeDesc: str
-  endpointLevel: Union[Code, UUID, None]
+class Endpoint(SyntaxTemplate):
+  purpose: str
+  level: Code
+  instanceType: Literal['Endpoint']

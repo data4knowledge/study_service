@@ -1,10 +1,6 @@
-from typing import List, Union
-from pydantic import BaseModel
-from .code import Code
-from uuid import UUID
+from typing import Literal
+from .base_node import *
 
-class IntercurrentEvent(BaseModel):
-  uuid: Union[UUID, None] = None
-  intercurrentEventName: str
-  intercurrentEventDesc: str
-  intercurrentEventStrategy: str
+class IntercurrentEvent(NodeNameLabelDesc):
+  strategy: str
+  instanceType: Literal['IntercurrentEvent']

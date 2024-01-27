@@ -96,6 +96,13 @@ class NodeNameLabel(NodeId):
   def parent_properties(cls):
     return ["n.name", "n.label"]
 
+class NodeDesc(NodeId):
+  description: str
+  
+  @classmethod
+  def parent_properties(cls):
+    return ["n.description"]
+
 class NodeNameLabelDesc(NodeId):
   name: str
   description: str

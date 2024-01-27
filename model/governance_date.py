@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Literal
 from .base_node import *
 from datetime import date
 from .code import Code
@@ -8,3 +8,4 @@ class GovernanceDate(NodeNameLabelDesc):
   type: Code
   dateValue: date
   geographicScopes: List[GeographicScope]
+  instanceType: Literal['GovernanceDate']

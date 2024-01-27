@@ -1,11 +1,12 @@
-from typing import List, Union
+from typing import List, Union, Literal
 from .base_node import *
 
 class NarrativeContent(NodeName):
   sectionNumber: str
   sectionTitle: str
   text: Union[str, None] = None
-  contentChildIds: List[str] = []
+  children: List[NodeId] = []
+  instanceType: Literal['NarrativeContent']
 
   def level(self):
     return len(self.sectionNumber.split('.'))

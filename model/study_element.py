@@ -1,14 +1,9 @@
-from typing import List, Union
-from pydantic import BaseModel
+from typing import Union, List, Literal
+from .base_node import *
 from .transition_rule import TransitionRule
-from .encounter import Encounter
-from .activity import Activity
 
-from uuid import UUID
-
-class StudyElement(BaseModel):
-  uuid: Union[UUID, None] = None
-  studyElementName: str
-  studyElementDesc: str
-  transitionStartRule: Union[TransitionRule, UUID, None] = None
-  transitionEndRule: Union[TransitionRule, UUID, None] = None
+class StudyElement(NodeNameLabelDesc):
+  transitionStartRule: Union[TransitionRule, None] = None
+  transitionEndRule: Union[TransitionRule, None] = None
+  studyInterventionIds: List[str] = []
+  instanceType: Literal['StudyElement']
