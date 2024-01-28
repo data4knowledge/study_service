@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Literal
 from .base_node import *
 from .code import Code
 
@@ -11,3 +11,4 @@ class Timing(NodeNameLabelDesc):
   windowLower: Union[str, None] = None
   windowUpper: Union[str, None] = None
   window: Union[str, None] = None
+  instanceType: Literal['Timing']
