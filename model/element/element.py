@@ -13,6 +13,11 @@ class Element():
       'write': {
         'query': "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C99905x1'}) SET st.text = $value RETURN st.text as value",
         'data': ['uuid', 'value']
+      },
+      'reference': {
+        'instance': "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C99905x1'}) RETURN st as value",
+        'klass': 'StudyProtocolDocumentVersion', 
+        'attribute': 'officialTitle'
       }
     },
     'trial_acronym': {
@@ -56,12 +61,27 @@ class Element():
         params = {'uuid': self._study_version.uuid}
         result = self._read(self.method_map[self._element]['read']['query'], params)
 #        print(f"QUERY: {result}")
-        if result:
+        if 'result' in result:
           return {'result': result['result']}
         else:
           return {'error': f"Failed to read {self._element}"}
       except Exception as e:
         return self._log_error("read", e)
+    else:
+      return self._implemented_status()
+
+  def reference(self):
+    if self._implemented():
+      try:
+        params = {'uuid': self._study_version.uuid}
+        item = self.method_map[self._element]['reference']
+        result = self._read(item['instance'], params)
+        if 'result' in result:
+          return {'result': {'instance': result['result'], 'klass': item['klass'], 'attribute': item['attribute']}}
+        else:
+          return {'error': f"Failed to get reference for {self._element}"}
+      except Exception as e:
+        return self._log_error("reference", e)
     else:
       return self._implemented_status()
 
@@ -78,6 +98,7 @@ class Element():
   def _read(self, query, params):
     db = Neo4jConnection()
     with db.session() as session:
+      print(f"READ: {query}, {params}")  
       result = session.execute_read(self._read_method, query, params)
       if not result:
         return {'error': f"Failed to read {self._element}"}

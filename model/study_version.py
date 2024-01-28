@@ -35,19 +35,19 @@ class StudyVersion(NodeId):
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:Study {uuid: '%s'})-[]->(n:StudyVersion)" % (uuid), "ORDER BY n.studyTitle ASC", page, size, filter)
 
-  @classmethod
-  def find_from_study_protocol_document_version(cls, uuid):
-    db = Neo4jConnection()
-    with db.session() as session:
-      return session.execute_read(cls._find_from_spdv, uuid)
+  # @classmethod
+  # def find_from_study_protocol_document_version(cls, uuid):
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     return session.execute_read(cls._find_from_spdv, uuid)
 
-  @staticmethod
-  def _find_from_spdv(tx, uuid):
-    query = "MATCH (sv:StudyVersion)-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion {uuid: $uuid}) RETURN sv"
-    result = tx.run(query, uuid=uuid)
-    for row in result:
-      return {'result': StudyVersion.wrap(row['sv'])}
-    return {'error': f"Exception. Failed to find study version"}
+  # @staticmethod
+  # def _find_from_spdv(tx, uuid):
+  #   query = "MATCH (sv:StudyVersion)-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion {uuid: $uuid}) RETURN sv"
+  #   result = tx.run(query, uuid=uuid)
+  #   for row in result:
+  #     return {'result': StudyVersion.wrap(row['sv'])}
+  #   return {'error': f"Exception. Failed to find study version"}
   
   def protocol_document(self):
     try:

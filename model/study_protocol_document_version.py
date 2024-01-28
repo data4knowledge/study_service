@@ -50,16 +50,32 @@ class StudyProtocolDocumentVersion(NodeId):
   childIds: List[str] = []
   instanceType: Literal['StudyProtocolDocumentVersion']
 
+  def set_study_version(self):
+    self._study_version = None
+    db = Neo4jConnection()
+    with db.session() as session:
+      result = session.execute_read(self._find_from_spdv, self.uuid)
+      if not 'error' in result:
+        self._study_version = result['result']
+
+  @staticmethod
+  def _find_from_spdv(tx, uuid):
+    query = "MATCH (sv:StudyVersion)-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion {uuid: $uuid}) RETURN sv"
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      return {'result': NodeId.wrap(row['sv'])}
+    return {'error': f"Exception. Failed to find study version"}
+
   def document_as_html(self):
     try:
       doc = Doc()
       with doc.tag('body'):
         #doc.asis(self._front_sheet(self.briefTitle))    
         items = self._all_narrative_content()
-        print(f"ITEMS: {items}")
+        #print(f"ITEMS: {items}")
         for section in self.section_list()['root']:
           try:
-            print(f"SECTION: {section}")
+            #print(f"SECTION: {section}")
             content = items[section['key']]
           except Exception as e:
             application_logger.warning(f"Protocol document section {section['key']} not found")
@@ -130,16 +146,16 @@ class StudyProtocolDocumentVersion(NodeId):
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to section", e, UnexpectedError)
 
-  def element_read(self, study_version, key):
+  def element_read(self, key):
     try:
-      result = Element(study_version, key).read()
+      result = Element(self._study_version, key).read()
       return result
     except Exception as e:
       application_logger.exception(f"Exception raised while reading from  element", e, UnexpectedError)
 
-  def element_write(self, study_version, key, text):
+  def element_write(self, key, text):
     try:
-      result = Element(study_version, key).write(text)
+      result = Element(self._study_version, key).write(text)
       return result
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to element", e, UnexpectedError)
@@ -330,7 +346,7 @@ class StudyProtocolDocumentVersion(NodeId):
       self._generate_m11_title_page_entry(doc, 'Trial Acronym:', f'{self._study_acronym()}')
       self._generate_m11_title_page_entry(doc, 'Protocol Identifier:', f'{self._study_identifier()}')
       self._generate_m11_title_page_entry(doc, 'Original Protocol:', '')
-      self._generate_m11_title_page_entry(doc, 'Version Number:', f'{self._study_version()}')
+      self._generate_m11_title_page_entry(doc, 'Version Number:', f'{self._study_version_identifier()}')
       self._generate_m11_title_page_entry(doc, 'Version Date:', f'{self._study_date()}')
       self._generate_m11_title_page_entry(doc, 'Amendment Identifier:', f'{self._amendment()}')
       self._generate_m11_title_page_entry(doc, 'Amendment Scope:', f'{self._amendment_scopes()}')
@@ -415,14 +431,14 @@ class StudyProtocolDocumentVersion(NodeId):
     #         doc.text(f"USDM: {', '.join(self._list_references(entry))}")  
 
   def _sponsor_identifier(self):
-    identifiers = self.study_version.studyIdentifiers
+    identifiers = self._study_version.studyIdentifiers
     for identifier in identifiers:
       if identifier.studyIdentifierScope.type.code == 'C70793':
         return identifier
     return None
   
   def _study_phase(self):
-    phase = self.study_version.studyPhase.standardCode
+    phase = self._study_version.studyPhase.standardCode
     results = [{'instance': phase, 'klass': 'Code', 'attribute': 'decode'}]
     return self._set_of_references(results)
   
@@ -431,15 +447,18 @@ class StudyProtocolDocumentVersion(NodeId):
     return self._set_of_references(results)
 
   def _study_full_title(self):
-    results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'officialTitle'}]
-    return self._set_of_references(results)
+    #results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'officialTitle'}]
+    result = Element( self._study_version, 'full_title').reference()
+    print(f"RESULT: {result}")
+    refs = [result['result']] if 'result' in result else []
+    return self._set_of_references(refs)
 
   def _study_acronym(self):
-    results = [{'instance': self.study_version, 'klass': 'StudyVersion', 'attribute': 'studyAcronym'}]
+    results = [{'instance': self._study_version, 'klass': 'StudyVersion', 'attribute': 'studyAcronym'}]
     return self._set_of_references(results)
 
-  def _study_version(self):
-    results = [{'instance': self.study_version, 'klass': 'StudyVersion', 'attribute': 'versionIdentifier'}]
+  def _study_version_identifier(self):
+    results = [{'instance': self._study_version, 'klass': 'StudyVersion', 'attribute': 'versionIdentifier'}]
     return self._set_of_references(results)
 
   def _study_identifier(self):
@@ -449,7 +468,7 @@ class StudyProtocolDocumentVersion(NodeId):
 
   def _study_regulatory_identifiers(self):
     results = []
-    identifiers = self.study_version.studyIdentifiers
+    identifiers = self._study_version.studyIdentifiers
     for identifier in identifiers:
       if identifier.studyIdentifierScope.type.code == 'C188863' or identifier.studyIdentifierScope.type.code == 'C93453':
         item = {'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier'}
@@ -465,7 +484,7 @@ class StudyProtocolDocumentVersion(NodeId):
     return None
   
   def _approval_date(self):
-    dates = self.study_version.dateValues
+    dates = self._study_version.dateValues
     for date in dates:
       if date.type.code == 'C132352':
         results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue'}]
@@ -481,13 +500,13 @@ class StudyProtocolDocumentVersion(NodeId):
     return self._set_of_references(results)
 
   def _amendment(self):
-    amendments = self.study_version.amendments
+    amendments = self._study_version.amendments
     results = [{'instance': amendments[-1], 'klass': 'StudyAmendment', 'attribute': 'number'}]
     return self._set_of_references(results)
 
   def _amendment_scopes(self):
     results = []
-    amendment = self.study_version.amendments[-1]
+    amendment = self._study_version.amendments[-1]
     for item in amendment.enrollments:
       if item.type.code == "C68846":
         results = [{'instance': item.type, 'klass': 'Code', 'attribute': 'decode'}]
@@ -548,7 +567,7 @@ class StudyProtocolDocumentVersion(NodeId):
   
   def _set_of_references(self, items):
     if items:
-      return ", ".join([f'<usdm:ref klass="{item["klass"]}" id="{item["instance"].id}" attribute="{item["attribute"]}" path="{item["path"]}"/>' for item in items])
+      return ", ".join([f'<usdm:ref klass="{item["klass"]}" id="{item["instance"].id}" attribute="{item["attribute"]}"/>' for item in items])
     else:
       return ""
 

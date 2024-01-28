@@ -180,19 +180,16 @@ async def get_section(uuid: str, key: str, item: TextBody):
   response_model=dict)
 async def get_element(uuid: str, key: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
+  doc.set_study_version()
   if not 'error' in doc:
     data = doc.element(key)
-    study_version = StudyVersion.find_from_study_protocol_document_version(doc.uuid)
-    if not 'error' in study_version:
-      result = doc.element_read(study_version['result'], key)
-      print(f"RESULT: {result}")
-      if not 'error' in result:
-        data['value'] = result['result']
-        return {'uuid': uuid, 'definition': data}
-      else:
-        raise HTTPException(status_code=500, detail=result['error'])
+    result = doc.element_read(key)
+    print(f"RESULT: {result}")
+    if not 'error' in result:
+      data['value'] = result['result']
+      return {'uuid': uuid, 'definition': data}
     else:
-      raise HTTPException(status_code=404, detail=study_version['error'])
+      raise HTTPException(status_code=500, detail=result['error'])
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
@@ -224,6 +221,7 @@ async def write_element(uuid: str, key: str, item: TextBody):
   response_model=str)
 async def get_section(uuid: str, section: str = None):
   doc = StudyProtocolDocumentVersion.find(uuid)
+  doc.set_study_version()
   if doc:
     try:
       if section: 
