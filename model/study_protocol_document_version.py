@@ -295,6 +295,7 @@ class StudyProtocolDocumentVersion(NodeId):
     soup = BeautifulSoup(content_text, 'html.parser')
     for ref in soup(['usdm:ref']):
       attributes = ref.attrs
+      print(f"ATRRIBUTES: {attributes}")
       if 'namexref' in attributes:
         application_logger.error(f"Xref reference detected {attributes}", e)
       else:
@@ -342,21 +343,21 @@ class StudyProtocolDocumentVersion(NodeId):
     doc = Doc()
     with doc.tag('table'):
       self._generate_m11_title_page_entry(doc, 'Sponsor Confidentiality Statement:', '')
-      self._generate_m11_title_page_entry(doc, 'Full Title:', f'{self._study_full_title()}')
-      self._generate_m11_title_page_entry(doc, 'Trial Acronym:', f'{self._study_acronym()}')
-      self._generate_m11_title_page_entry(doc, 'Protocol Identifier:', f'{self._study_identifier()}')
+      self._generate_m11_title_page_entry(doc, 'Full Title:', f"{self._element_references('full_title')}")
+      self._generate_m11_title_page_entry(doc, 'Trial Acronym:', f"{self._element_references('acronym')}")
+      self._generate_m11_title_page_entry(doc, 'Protocol Identifier:', f"{self._element_references('study_identifier')}")
       self._generate_m11_title_page_entry(doc, 'Original Protocol:', '')
-      self._generate_m11_title_page_entry(doc, 'Version Number:', f'{self._study_version_identifier()}')
-      self._generate_m11_title_page_entry(doc, 'Version Date:', f'{self._study_date()}')
-      self._generate_m11_title_page_entry(doc, 'Amendment Identifier:', f'{self._amendment()}')
-      self._generate_m11_title_page_entry(doc, 'Amendment Scope:', f'{self._amendment_scopes()}')
+      self._generate_m11_title_page_entry(doc, 'Version Number:', f"{self._element_references('study_version_identifier')}")
+      self._generate_m11_title_page_entry(doc, 'Version Date:', f"{self._element_references('study_date')}")
+      self._generate_m11_title_page_entry(doc, 'Amendment Identifier:', f"{self._element_references('amendment')}")
+      self._generate_m11_title_page_entry(doc, 'Amendment Scope:', f"{self._element_references('amendment_scopes')}")
       self._generate_m11_title_page_entry(doc, 'Compound Codes(s):', '')
       self._generate_m11_title_page_entry(doc, 'Compound Name(s):', '')
-      self._generate_m11_title_page_entry(doc, 'Trial Phase:', f'{self._study_phase()}')
-      self._generate_m11_title_page_entry(doc, 'Short Title:', f'{self._study_short_title()}')
-      self._generate_m11_title_page_entry(doc, 'Sponsor Name and Address:', f'{self._organization_name_and_address()}')
-      self._generate_m11_title_page_entry(doc, 'Regulatory Agency Identifier Number(s):', f'{self._study_regulatory_identifiers()}')
-      self._generate_m11_title_page_entry(doc, 'Spondor Approval Date:', f'{self._approval_date()}')
+      self._generate_m11_title_page_entry(doc, 'Trial Phase:', f"{self._element_references('study_phase')}")
+      self._generate_m11_title_page_entry(doc, 'Short Title:', f"{self._element_references('study_short_title')}")
+      self._generate_m11_title_page_entry(doc, 'Sponsor Name and Address:', f"{self._element_references('organization_name_and_address')}")
+      self._generate_m11_title_page_entry(doc, 'Regulatory Agency Identifier Number(s):', f"{self._element_references('study_regulatory_identifiers')}")
+      self._generate_m11_title_page_entry(doc, 'Spondor Approval Date:', f"{self._element_references('approval_date')}")
 
       # Enter Nonproprietary Name(s)
       # Enter Proprietary Name(s)
@@ -430,91 +431,99 @@ class StudyProtocolDocumentVersion(NodeId):
     #       with doc.tag('span', style="color: #FA8072"):
     #         doc.text(f"USDM: {', '.join(self._list_references(entry))}")  
 
-  def _sponsor_identifier(self):
-    identifiers = self._study_version.studyIdentifiers
-    for identifier in identifiers:
-      if identifier.studyIdentifierScope.type.code == 'C70793':
-        return identifier
-    return None
-  
-  def _study_phase(self):
-    phase = self._study_version.studyPhase.standardCode
-    results = [{'instance': phase, 'klass': 'Code', 'attribute': 'decode'}]
-    return self._set_of_references(results)
-  
-  def _study_short_title(self):
-    results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'briefTitle'}]
-    return self._set_of_references(results)
-
-  def _study_full_title(self):
-    #results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'officialTitle'}]
-    result = Element( self._study_version, 'full_title').reference()
+  def _element_references(self, name):
+    result = Element( self._study_version, name).reference()
     print(f"RESULT: {result}")
     refs = [result['result']] if 'result' in result else []
-    return self._set_of_references(refs)
+    result = self._set_of_references(refs)
+    print(f"REF: {result}")
+    return result
 
-  def _study_acronym(self):
-    results = [{'instance': self._study_version, 'klass': 'StudyVersion', 'attribute': 'studyAcronym'}]
-    return self._set_of_references(results)
-
-  def _study_version_identifier(self):
-    results = [{'instance': self._study_version, 'klass': 'StudyVersion', 'attribute': 'versionIdentifier'}]
-    return self._set_of_references(results)
-
-  def _study_identifier(self):
-    identifier = self._sponsor_identifier()
-    results = [{'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier'}]
-    return self._set_of_references(results)
-
-  def _study_regulatory_identifiers(self):
-    results = []
-    identifiers = self._study_version.studyIdentifiers
-    for identifier in identifiers:
-      if identifier.studyIdentifierScope.type.code == 'C188863' or identifier.studyIdentifierScope.type.code == 'C93453':
-        item = {'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier'}
-        results.append(item)
-    return self._set_of_references(results)
-
-  def _study_date(self):
-    dates = self.protocol_document_version.dateValues
-    for date in dates:
-      if date.type.code == 'C99903x1':
-        results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue'}]
-        return self._set_of_references(results)
-    return None
+  # def _sponsor_identifier(self):
+  #   identifiers = self._study_version.studyIdentifiers
+  #   for identifier in identifiers:
+  #     if identifier.studyIdentifierScope.type.code == 'C70793':
+  #       return identifier
+  #   return None
   
-  def _approval_date(self):
-    dates = self._study_version.dateValues
-    for date in dates:
-      if date.type.code == 'C132352':
-        results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue'}]
-        return self._set_of_references(results)
-    return None
+  # def _study_phase(self):
+  #   phase = self._study_version.studyPhase.standardCode
+  #   results = [{'instance': phase, 'klass': 'Code', 'attribute': 'decode'}]
+  #   return self._set_of_references(results)
+  
+  # def _study_short_title(self):
+  #   results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'briefTitle'}]
+  #   return self._set_of_references(results)
 
-  def _organization_name_and_address(self):
-    identifier = self._sponsor_identifier()
-    results = [
-      {'instance': identifier.studyIdentifierScope, 'klass': 'Organization', 'attribute': 'name'},
-      {'instance': identifier.studyIdentifierScope.legalAddress, 'klass': 'Address', 'attribute': 'text'},
-    ]
-    return self._set_of_references(results)
+  # def _study_full_title(self):
+  #   #results = [{'instance': self.protocol_document_version, 'klass': 'StudyProtocolDocumentVersion', 'attribute': 'officialTitle'}]
+  #   result = Element( self._study_version, 'full_title').reference()
+  #   print(f"RESULT: {result}")
+  #   refs = [result['result']] if 'result' in result else []
+  #   return self._set_of_references(refs)
 
-  def _amendment(self):
-    amendments = self._study_version.amendments
-    results = [{'instance': amendments[-1], 'klass': 'StudyAmendment', 'attribute': 'number'}]
-    return self._set_of_references(results)
+  # def _study_acronym(self):
+  #   results = [{'instance': self._study_version, 'klass': 'StudyVersion', 'attribute': 'studyAcronym'}]
+  #   return self._set_of_references(results)
 
-  def _amendment_scopes(self):
-    results = []
-    amendment = self._study_version.amendments[-1]
-    for item in amendment.enrollments:
-      if item.type.code == "C68846":
-        results = [{'instance': item.type, 'klass': 'Code', 'attribute': 'decode'}]
-        return self._set_of_references(results)
-      else:
-        entry = {'instance': item.code.standardCode, 'klass': 'Code', 'attribute': 'decode'}
-        results.append(entry)
-    return self._set_of_references(results)
+  # def _study_version_identifier(self):
+  #   results = [{'instance': self._study_version, 'klass': 'StudyVersion', 'attribute': 'versionIdentifier'}]
+  #   return self._set_of_references(results)
+
+  # def _study_identifier(self):
+  #   identifier = self._sponsor_identifier()
+  #   results = [{'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier'}]
+  #   return self._set_of_references(results)
+
+  # def _study_regulatory_identifiers(self):
+  #   results = []
+  #   identifiers = self._study_version.studyIdentifiers
+  #   for identifier in identifiers:
+  #     if identifier.studyIdentifierScope.type.code == 'C188863' or identifier.studyIdentifierScope.type.code == 'C93453':
+  #       item = {'instance': identifier, 'klass': 'StudyIdentifier', 'attribute': 'studyIdentifier'}
+  #       results.append(item)
+  #   return self._set_of_references(results)
+
+  # def _study_date(self):
+  #   dates = self.protocol_document_version.dateValues
+  #   for date in dates:
+  #     if date.type.code == 'C99903x1':
+  #       results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue'}]
+  #       return self._set_of_references(results)
+  #   return None
+  
+  # def _approval_date(self):
+  #   dates = self._study_version.dateValues
+  #   for date in dates:
+  #     if date.type.code == 'C132352':
+  #       results = [{'instance': date, 'klass': 'GovernanceDate', 'attribute': 'dateValue'}]
+  #       return self._set_of_references(results)
+  #   return None
+
+  # def _organization_name_and_address(self):
+  #   identifier = self._sponsor_identifier()
+  #   results = [
+  #     {'instance': identifier.studyIdentifierScope, 'klass': 'Organization', 'attribute': 'name'},
+  #     {'instance': identifier.studyIdentifierScope.legalAddress, 'klass': 'Address', 'attribute': 'text'},
+  #   ]
+  #   return self._set_of_references(results)
+
+  # def _amendment(self):
+  #   amendments = self._study_version.amendments
+  #   results = [{'instance': amendments[-1], 'klass': 'StudyAmendment', 'attribute': 'number'}]
+  #   return self._set_of_references(results)
+
+  # def _amendment_scopes(self):
+  #   results = []
+  #   amendment = self._study_version.amendments[-1]
+  #   for item in amendment.enrollments:
+  #     if item.type.code == "C68846":
+  #       results = [{'instance': item.type, 'klass': 'Code', 'attribute': 'decode'}]
+  #       return self._set_of_references(results)
+  #     else:
+  #       entry = {'instance': item.code.standardCode, 'klass': 'Code', 'attribute': 'decode'}
+  #       results.append(entry)
+  #   return self._set_of_references(results)
   
   def _criteria(self, type):
     results = []
@@ -567,7 +576,7 @@ class StudyProtocolDocumentVersion(NodeId):
   
   def _set_of_references(self, items):
     if items:
-      return ", ".join([f'<usdm:ref klass="{item["klass"]}" id="{item["instance"].id}" attribute="{item["attribute"]}"/>' for item in items])
+      return ", ".join([f'<usdm:ref klass="{item["klass"]}" uuid="{item["instance"].uuid}", id="{item["instance"].id}" attribute="{item["attribute"]}"/>' for item in items])
     else:
       return ""
 

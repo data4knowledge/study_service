@@ -180,8 +180,8 @@ async def get_section(uuid: str, key: str, item: TextBody):
   response_model=dict)
 async def get_element(uuid: str, key: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  doc.set_study_version()
   if not 'error' in doc:
+    doc.set_study_version()
     data = doc.element(key)
     result = doc.element_read(key)
     print(f"RESULT: {result}")
@@ -201,17 +201,14 @@ async def get_element(uuid: str, key: str):
 async def write_element(uuid: str, key: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
+    doc.set_study_version()
     data = doc.element(key)
-    study_version = StudyVersion.find_from_study_protocol_document_version(doc.uuid)
-    if not 'error' in study_version:
-      result = doc.element_write(study_version['result'], key, item.text)
-      if not 'error' in result:
-        data['value'] = result['result']
-        return {'uuid': uuid, 'definition': data}
-      else:
-        raise HTTPException(status_code=500, detail=result['error'])
+    result = doc.element_write(key, item.text)
+    if not 'error' in result:
+      data['value'] = result['result']
+      return {'uuid': uuid, 'definition': data}
     else:
-      raise HTTPException(status_code=404, detail=study_version['error'])
+      raise HTTPException(status_code=500, detail=result['error'])
   else:
     raise HTTPException(status_code=404, detail=doc['error'])
 
@@ -221,9 +218,9 @@ async def write_element(uuid: str, key: str, item: TextBody):
   response_model=str)
 async def get_section(uuid: str, section: str = None):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  doc.set_study_version()
   if doc:
     try:
+      doc.set_study_version()
       if section: 
         return doc.section_as_html(section)
       else:
