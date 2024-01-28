@@ -55,16 +55,16 @@ class Element():
         'data': ['uuid', 'value']
       }
     },
-    'sponsor_identifier': {
+    'protocol_identifier': {
       'status': "ok",
       'root':{
         'query': "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(si:StudyIdentifiers)-[]->(c:Code {code: 'C70793'})",
       },
       'read': {
-        'query': "RETURN st.text as value",
+        'query': "RETURN si.text as value",
       },
       'write': {
-        'query': "SET st.text = $value RETURN st.text as value",
+        'query': "SET si.studyIdentifier = $value RETURN si.studyIdentifier as value",
         'data': ['uuid', 'value']
       },
       'reference': {
@@ -74,7 +74,7 @@ class Element():
       }
     },
   
-    'study_phase': {'status': "no map"},
+    'trial_phase': {'status': "no map"},
   #   phase = self._study_version.studyPhase.standardCode
   #   results = [{'instance': phase, 'klass': 'Code', 'attribute': 'decode'}]
   #   return self._set_of_references(results)
