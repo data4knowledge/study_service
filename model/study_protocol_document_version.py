@@ -576,7 +576,7 @@ class StudyProtocolDocumentVersion(NodeId):
   
   def _set_of_references(self, items):
     if items:
-      return ", ".join([f'<usdm:ref klass="{item["klass"]}" uuid="{item["instance"].uuid}", id="{item["instance"].id}" attribute="{item["attribute"]}"/>' for item in items])
+      return ", ".join([f'<usdm:ref klass="{item["klass"]}" uuid="{item["instance"].uuid}" id="{item["instance"].id}" attribute="{item["attribute"]}"/>' for item in items])
     else:
       return ""
 
