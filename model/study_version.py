@@ -3,7 +3,7 @@ import traceback
 from typing import List, Union, Literal
 from .code import *
 from .alias_code import *
-from .study_protocol_version import *
+#from .study_protocol_version import *
 from .study_design import *
 from d4kms_service import Neo4jConnection
 from .base_node import NodeId

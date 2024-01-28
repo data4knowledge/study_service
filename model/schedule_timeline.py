@@ -7,7 +7,7 @@ from .timing import Timing
 class ScheduleTimeline(NodeNameLabelDesc):
   mainTimeline: bool
   entryCondition: str
-  entryId: str
+  entry: ScheduledActivityInstance = None
   exits: List[ScheduleTimelineExit] = []
   timings: List[Timing] = []
   instances: List[Union[ScheduledActivityInstance, ScheduledDecisionInstance]] = []

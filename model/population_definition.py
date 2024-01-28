@@ -1,11 +1,11 @@
 from typing import Union, List, Literal
-from .api_base_model import ApiBaseModelWithIdNameLabelAndDesc
+from .base_node import *
 from .code import Code
 from .range import Range
 from .eligibility_criterion import EligibilityCriterion
 from .characteristic import Characteristic
 
-class PopulationDefinition(ApiBaseModelWithIdNameLabelAndDesc):
+class PopulationDefinition(NodeNameLabelDesc):
   includesHealthySubjects: bool
   plannedEnrollmentNumber: Union[Range, None] = None
   plannedCompletionNumber: Union[Range, None] = None
