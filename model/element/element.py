@@ -8,20 +8,20 @@ class Element():
     'full_title': {
       'status': "ok",
       'read': {
-        'query': "MATCH (sv:StudyVersion {uuid: $uuid}) RETURN sv.studyTitle as value",
+        'query': "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C99905x1'}) RETURN st.text as value",
       },
       'write': {
-        'query': "MATCH (sv:StudyVersion {uuid: $uuid}) SET sv.studyTitle = $value RETURN sv.studyTitle as value",
+        'query': "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C99905x1'}) SET st.text = $value RETURN st.text as value",
         'data': ['uuid', 'value']
       }
     },
     'trial_acronym': {
       'status': "ok",
       'read': {
-        'query': "MATCH (sv:StudyVersion {uuid: $uuid}) RETURN sv.studyAcronym as value",
+        'query': "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C94108'}) RETURN sv.text as value",
       },
       'write': {
-        'query': "MATCH (sv:StudyVersion {uuid: $uuid}) SET sv.studyAcronym = $value RETURN sv.studyAcronym as value",
+        'query': "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C94108'}) SET sv.text = $value RETURN sv.text as value",
         'data': ['uuid', 'value']
       }
     },
