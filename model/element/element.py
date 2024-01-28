@@ -19,7 +19,7 @@ class Element():
         'data': ['uuid', 'value']
       },
       'reference': {
-        'instance': "RETURN st as value",
+        'query': "RETURN st as value",
         'klass': 'StudyTitle', 
         'attribute': 'text'
       }
@@ -37,7 +37,7 @@ class Element():
         'data': ['uuid', 'value']
       },
       'reference': {
-        'instance': "RETURN st as value",
+        'query': "RETURN st as value",
         'klass': 'StudyTitle', 
         'attribute': 'text'
       }
@@ -68,7 +68,7 @@ class Element():
         'data': ['uuid', 'value']
       },
       'reference': {
-        'instance': "RETURN si as value",
+        'query': "RETURN si as value",
         'klass': 'StudyIdentifier', 
         'attribute': 'studyIdentifier'
       }

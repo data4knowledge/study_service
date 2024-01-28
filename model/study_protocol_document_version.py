@@ -344,7 +344,7 @@ class StudyProtocolDocumentVersion(NodeId):
     with doc.tag('table'):
       self._generate_m11_title_page_entry(doc, 'Sponsor Confidentiality Statement:', '')
       self._generate_m11_title_page_entry(doc, 'Full Title:', f"{self._element_references('full_title')}")
-      self._generate_m11_title_page_entry(doc, 'Trial Acronym:', f"{self._element_references('acronym')}")
+      self._generate_m11_title_page_entry(doc, 'Trial Acronym:', f"{self._element_references('trial_acronym')}")
       self._generate_m11_title_page_entry(doc, 'Protocol Identifier:', f"{self._element_references('study_identifier')}")
       self._generate_m11_title_page_entry(doc, 'Original Protocol:', '')
       self._generate_m11_title_page_entry(doc, 'Version Number:', f"{self._element_references('study_version_identifier')}")
