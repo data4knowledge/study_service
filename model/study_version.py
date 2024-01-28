@@ -16,7 +16,6 @@ from .study_title import StudyTitle
 class StudyVersion(NodeId):
   versionIdentifier: str
   rationale: str
-  studyAcronym: str
   studyType: Union[Code, None] = None
   studyPhase: Union[AliasCode, None] = None
   documentVersionId: Union[str, None] = None
@@ -25,7 +24,7 @@ class StudyVersion(NodeId):
   businessTherapeuticAreas: List[Code] = []
   studyIdentifiers: List[StudyIdentifier] = []
   studyDesigns: List[StudyDesign] = []
-  titles: List[StudyTitle]
+  titles: List[StudyTitle] = []
   instanceType: Literal['StudyVersion']
 
   @classmethod
