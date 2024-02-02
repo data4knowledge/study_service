@@ -5,6 +5,7 @@ import traceback
 import logging
 from uuid import uuid4
 from d4kms_generic import ServiceEnvironment
+from d4kms_generic import application_logger
 
 class GithubService():
   
@@ -24,15 +25,17 @@ class GithubService():
     self.file_remaining_count = 0
     self.elements = []
 
-  def next(self, dir):
+  def next(self):
     try:
       file = self.files[self.file_index]
       with open(file, 'r') as f:
         data = f.read()
-      name = os.path.basename(file)
-      self.result.append(name)
+      filename = os.path.basename(file)
+      self.result.append(filename)
+      pathname = os.path.relpath(file, 'uploads')
+      application_logger.debug(f"Filename: {pathname}, {file}")
       blob = self.repo.create_git_blob(data, "utf-8")
-      element = github.InputGitTreeElement(path=f"{dir}/{file}", mode='100644', type='blob', sha=blob.sha)
+      element = github.InputGitTreeElement(path=pathname, mode='100644', type='blob', sha=blob.sha)
       self.elements.append(element)
       self.file_count += 1
       self.file_index += 1

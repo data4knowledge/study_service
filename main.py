@@ -17,16 +17,13 @@ from model.study_protocol_document_version import StudyProtocolDocumentVersion, 
 # from model.study_arm import StudyArm, StudyArmIn
 # from model.study_data import StudyData, StudyDataIn
 # from model.encounter import Encounter, EncounterIn, EncounterLink
-from d4kms_generic import ServiceEnvironment
 # from typing import List
-import logging
 import traceback
+from d4kms_generic import ServiceEnvironment
+from d4kms_generic import application_logger
 
 VERSION = "0.7"
 SYSTEM_NAME = "d4k Study Microservice"
-
-#log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
   title = SYSTEM_NAME,

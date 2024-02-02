@@ -1,5 +1,6 @@
 from .base_node import BaseNode
 from d4kms_service import Neo4jConnection
+from d4kms_generic import application_logger
 from .study_file_nodes_and_edges import StudyFileNodesAndEdges
 from service.github_service import GithubService
 from service.aura_service import AuraService
@@ -9,7 +10,6 @@ from usdm_excel import USDMExcel
 import os
 import yaml
 import traceback
-import logging
 
 class StudyFile(BaseNode):
   uuid: str = ""
@@ -70,19 +70,10 @@ class StudyFile(BaseNode):
       ne.dump()
 
       self.set_status("running", "Uploading to github", 15)
-      #github = GithubService()
-      #total = github.upload_dir(self.uuid, self.dir_path, '*.csv')
-      #while github.next():
-      #  count = github.progress()
-      #  percent = 15 + int(65.0 * (float(count) / float(total)))
-      #  self.set_status("running", "Uploading to github", percent)
-      #github.check_all_visible()
-      #file_list = github.upload_file_list()
       git = GithubService()
       file_count = git.file_list(self.dir_path, "*.csv")
-      dir = str(uuid4())
       for index in range(file_count):
-        more = git.next(dir)
+        more = git.next()
         count = git.progress()
         percent = 15 + int(65.0 * (float(count) / float(file_count)))
         self.set_status("running", "Uploading to github", percent)
@@ -90,7 +81,9 @@ class StudyFile(BaseNode):
 
       self.set_status("running", "Loading database", 80)
       aura = AuraService()
-      aura.load(self.uuid, self.dir_path, git.upload_file_list())
+      files = git.upload_file_list()
+      application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
+      aura.load(self.uuid, files)
 
       self.set_status("complete", "Finsihed", 100)
       return True
@@ -102,7 +95,7 @@ class StudyFile(BaseNode):
 
   def set_status(self, status, stage, percentage):
     self.status = status
-    logging.info(f"Study load, status: {status}")
+    application_logger.info(f"Study load, status: {status}")
     #print(f"Study load, status: {status}")
     db = Neo4jConnection()
     with db.session() as session:
@@ -119,8 +112,8 @@ class StudyFile(BaseNode):
     return ""
     
   def _log(self, e, trace):
-    logging.error(self.error)
-    logging.error(f"Exception {e}\n{trace}")
+    application_logger.error(self.error)
+    application_logger.error(f"Exception {e}\n{trace}")
 
   @staticmethod
   def _create(tx, filename, full_path, uuid):
