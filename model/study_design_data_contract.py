@@ -4,7 +4,17 @@ class StudyDesignDataContract():
 
   @classmethod
   def create(cls, uuid):
-    pass
+    query= """
+    MATCH(sd:StudyDesign {uuid: '%s'})
+    OPTIONAL MATCH (sd)-[:ACTIVITIES_REL]-(act:Activity)
+    OPTIONAL MATCH (act)<-[:ACTIVITY_REL]-(act_inst:ScheduledActivityInstance)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
+    OPTIONAL MATCH (act)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)
+    OPTIONAL MATCH (bc)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)
+    WITH sd, act, tl, bc, act_inst, bc_prop
+    MERGE (dc:DataContract{uri:'/'+sd.uuid+'/'+act.uuid+'/'+act_inst.uuid})
+    MERGE (dc)-[:PROPERTIES_REL]->(bc_prop)
+    MERGE (dc)-[:INSTANCES_REL]->(act_inst)
+    """
 
   @classmethod
   def read(cls, uuid, page, size, filter):
