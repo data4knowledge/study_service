@@ -9,7 +9,7 @@ class StudyDesignDataContract():
     OPTIONAL MATCH (sd)-[:ACTIVITIES_REL]-(act:Activity)
     OPTIONAL MATCH (act)<-[:ACTIVITY_REL]-(act_inst:ScheduledActivityInstance)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
     OPTIONAL MATCH (act)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)
-    OPTIONAL MATCH (bc)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)
+    MATCH (bc)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)
     WITH sd, act, tl, bc, act_inst, bc_prop
     MERGE (dc:DataContract{uri:'/'+sd.uuid+'/'+bc_prop.uuid+'/'+act_inst.uuid})
     MERGE (dc)-[:PROPERTIES_REL]->(bc_prop)
