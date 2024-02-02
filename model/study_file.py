@@ -70,18 +70,27 @@ class StudyFile(BaseNode):
       ne.dump()
 
       self.set_status("running", "Uploading to github", 15)
-      github = GithubService()
-      total = github.upload_dir(self.uuid, self.dir_path, '*.csv')
-      while github.next():
-        count = github.progress()
-        percent = 15 + int(65.0 * (float(count) / float(total)))
+      #github = GithubService()
+      #total = github.upload_dir(self.uuid, self.dir_path, '*.csv')
+      #while github.next():
+      #  count = github.progress()
+      #  percent = 15 + int(65.0 * (float(count) / float(total)))
+      #  self.set_status("running", "Uploading to github", percent)
+      #github.check_all_visible()
+      #file_list = github.upload_file_list()
+      git = GithubService()
+      file_count = git.file_list(self.dir_path, "*.csv")
+      dir = str(uuid4())
+      for index in range(file_count):
+        more = git.next(dir)
+        count = git.progress()
+        percent = 15 + int(65.0 * (float(count) / float(file_count)))
         self.set_status("running", "Uploading to github", percent)
-      github.check_all_visible()
-      file_list = github.upload_file_list()
+      git.load()
 
       self.set_status("running", "Loading database", 80)
       aura = AuraService()
-      aura.load(self.uuid, self.dir_path, file_list)
+      aura.load(self.uuid, self.dir_path, git.upload_file_list())
 
       self.set_status("complete", "Finsihed", 100)
       return True
