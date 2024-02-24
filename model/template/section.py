@@ -5,6 +5,3 @@ class Section(TemplateBase):
 
   def __init__(self, definition):
     self._definition = definition
-
-  def get(self):
-    return self._definition

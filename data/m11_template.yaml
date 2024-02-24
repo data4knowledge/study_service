@@ -1,720 +1,1004 @@
-- key: '0'
+'0':
   level: 1
   section_number: ''
   section_title: Title Sheet
-  text: '<usdm:section name="M11-title-page"/>'
-- key: '1'
+  file: m11_title_sheet.html
+'1':
   level: 1
   section_number: '1'
   section_title: Protocol Summary
+  header_only: false
+  elements: []
   text: ''
-- key: '1.1'
+'1.1':
   level: 2
   section_number: '1.1'
   section_title: Protocol Synopsis
+  header_only: false
+  elements: []
   text: ''
-- key: 1.1.1
+'1.1.1':
   level: 3
   section_number: 1.1.1
   section_title: Primary and Secondary Objectives and Endpoints
+  header_only: false
+  elements: []
   text: ''
-- key: 1.1.2
+'1.1.2':
   level: 3
   section_number: 1.1.2
   section_title: Overall Design
+  header_only: false
+  elements: []
   text: ''
-- key: '1.2'
+'1.2':
   level: 2
   section_number: '1.2'
   section_title: Trial Schema
+  header_only: false
+  elements: []
   text: ''
-- key: '1.3'
+'1.3':
   level: 2
   section_number: '1.3'
   section_title: Schedule of Activities
+  header_only: false
+  elements: []
   text: ''
-- key: '2'
+'2':
   level: 1
   section_number: '2'
   section_title: Introduction
+  header_only: false
+  elements: []
   text: ''
-- key: '2.1'
+'2.1':
   level: 2
   section_number: '2.1'
   section_title: Purpose of Trial
+  header_only: false
+  elements: []
   text: ''
-- key: '2.2'
+'2.2':
   level: 2
   section_number: '2.2'
   section_title: Summary of Benefits and Risks
+  header_only: false
+  elements: []
   text: ''
-- key: 2.2.1
+2.2.1:
   level: 3
   section_number: 2.2.1
   section_title: Benefit Summary
+  header_only: false
+  elements: []
   text: ''
-- key: 2.2.2
+2.2.2:
   level: 3
   section_number: 2.2.2
   section_title: Risk Summary and Mitigation Strategy
+  header_only: false
+  elements: []
   text: ''
-- key: 2.2.3
+2.2.3:
   level: 3
   section_number: 2.2.3
   section_title: Overall Benefit:Risk Conclusion
+  header_only: false
+  elements: []
   text: ''
-- key: '3'
+'3':
   level: 1
   section_number: '3'
   section_title: Trial Objectives, Endpoints and Estimands
+  header_only: false
+  elements: []
   text: ''
-- key: '3.1'
+'3.1':
   level: 2
   section_number: '3.1'
   section_title: '{Primary/Secondary/Exploratory} Objective + Associated Endpoint
     {and Estimand}'
+  header_only: false
+  elements: []
   text: ''
-- key: 3.1.1
+3.1.1:
   level: 3
   section_number: 3.1.1
   section_title: '{Primary/Secondary/Exploratory} Estimand'
+  header_only: false
+  elements: []
   text: ''
-- key: '4'
+'4':
   level: 1
   section_number: '4'
   section_title: Trial Design
+  header_only: false
+  elements: []
   text: ''
-- key: '4.1'
+'4.1':
   level: 2
   section_number: '4.1'
   section_title: Description of Trial Design
+  header_only: false
+  elements: []
   text: ''
-- key: 4.1.1
+4.1.1:
   level: 3
   section_number: 4.1.1
   section_title: Stakeholder Input into Design
+  header_only: false
+  elements: []
   text: ''
-- key: '4.2'
+'4.2':
   level: 2
   section_number: '4.2'
   section_title: Rationale for Trial Design
+  header_only: false
+  elements: []
   text: ''
-- key: 4.2.1
+4.2.1:
   level: 3
   section_number: 4.2.1
   section_title: Rationale for Intervention Model
+  header_only: false
+  elements: []
   text: ''
-- key: 4.2.2
+4.2.2:
   level: 3
   section_number: 4.2.2
   section_title: Rationale for Duration
+  header_only: false
+  elements: []
   text: ''
-- key: 4.2.3
+4.2.3:
   level: 3
   section_number: 4.2.3
   section_title: Rationale for Endpoints
+  header_only: false
+  elements: []
   text: ''
-- key: 4.2.4
+4.2.4:
   level: 3
   section_number: 4.2.4
   section_title: Rationale for Interim Analysis
+  header_only: false
+  elements: []
   text: ''
-- key: 4.2.5
+4.2.5:
   level: 3
   section_number: 4.2.5
   section_title: Rationale for Comparator
+  header_only: false
+  elements: []
   text: ''
-- key: 4.2.6
+4.2.6:
   level: 3
   section_number: 4.2.6
   section_title: Rationale for Adaptive or Novel Trial Design
+  header_only: false
+  elements: []
   text: ''
-- key: 4.2.7
+4.2.7:
   level: 3
   section_number: 4.2.7
   section_title: Rationale for Other Trial Design Aspects
+  header_only: false
+  elements: []
   text: ''
-- key: '4.3'
+'4.3':
   level: 2
   section_number: '4.3'
   section_title: Trial Stopping Rules
+  header_only: false
+  elements: []
   text: ''
-- key: 4.3.1
+4.3.1:
   level: 3
   section_number: 4.3.1
   section_title: '{Temporary Trial Halt}'
+  header_only: false
+  elements: []
   text: ''
-- key: '4.4'
+'4.4':
   level: 2
   section_number: '4.4'
   section_title: Start of Trial and End of Trial
+  header_only: false
+  elements: []
   text: ''
-- key: '4.5'
+'4.5':
   level: 2
   section_number: '4.5'
   section_title: Access to Trial Intervention After End of Trial
+  header_only: false
+  elements: []
   text: ''
-- key: '5'
+'5':
   level: 1
   section_number: '5'
   section_title: Trial Population
+  header_only: false
+  elements: []
   text: ''
-- key: '5.1'
+'5.1':
   level: 2
   section_number: '5.1'
   section_title: Description of Trial Population and Rationale
+  header_only: false
+  elements: []
   text: ''
-- key: '5.2'
+'5.2':
   level: 2
   section_number: '5.2'
   section_title: Inclusion Criteria
+  header_only: false
+  elements: []
   text: ''
-- key: '5.3'
+'5.3':
   level: 2
   section_number: '5.3'
   section_title: Exclusion Criteria
+  header_only: false
+  elements: []
   text: ''
-- key: '5.4'
+'5.4':
   level: 2
   section_number: '5.4'
   section_title: Contraception
+  header_only: false
+  elements: []
   text: ''
-- key: '5.5'
+'5.5':
   level: 2
   section_number: '5.5'
   section_title: Lifestyle Restrictions
+  header_only: false
+  elements: []
   text: ''
-- key: 5.5.1
+5.5.1:
   level: 3
   section_number: 5.5.1
   section_title: Meals and Dietary Restrictions
+  header_only: false
+  elements: []
   text: ''
-- key: 5.5.2
+5.5.2:
   level: 3
   section_number: 5.5.2
   section_title: Caffeine, Alcohol, Tobacco, and Other Restrictions
+  header_only: false
+  elements: []
   text: ''
-- key: 5.5.3
+5.5.3:
   level: 3
   section_number: 5.5.3
   section_title: Physical Activity Restrictions
+  header_only: false
+  elements: []
   text: ''
-- key: 5.5.4
+5.5.4:
   level: 3
   section_number: 5.5.4
   section_title: Other Activity Restrictions
+  header_only: false
+  elements: []
   text: ''
-- key: '5.6'
+'5.6':
   level: 2
   section_number: '5.6'
   section_title: Screen Failure and Rescreening
+  header_only: false
+  elements: []
   text: ''
-- key: '6'
+'6':
   level: 1
   section_number: '6'
   section_title: Trial Intervention And Concomitant Therapy
+  header_only: false
+  elements: []
   text: ''
-- key: '6.1'
+'6.1':
   level: 2
   section_number: '6.1'
   section_title: Description of Investigational Trial Intervention
+  header_only: false
+  elements: []
   text: ''
-- key: '6.2'
+'6.2':
   level: 2
   section_number: '6.2'
   section_title: Rationale for Investigational Trial Intervention Dose and Regimen
+  header_only: false
+  elements: []
   text: ''
-- key: '6.3'
+'6.3':
   level: 2
   section_number: '6.3'
   section_title: Investigational Trial Intervention Administration
+  header_only: false
+  elements: []
   text: ''
-- key: 6.3.1
+6.3.1:
   level: 3
   section_number: 6.3.1
   section_title: Investigational Trial Intervention Dose Modification
+  header_only: false
+  elements: []
   text: ''
-- key: '6.4'
+'6.4':
   level: 2
   section_number: '6.4'
   section_title: Management of Investigational Trial Intervention Overdose
+  header_only: false
+  elements: []
   text: ''
-- key: '6.5'
+'6.5':
   level: 2
   section_number: '6.5'
   section_title: Preparation, Storage, Handling and Accountability of Investigational
     Trial Intervention(s)
+  header_only: false
+  elements: []
   text: ''
-- key: 6.5.1
+6.5.1:
   level: 3
   section_number: 6.5.1
   section_title: Preparation of Investigational Trial Intervention(s)
+  header_only: false
+  elements: []
   text: ''
-- key: 6.5.2
+6.5.2:
   level: 3
   section_number: 6.5.2
   section_title: Storage and Handling of Investigational Trial Intervention
+  header_only: false
+  elements: []
   text: ''
-- key: 6.5.3
+6.5.3:
   level: 3
   section_number: 6.5.3
   section_title: Accountability of Investigational Trial Intervention
+  header_only: false
+  elements: []
   text: ''
-- key: '6.6'
+'6.6':
   level: 2
   section_number: '6.6'
   section_title: Investigational Trial Intervention Assignment, Randomisation and
     Blinding
+  header_only: false
+  elements: []
   text: ''
-- key: 6.6.1
+6.6.1:
   level: 3
   section_number: 6.6.1
   section_title: Participant Assignment to Investigational Trial Intervention
+  header_only: false
+  elements: []
   text: ''
-- key: 6.6.2
+6.6.2:
   level: 3
   section_number: 6.6.2
   section_title: Randomisation
+  header_only: false
+  elements: []
   text: ''
-- key: 6.6.3
+6.6.3:
   level: 3
   section_number: 6.6.3
   section_title: '{Blinding}'
+  header_only: false
+  elements: []
   text: ''
-- key: 6.6.4
+6.6.4:
   level: 3
   section_number: 6.6.4
   section_title: '{Emergency Unblinding at the Site}'
+  header_only: false
+  elements: []
   text: ''
-- key: '6.7'
+'6.7':
   level: 2
   section_number: '6.7'
   section_title: Investigational Trial Intervention Compliance
+  header_only: false
+  elements: []
   text: ''
-- key: '6.8'
+'6.8':
   level: 2
   section_number: '6.8'
   section_title: Description of Non-Investigational Trial Intervention(s)
+  header_only: false
+  elements: []
   text: ''
-- key: 6.8.1
+6.8.1:
   level: 3
   section_number: 6.8.1
   section_title: '{Background Intervention}'
+  header_only: false
+  elements: []
   text: ''
-- key: 6.8.2
+6.8.2:
   level: 3
   section_number: 6.8.2
   section_title: '{Rescue Therapy}'
+  header_only: false
+  elements: []
   text: ''
-- key: 6.8.3
+6.8.3:
   level: 3
   section_number: 6.8.3
   section_title: '{Other Therapy}'
+  header_only: false
+  elements: []
   text: ''
-- key: '6.9'
+'6.9':
   level: 2
   section_number: '6.9'
   section_title: Concomitant Therapy
+  header_only: false
+  elements: []
   text: ''
-- key: 6.9.1
+6.9.1:
   level: 3
   section_number: 6.9.1
   section_title: '{Prohibited Concomitant Therapy}'
+  header_only: false
+  elements: []
   text: ''
-- key: 6.9.2
+6.9.2:
   level: 3
   section_number: 6.9.2
   section_title: '{Permitted Concomitant Therapy}'
+  header_only: false
+  elements: []
   text: ''
-- key: '7'
+'7':
   level: 1
   section_number: '7'
   section_title: Participant Discontinuation of Trial Intervention and Withdrawal
     From trial
+  header_only: false
+  elements: []
   text: ''
-- key: '7.1'
+'7.1':
   level: 2
   section_number: '7.1'
   section_title: Discontinuation of Trial Intervention for Individual Participants
+  header_only: false
+  elements: []
   text: ''
-- key: 7.1.1
+7.1.1:
   level: 3
   section_number: 7.1.1
   section_title: Permanent Discontinuation of Trial Intervention
+  header_only: false
+  elements: []
   text: ''
-- key: 7.1.2
+7.1.2:
   level: 3
   section_number: 7.1.2
   section_title: Temporary Discontinuation of Trial Intervention
+  header_only: false
+  elements: []
   text: ''
-- key: 7.1.3
+7.1.3:
   level: 3
   section_number: 7.1.3
   section_title: Rechallenge
+  header_only: false
+  elements: []
   text: ''
-- key: '7.2'
+'7.2':
   level: 2
   section_number: '7.2'
   section_title: Withdrawal from the Trial
+  header_only: false
+  elements: []
   text: ''
-- key: '7.3'
+'7.3':
   level: 2
   section_number: '7.3'
   section_title: Lost to Follow-Up
+  header_only: false
+  elements: []
   text: ''
-- key: '7.4'
+'7.4':
   level: 2
   section_number: '7.4'
   section_title: Participant Stopping Rules
+  header_only: false
+  elements: []
   text: ''
-- key: '8'
+'8':
   level: 1
   section_number: '8'
   section_title: Trial Assessments and Procedures
+  header_only: false
+  elements: []
   text: ''
-- key: '8.1'
+'8.1':
   level: 2
   section_number: '8.1'
   section_title: Screening/Baseline Assessments and Procedures
+  header_only: false
+  elements: []
   text: ''
-- key: '8.2'
+'8.2':
   level: 2
   section_number: '8.2'
   section_title: Efficacy Assessments and Procedures
+  header_only: false
+  elements: []
   text: ''
-- key: '8.3'
+'8.3':
   level: 2
   section_number: '8.3'
   section_title: Safety Assessments and Procedures
+  header_only: false
+  elements: []
   text: ''
-- key: 8.3.1
+8.3.1:
   level: 3
   section_number: 8.3.1
   section_title: Physical Examination
+  header_only: false
+  elements: []
   text: ''
-- key: 8.3.2
+8.3.2:
   level: 3
   section_number: 8.3.2
   section_title: Vital Signs
+  header_only: false
+  elements: []
   text: ''
-- key: 8.3.3
+8.3.3:
   level: 3
   section_number: 8.3.3
   section_title: Electrocardiograms
+  header_only: false
+  elements: []
   text: ''
-- key: 8.3.4
+8.3.4:
   level: 3
   section_number: 8.3.4
   section_title: Clinical Laboratory Assessments
+  header_only: false
+  elements: []
   text: ''
-- key: 8.3.5
+8.3.5:
   level: 3
   section_number: 8.3.5
   section_title: Pregnancy Testing
+  header_only: false
+  elements: []
   text: ''
-- key: 8.3.6
+8.3.6:
   level: 3
   section_number: 8.3.6
   section_title: Suicidal Ideation and Behaviour Risk Monitoring
+  header_only: false
+  elements: []
   text: ''
-- key: '8.4'
+'8.4':
   level: 2
   section_number: '8.4'
   section_title: Pharmacokinetics
+  header_only: false
+  elements: []
   text: ''
-- key: '8.5'
+'8.5':
   level: 2
   section_number: '8.5'
   section_title: Genetic Testing
+  header_only: false
+  elements: []
   text: ''
-- key: '8.6'
+'8.6':
   level: 2
   section_number: '8.6'
   section_title: Biomarkers
+  header_only: false
+  elements: []
   text: ''
-- key: '8.7'
+'8.7':
   level: 2
   section_number: '8.7'
   section_title: Immunogenicity Assessments
+  header_only: false
+  elements: []
   text: ''
-- key: '8.8'
+'8.8':
   level: 2
   section_number: '8.8'
   section_title: Medical Resource Utilisation and Health Economics
+  header_only: false
+  elements: []
   text: ''
-- key: '9'
+'9':
   level: 1
   section_number: '9'
   section_title: Adverse Events, Serious Adverse Events, Product Complaints, Pregnancy
     and Postpartum Information
+  header_only: false
+  elements: []
   text: ''
-- key: '9.1'
+'9.1':
   level: 2
   section_number: '9.1'
   section_title: Definitions
+  header_only: false
+  elements: []
   text: ''
-- key: 9.1.1
+9.1.1:
   level: 3
   section_number: 9.1.1
   section_title: Definitions of Adverse Events
+  header_only: false
+  elements: []
   text: ''
-- key: 9.1.2
+9.1.2:
   level: 3
   section_number: 9.1.2
   section_title: Definitions of Serious Adverse Events
+  header_only: false
+  elements: []
   text: ''
-- key: 9.1.3
+9.1.3:
   level: 3
   section_number: 9.1.3
   section_title: Definitions Related to Childbearing Potential
+  header_only: false
+  elements: []
   text: ''
-- key: 9.1.4
+9.1.4:
   level: 3
   section_number: 9.1.4
   section_title: '{Definition of Medical Device Product Complaints}'
+  header_only: false
+  elements: []
   text: ''
-- key: '9.2'
+'9.2':
   level: 2
   section_number: '9.2'
   section_title: Timing and Mechanism for Collection and Reporting
+  header_only: false
+  elements: []
   text: ''
-- key: '9.3'
+'9.3':
   level: 2
   section_number: '9.3'
   section_title: Identification, Recording and Follow-Up
+  header_only: false
+  elements: []
   text: ''
-- key: 9.3.1
+9.3.1:
   level: 3
   section_number: 9.3.1
   section_title: Identification
+  header_only: false
+  elements: []
   text: ''
-- key: 9.3.2
+9.3.2:
   level: 3
   section_number: 9.3.2
   section_title: Intensity
+  header_only: false
+  elements: []
   text: ''
-- key: 9.3.3
+9.3.3:
   level: 3
   section_number: 9.3.3
   section_title: Causality
+  header_only: false
+  elements: []
   text: ''
-- key: 9.3.4
+9.3.4:
   level: 3
   section_number: 9.3.4
   section_title: Follow-up
+  header_only: false
+  elements: []
   text: ''
-- key: '9.4'
+'9.4':
   level: 2
   section_number: '9.4'
   section_title: Reporting
+  header_only: false
+  elements: []
   text: ''
-- key: 9.4.1
+9.4.1:
   level: 3
   section_number: 9.4.1
   section_title: Regulatory Reporting Requirements
+  header_only: false
+  elements: []
   text: ''
-- key: 9.4.2
+9.4.2:
   level: 3
   section_number: 9.4.2
   section_title: Adverse Events of Special Interest
+  header_only: false
+  elements: []
   text: ''
-- key: 9.4.3
+9.4.3:
   level: 3
   section_number: 9.4.3
   section_title: Disease-related Events or Outcomes Not Qualifying as AEs or SAEs
+  header_only: false
+  elements: []
   text: ''
-- key: '9.5'
+'9.5':
   level: 2
   section_number: '9.5'
   section_title: Pregnancy and Postpartum Information
+  header_only: false
+  elements: []
   text: ''
-- key: 9.5.1
+9.5.1:
   level: 3
   section_number: 9.5.1
   section_title: '{Participants Who Become Pregnant During the Trial}'
+  header_only: false
+  elements: []
   text: ''
-- key: 9.5.2
+9.5.2:
   level: 3
   section_number: 9.5.2
   section_title: '{Participants Whose Partners Become Pregnant}'
+  header_only: false
+  elements: []
   text: ''
-- key: '10'
+'10':
   level: 1
   section_number: '10'
   section_title: Statistical Considerations
+  header_only: false
+  elements: []
   text: ''
-- key: '10.1'
+'10.1':
   level: 2
   section_number: '10.1'
   section_title: Analysis Sets
+  header_only: false
+  elements: []
   text: ''
-- key: '10.2'
+'10.2':
   level: 2
   section_number: '10.2'
   section_title: Analyses Supporting Primary Objective(s)
+  header_only: false
+  elements: []
   text: ''
-- key: 10.2.1
+10.2.1:
   level: 3
   section_number: 10.2.1
   section_title: Statistical Model, Hypothesis, and Method of Analysis
+  header_only: false
+  elements: []
   text: ''
-- key: 10.2.2
+10.2.2:
   level: 3
   section_number: 10.2.2
   section_title: Handling of Intercurrent Events of Primary Estimand(s)
+  header_only: false
+  elements: []
   text: ''
-- key: 10.2.3
+10.2.3:
   level: 3
   section_number: 10.2.3
   section_title: Handling of Missing Data
+  header_only: false
+  elements: []
   text: ''
-- key: 10.2.4
+10.2.4:
   level: 3
   section_number: 10.2.4
   section_title: Sensitivity Analysis
+  header_only: false
+  elements: []
   text: ''
-- key: 10.2.5
+10.2.5:
   level: 3
   section_number: 10.2.5
   section_title: Supplementary Analysis
+  header_only: false
+  elements: []
   text: ''
-- key: '10.3'
+'10.3':
   level: 2
   section_number: '10.3'
   section_title: Analysis Supporting Secondary Objective(s)
+  header_only: false
+  elements: []
   text: ''
-- key: '10.4'
+'10.4':
   level: 2
   section_number: '10.4'
   section_title: Analysis of Exploratory Objective(s)
+  header_only: false
+  elements: []
   text: ''
-- key: '10.5'
+'10.5':
   level: 2
   section_number: '10.5'
   section_title: Safety Analyses
+  header_only: false
+  elements: []
   text: ''
-- key: '10.6'
+'10.6':
   level: 2
   section_number: '10.6'
   section_title: Other Analyses
+  header_only: false
+  elements: []
   text: ''
-- key: '10.7'
+'10.7':
   level: 2
   section_number: '10.7'
   section_title: Interim Analyses
+  header_only: false
+  elements: []
   text: ''
-- key: '10.8'
+'10.8':
   level: 2
   section_number: '10.8'
   section_title: Sample Size Determination
+  header_only: false
+  elements: []
   text: ''
-- key: '10.9'
+'10.9':
   level: 2
   section_number: '10.9'
   section_title: Protocol Deviations
+  header_only: false
+  elements: []
   text: ''
-- key: '11'
+'11':
   level: 1
   section_number: '11'
   section_title: 'General Considerations: Regulatory, Ethical, And trial Oversight'
+  header_only: false
+  elements: []
   text: ''
-- key: '11.1'
+'11.1':
   level: 2
   section_number: '11.1'
   section_title: Regulatory and Ethical Considerations
+  header_only: false
+  elements: []
   text: ''
-- key: '11.2'
+'11.2':
   level: 2
   section_number: '11.2'
   section_title: Trial Oversight
+  header_only: false
+  elements: []
   text: ''
-- key: 11.2.1
+11.2.1:
   level: 3
   section_number: 11.2.1
   section_title: Investigator Responsibilities
+  header_only: false
+  elements: []
   text: ''
-- key: 11.2.2
+11.2.2:
   level: 3
   section_number: 11.2.2
   section_title: Sponsor Responsibilities
+  header_only: false
+  elements: []
   text: ''
-- key: '11.3'
+'11.3':
   level: 2
   section_number: '11.3'
   section_title: Committees
+  header_only: false
+  elements: []
   text: ''
-- key: '11.4'
+'11.4':
   level: 2
   section_number: '11.4'
   section_title: Informed Consent Process
+  header_only: false
+  elements: []
   text: ''
-- key: 11.4.1
+11.4.1:
   level: 3
   section_number: 11.4.1
   section_title: Informed Consent for Rescreening
+  header_only: false
+  elements: []
   text: ''
-- key: 11.4.2
+11.4.2:
   level: 3
   section_number: 11.4.2
   section_title: Informed Consent for Use of Remaining Samples in Exploratory Research
+  header_only: false
+  elements: []
   text: ''
-- key: '11.5'
+'11.5':
   level: 2
   section_number: '11.5'
   section_title: Insurance and Indemnity
+  header_only: false
+  elements: []
   text: ''
-- key: '11.6'
+'11.6':
   level: 2
   section_number: '11.6'
   section_title: Early Site Closure
+  header_only: false
+  elements: []
   text: ''
-- key: '12'
+'12':
   level: 1
   section_number: '12'
   section_title: 'General Considerations: Risk Management and Data Governance'
+  header_only: false
+  elements: []
   text: ''
-- key: '12.1'
+'12.1':
   level: 2
   section_number: '12.1'
   section_title: Risk Management
+  header_only: false
+  elements: []
   text: ''
-- key: '12.2'
+'12.2':
   level: 2
   section_number: '12.2'
   section_title: Data Governance
+  header_only: false
+  elements: []
   text: ''
-- key: '12.3'
+'12.3':
   level: 2
   section_number: '12.3'
   section_title: Source Data
+  header_only: false
+  elements: []
   text: ''
-- key: '13'
+'13':
   level: 1
   section_number: '13'
   section_title: 'Appendix: Definitions and Supporting Operational Details'
+  header_only: false
+  elements: []
   text: ''
-- key: '13.1'
+'13.1':
   level: 2
   section_number: '13.1'
   section_title: Clinical Laboratory Tests
+  header_only: false
+  elements: []
   text: ''
-- key: '13.2'
+'13.2':
   level: 2
   section_number: '13.2'
   section_title: Country/Region-Specific Differences
+  header_only: false
+  elements: []
   text: ''
-- key: '13.3'
+'13.3':
   level: 2
   section_number: '13.3'
   section_title: Prior Protocol Amendment(s)
+  header_only: false
+  elements: []
   text: ''
-- key: '14'
+'14':
   level: 1
   section_number: '14'
   section_title: 'Appendix:  Glossary of Terms and Abbreviations'
+  header_only: false
+  elements: []
   text: ''
-- key: '15'
+'15':
   level: 1
   section_number: '15'
   section_title: 'Appendix:  References'
+  header_only: false
+  elements: []
   text: ''

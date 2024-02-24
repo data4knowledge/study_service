@@ -1,5 +1,12 @@
 definitions:
+  sponsor_confidentiality_statement:
+    type: text
+    value: ''
+    add: False
+    status: 'no map'
   full_title:
+    type: text
+    add: False
     status: "ok"
     root:
       query: "MATCH (sv:StudyVersionuuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Codecode: 'C99905x1'})"
@@ -14,10 +21,12 @@ definitions:
       query: "RETURN st as value"
       klass: 'StudyTitle'
       attribute: 'text'
-  trial_acronym:
+  study_acronym:
+    type: text
+    add: False
     status: "ok"
     root:
-      query: "MATCH (sv:StudyVersionuuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Codecode: 'C94108'})"
+      query: "MATCH (sv:StudyVersion uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Codecode: 'C94108'})"
     read:
       query: "RETURN st.text as value"
     write:
@@ -30,6 +39,8 @@ definitions:
       klass: 'StudyTitle'
       attribute: 'text'
   version_number:
+    type: text
+    add: False
     status: "ok"
     root:
       query: "MATCH (sv:StudyVersionuuid: $uuid})"
@@ -41,6 +52,8 @@ definitions:
       - 'uuid'
       - 'value'
   protocol_identifier:
+    type: text
+    add: False
     status: "ok"
     root:
       query: "MATCH (sv:StudyVersionuuid: $uuid})-[]->(si:StudyIdentifiers)-[]->(c:Codecode: 'C70793'})"
@@ -56,6 +69,10 @@ definitions:
       klass: 'StudyIdentifier'
       attribute: 'studyIdentifier'
 
+# trial_phase:
+#   type: code_list
+#   value: ''
+#   add: False
   trial_phase:
     status: 'no map'
 #   phase = self._study_version.studyPhase.standardCode
@@ -74,11 +91,6 @@ definitions:
 #   print(f"RESULT:result}")
 #   refs = [result['result']] if 'result' in result else []
 #   return self._set_of_references(refs)
-
-  study_acronym:
-    status: 'no map'
-#   results = [{'instance: self._study_version, 'klass: 'StudyVersion', 'attribute: 'studyAcronym'}]
-#   return self._set_of_references(results)
 
   study_version_identifier:
     status: 'no map'
@@ -127,12 +139,20 @@ definitions:
 #   ]
 #   return self._set_of_references(results)
 
+# amendment_identifier:
+#   type: text
+#   value: ''
+#   add: False
   amendment:
     status: 'no map'
 #   amendments = self._study_version.amendments
 #   results = [{'instance: amendments[-1], 'klass: 'StudyAmendment', 'attribute: 'number'}]
 #   return self._set_of_references(results)
 
+# amendment_scope:
+#   type: text
+#   value: ''
+#   add: False
   amendment_scopes:
     status: 'no map'
 #   results = []
@@ -148,3 +168,110 @@ definitions:
   
   compound_code:
     status: "no map"
+    type: text
+    value: ''
+    add: False
+
+
+  original_protocol:
+    status: 'no map'
+    type: text
+    value: ''
+    add: False
+  version_date:
+    status: 'no map'
+    type: text
+    value: ''
+    add: False
+  nonproprietary_name:
+    type: text
+    value: ''
+    add: False
+  proprietary_name:
+    type: text
+    value: ''
+    add: False
+  trial_short_title:
+    type: text
+    value: ''
+    add: False
+  sponsor_name:
+    type: text
+    value: ''
+    add: False
+  sponsor_legal_address:
+    type: text
+    value: ''
+    add: False
+  eu_ct_number:
+    type: text
+    value: ''
+    add: False
+  ide_number:
+    type: text
+    value: ''
+    add: False
+  fda_ind_number:
+    type: text
+    value: ''
+    add: False
+  jrct_number:
+    type: identifier
+    value: ''
+    add: False
+  nct_number:
+    type: identifier
+    value: ''
+    add: False
+  nmpa_ind_number:
+    type: identifier
+    value: ''
+    add: False
+  who_utn_number:
+    type: identifier
+    value: ''
+    add: False
+  other_regulatory_agency_identifier_number:
+    type: identifier
+    value: ''
+    add: True
+  approval_date_or_state_location_where_information_can_be_found:
+    type: text
+    value: ''
+    add: False
+  sponsor_signature_block:
+    type: text
+    value: ''
+    add: False
+  describe_method:
+    type: text
+    value: ''
+    add: False
+  expedited_safety_information_contact_method:
+    type: text
+    value: ''
+    add: False
+  approximate_number_or_percentage_enrolled:
+    type: text
+    value: ''
+    add: False
+  primary_reason_for_amendment:
+    type: text
+    value: ''
+    add: False
+  secondary_reason_for_amendment:
+    type: text
+    value: ''
+    add: False
+  description_of_amendment_change:
+    type: text
+    value: ''
+    add: False
+  rationale_for_amendment_change:
+    type: text
+    value: ''
+    add: False
+  section_of_amendment_change:
+    type: text
+    value: ''
+    add: False
