@@ -31,14 +31,15 @@ class Template(TemplateBase):
     return [{'key': x, 'sectionNumber': self._definition[x]['sectionNumber'], 'sectionTitle': self._definition[x]['sectionTitle']} for x in order if self._level(self._definition[x]['sectionNumber']) == 1]
  
   def section_hierarchy(self):
-    section_defs = self._sections()
-    sections = self._read_section_list()
+    order = self._section_order()
+    print(f"ORDER: {order}")
     parent = [{'item': {'name':	'ROOT', 'section_number': '-1', 'section_title':	'Root', 'text': ''}, 'children': []}]
     current_level = 1
     previous_item = None
-    for section in sections:
+    for uuid in order:
+      section = self._sections[uuid]
+      print(f"SECTION: {section}")
       section_number = SectionNumber(section['section_number'])
-      section['header_only'] = section_defs[section['key']]['header_only']
       item = {'item': section, 'children': []}
       if section_number.level == current_level:
         parent[-1]['children'].append(item)
@@ -55,11 +56,12 @@ class Template(TemplateBase):
     return parent[0]
 
   def _section_order(self):
-    return sorted(list(self._sections.keys()), key=self._section_ordering)
+    ordered = sorted(self._sections.items(), key=self._section_ordering)
+    return [x[0] for x in ordered]
 
   def _section_ordering(self, s):
     try:
-      return [int(_) for _ in s.split("-")]
+      return [int(_) for _ in s[1]['section_number'].split(".")]
     except Exception as e:
       application_logger.exception("Exception during section ordering", e)
 

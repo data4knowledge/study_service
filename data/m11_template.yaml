@@ -2,7 +2,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 6.6.3
+  section_number: '6.6.3'
   section_title: '{Blinding}'
   text: ''
 08786fb4-5b69-4053-9b27-fa07587e71a2:
@@ -23,14 +23,14 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 1.1.2
+  section_number: '1.1.2'
   section_title: Overall Design
   text: ''
 0c4b2f93-743e-4701-82ec-c13641d3c23d:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.3.1
+  section_number: '9.3.1'
   section_title: Identification
   text: ''
 0f4d1d52-292d-4d0e-ab57-59139cc1ca92:
@@ -58,7 +58,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 4.3.1
+  section_number: '4.3.1'
   section_title: '{Temporary Trial Halt}'
   text: ''
 1764d481-9f0c-4933-9614-adc29a5837c7:
@@ -107,14 +107,14 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 1.1.1
+  section_number: '1.1.1'
   section_title: Primary and Secondary Objectives and Endpoints
   text: ''
 2bab434b-3615-4574-98a0-4a2b26493680:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.4.2
+  section_number: '9.4.2'
   section_title: Adverse Events of Special Interest
   text: ''
 2d3d2f9d-52ec-4f73-9bb6-06921ca1bd07:
@@ -149,7 +149,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 10.2.5
+  section_number: '10.2.5'
   section_title: Supplementary Analysis
   text: ''
 3b7b7a90-c438-4d90-a6a8-3a7c60c1ffd0:
@@ -163,7 +163,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 6.8.2
+  section_number: '6.8.2'
   section_title: '{Rescue Therapy}'
   text: ''
 3c4ecf55-c1fb-40ae-a9aa-cf024b755942:
@@ -184,7 +184,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 2.2.1
+  section_number: '2.2.1'
   section_title: Benefit Summary
   text: ''
 3fee555a-4da0-49f2-9d82-7a61554e5b3c:
@@ -198,35 +198,35 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 8.3.6
+  section_number: '8.3.6'
   section_title: Suicidal Ideation and Behaviour Risk Monitoring
   text: ''
 422f1a47-8d6d-4fb5-bc70-03f88a2473a2:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.3.3
+  section_number: '9.3.3'
   section_title: Causality
   text: ''
 43fc15b9-690f-49ff-bc75-3a5335c1ec2e:
   elements: []
   header_only: false
   level: 3
-  section_number: 4.2.2
+  section_number: '4.2.2'
   section_title: Rationale for Duration
   text: ''
 4d1dfe71-ec1f-44db-b62a-4d90c6b52ed0:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.5.1
+  section_number: '9.5.1'
   section_title: '{Participants Who Become Pregnant During the Trial}'
   text: ''
 4eb3a86c-36dd-4779-84b9-99f496792503:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.5.2
+  section_number: '9.5.2'
   section_title: '{Participants Whose Partners Become Pregnant}'
   text: ''
 515e352c-169e-4fe8-bf9e-9780ed35ba92:
@@ -247,7 +247,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 6.6.2
+  section_number: '6.6.2'
   section_title: Randomisation
   text: ''
 538914c6-a2e3-4e39-b6d7-e62401a2df71:
@@ -275,14 +275,14 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 3.1.1
+  section_number: '3.1.1'
   section_title: '{Primary/Secondary/Exploratory} Estimand'
   text: ''
 56c34722-836c-4beb-a709-6969ff8a1d68:
   elements: []
   header_only: false
   level: 3
-  section_number: 6.5.2
+  section_number: '6.5.2'
   section_title: Storage and Handling of Investigational Trial Intervention
   text: ''
 5732e865-f45b-4f9b-af11-e4c8c7430c51:
@@ -296,7 +296,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 4.2.1
+  section_number: '4.2.1'
   section_title: Rationale for Intervention Model
   text: ''
 598b906e-290e-42f3-9e0a-e5bec63b1d6f:
@@ -310,21 +310,21 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 5.5.4
+  section_number: '5.5.4'
   section_title: Other Activity Restrictions
   text: ''
 5bd44cf7-5589-4f3a-95f7-6b6d28eaf90a:
   elements: []
   header_only: false
   level: 3
-  section_number: 4.2.3
+  section_number: '4.2.3'
   section_title: Rationale for Endpoints
   text: ''
 6099aa6e-3551-4d07-99a7-f585334e099f:
   elements: []
   header_only: false
   level: 3
-  section_number: 6.3.1
+  section_number: '6.3.1'
   section_title: Investigational Trial Intervention Dose Modification
   text: ''
 642a93ec-89d6-4ed1-9ba1-5c73f312e3c5:
@@ -338,7 +338,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 7.1.3
+  section_number: '7.1.3'
   section_title: Rechallenge
   text: ''
 66bd64be-3eb0-4727-ba9b-feea2387de26:
@@ -373,14 +373,14 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 8.3.4
+  section_number: '8.3.4'
   section_title: Clinical Laboratory Assessments
   text: ''
 72a3ca8e-d4a3-4a81-a480-560f5acc27c6:
   elements: []
   header_only: false
   level: 3
-  section_number: 8.3.5
+  section_number: '8.3.5'
   section_title: Pregnancy Testing
   text: ''
 72d692d4-c877-4333-9c11-1afa4821b1f3:
@@ -401,7 +401,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 6.5.1
+  section_number: '6.5.1'
   section_title: Preparation of Investigational Trial Intervention(s)
   text: ''
 74f2a153-b7e3-425e-9ccf-2ad014207d52:
@@ -415,7 +415,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 4.2.6
+  section_number: '4.2.6'
   section_title: Rationale for Adaptive or Novel Trial Design
   text: ''
 7cbbffdc-1ea9-42b7-8883-7d99930ad945:
@@ -430,21 +430,21 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 10.2.1
+  section_number: '10.2.1'
   section_title: Statistical Model, Hypothesis, and Method of Analysis
   text: ''
 7f68594b-725f-4047-bc01-7971e17635cb:
   elements: []
   header_only: false
   level: 3
-  section_number: 7.1.1
+  section_number: '7.1.1'
   section_title: Permanent Discontinuation of Trial Intervention
   text: ''
 7fe3cebf-999d-45fc-a640-fc8337f1f372:
   elements: []
   header_only: false
   level: 3
-  section_number: 2.2.3
+  section_number: '2.2.3'
   section_title: Overall Benefit:Risk Conclusion
   text: ''
 805aae75-9699-48c3-9c86-4eacbe124ac3:
@@ -465,14 +465,14 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 4.2.7
+  section_number: '4.2.7'
   section_title: Rationale for Other Trial Design Aspects
   text: ''
 868550bc-3052-4b5b-b902-f3266ae5c145:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.4.3
+  section_number: '9.4.3'
   section_title: Disease-related Events or Outcomes Not Qualifying as AEs or SAEs
   text: ''
 86b64ba2-88c2-4266-9c5e-c3ce94466d48:
@@ -515,14 +515,14 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 4.2.4
+  section_number: '4.2.4'
   section_title: Rationale for Interim Analysis
   text: ''
 909fc7d9-190a-4e1a-b879-56bf4289a990:
   elements: []
   header_only: false
   level: 3
-  section_number: 6.6.4
+  section_number: '6.6.4'
   section_title: '{Emergency Unblinding at the Site}'
   text: ''
 91bcc12f-668c-453f-b203-554c2c355c8d:
@@ -537,7 +537,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 11.4.2
+  section_number: '11.4.2'
   section_title: Informed Consent for Use of Remaining Samples in Exploratory Research
   text: ''
 934a4a2b-cc5d-4357-b179-bc9a06c88681:
@@ -551,7 +551,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 11.2.2
+  section_number: '11.2.2'
   section_title: Sponsor Responsibilities
   text: ''
 9529e520-f6f9-4498-a734-42eecc2b68ae:
@@ -565,7 +565,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 2.2.2
+  section_number: '2.2.2'
   section_title: Risk Summary and Mitigation Strategy
   text: ''
 96a7c03a-f7bd-420f-b81c-c869e3f0210e:
@@ -579,7 +579,7 @@
   elements: []
   header_only: false
   level: 3
-  section_number: 8.3.1
+  section_number: '8.3.1'
   section_title: Physical Examination
   text: ''
 99fef735-d8f0-46d0-abef-90a6355071be:
@@ -599,8 +599,9 @@
 a2d1191c-1e90-44ec-82f7-b5435e6aee82:
   file: m11_title_sheet.html
   level: 1
-  section_number: ''
+  section_number: '0'
   section_title: Title Sheet
+  text: ''
 a44d668a-d8bc-4fbf-8b45-9d695843b2bf:
   elements: []
   header_only: false
@@ -612,21 +613,21 @@ a5658ef6-4d7a-4345-9655-26034e5e64fc:
   elements: []
   header_only: false
   level: 3
-  section_number: 6.8.3
+  section_number: '6.8.3'
   section_title: '{Other Therapy}'
   text: ''
 a586ff8d-bcf1-4a34-8975-a52678d32440:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.1.4
+  section_number: '9.1.4'
   section_title: '{Definition of Medical Device Product Complaints}'
   text: ''
 a5a346c5-ebc4-4a95-be6b-22aa1a03aa05:
   elements: []
   header_only: false
   level: 3
-  section_number: 7.1.2
+  section_number: '7.1.2'
   section_title: Temporary Discontinuation of Trial Intervention
   text: ''
 a67a2398-559c-4d46-bee8-0e6dd629aa5f:
@@ -640,7 +641,7 @@ a8665e35-b922-47e0-b1d9-62c4a3a2c6f3:
   elements: []
   header_only: false
   level: 3
-  section_number: 8.3.3
+  section_number: '8.3.3'
   section_title: Electrocardiograms
   text: ''
 a94ae88d-02ae-4e6d-ab8d-6bad63d3298e:
@@ -668,7 +669,7 @@ b7dd5b92-79d9-4370-a7e9-36f3f6e8156b:
   elements: []
   header_only: false
   level: 3
-  section_number: 8.3.2
+  section_number: '8.3.2'
   section_title: Vital Signs
   text: ''
 b7e7fdd6-42f8-4ed8-b397-5503ef8bcb1b:
@@ -696,14 +697,14 @@ ba974e8c-d089-4bda-bac5-4395434fda88:
   elements: []
   header_only: false
   level: 3
-  section_number: 10.2.2
+  section_number: '10.2.2'
   section_title: Handling of Intercurrent Events of Primary Estimand(s)
   text: ''
 bc8989cf-db1d-4947-bd5f-b771d51d81e3:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.1.1
+  section_number: '9.1.1'
   section_title: Definitions of Adverse Events
   text: ''
 bd3eb29f-8a0c-410d-9e26-624b975e72c7:
@@ -717,7 +718,7 @@ bec761eb-6de1-4ba9-a4fe-a87d67ea4958:
   elements: []
   header_only: false
   level: 3
-  section_number: 11.4.1
+  section_number: '11.4.1'
   section_title: Informed Consent for Rescreening
   text: ''
 c2e96b31-c2f2-4da7-8079-3130347ad400:
@@ -745,7 +746,7 @@ c5d2bb01-9cee-486f-b159-ed2b265be2f8:
   elements: []
   header_only: false
   level: 3
-  section_number: 6.6.1
+  section_number: '6.6.1'
   section_title: Participant Assignment to Investigational Trial Intervention
   text: ''
 c769a123-e2c0-403a-9712-ba531dc92666:
@@ -759,7 +760,7 @@ c7855212-7756-4a63-8414-cb1961761a66:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.4.1
+  section_number: '9.4.1'
   section_title: Regulatory Reporting Requirements
   text: ''
 c8870920-7c43-44d6-acc5-3c4808d224a6:
@@ -773,7 +774,7 @@ ca9201c0-d9d1-4f19-8670-10b907852cc5:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.1.2
+  section_number: '9.1.2'
   section_title: Definitions of Serious Adverse Events
   text: ''
 cbb80f2a-0e2a-4047-b3a1-7490243ffe19:
@@ -801,7 +802,7 @@ d2788f57-5657-4678-b745-856a5517c989:
   elements: []
   header_only: false
   level: 3
-  section_number: 11.2.1
+  section_number: '11.2.1'
   section_title: Investigator Responsibilities
   text: ''
 d352d068-04e7-4784-a33f-19f12014f344:
@@ -822,7 +823,7 @@ d765f086-0fc5-456b-bf77-7137cf5e5dd8:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.3.4
+  section_number: '9.3.4'
   section_title: Follow-up
   text: ''
 d8131a93-19a3-4ef1-8f53-e1ee81de90d2:
@@ -857,14 +858,14 @@ dbb19d29-3355-492d-9c6b-c45d149cc107:
   elements: []
   header_only: false
   level: 3
-  section_number: 10.2.4
+  section_number: '10.2.4'
   section_title: Sensitivity Analysis
   text: ''
 e11c2461-aa30-4eb9-acc2-7c1e54b95e45:
   elements: []
   header_only: false
   level: 3
-  section_number: 5.5.2
+  section_number: '5.5.2'
   section_title: Caffeine, Alcohol, Tobacco, and Other Restrictions
   text: ''
 e208859c-41bf-4b0f-b41e-59de4310cd02:
@@ -878,28 +879,28 @@ e4ee4390-be0d-4ac0-927c-b4dfed38097e:
   elements: []
   header_only: false
   level: 3
-  section_number: 4.2.5
+  section_number: '4.2.5'
   section_title: Rationale for Comparator
   text: ''
 e65d2667-09dc-422f-b95c-723b6516f18f:
   elements: []
   header_only: false
   level: 3
-  section_number: 6.5.3
+  section_number: '6.5.3'
   section_title: Accountability of Investigational Trial Intervention
   text: ''
 e74a7259-25a1-4e2b-9788-22d6529a22a1:
   elements: []
   header_only: false
   level: 3
-  section_number: 10.2.3
+  section_number: '10.2.3'
   section_title: Handling of Missing Data
   text: ''
 eb58fd30-4a2f-4976-a12c-917ab844efe1:
   elements: []
   header_only: false
   level: 3
-  section_number: 4.1.1
+  section_number: '4.1.1'
   section_title: Stakeholder Input into Design
   text: ''
 f0ef80f2-3bd0-43ba-b2f3-101568df4c83:
@@ -914,14 +915,14 @@ f2197f51-4fc9-41f4-9d21-720a3747d0ea:
   elements: []
   header_only: false
   level: 3
-  section_number: 6.8.1
+  section_number: '6.8.1'
   section_title: '{Background Intervention}'
   text: ''
 f22889db-0746-493d-a674-a1bbaee3dedd:
   elements: []
   header_only: false
   level: 3
-  section_number: 9.3.2
+  section_number: '9.3.2'
   section_title: Intensity
   text: ''
 f2a378d4-d8d1-4e4c-be80-14a90bc58e27:
@@ -956,14 +957,14 @@ f9bcb22f-ea52-41a7-84d9-fa9d48f7a7c9:
   elements: []
   header_only: false
   level: 3
-  section_number: 5.5.1
+  section_number: '5.5.1'
   section_title: Meals and Dietary Restrictions
   text: ''
 facda704-2b5a-4edd-a619-76bf33ac525e:
   elements: []
   header_only: false
   level: 3
-  section_number: 5.5.3
+  section_number: '5.5.3'
   section_title: Physical Activity Restrictions
   text: ''
 fb0a6aad-530f-4cab-868f-6b597064a085:
@@ -991,7 +992,7 @@ fe8da322-a089-44cd-9341-931d5aae36a5:
   elements: []
   header_only: false
   level: 3
-  section_number: 6.9.1
+  section_number: '6.9.1'
   section_title: '{Prohibited Concomitant Therapy}'
   text: ''
 feb2344f-676b-4f86-81e9-c76bc0ab9575:
