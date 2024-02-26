@@ -21,9 +21,9 @@ class TemplatetManager(TemplateBase):
     print(f"TEMPLATES: {result}")
     return result
   
-  def get(self, uuid: str) -> Template:
+  def template(self, uuid: str) -> Template:
     if uuid in self._definitions:
-      return Template(self._definitions[uuid])
+      return Template(self._definitions[uuid], self.DIR)
     else:
       message = f"Missing template '{uuid}'"
       application_logger.error(message)

@@ -106,11 +106,11 @@ async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   description="Creates a study. If succesful the uuid of the created resource is returned.",
   status_code=201,
   response_model=str)
-async def create_study(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+async def create_study(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
   result = Study.create(name, description, label)
   if not 'error' in result:
     doc = StudyProtocolDocumentVersion.find_from_study(result['uuid'])
-    background_tasks.add_task(SPDVBackground().add_all_sections, doc.section_hierarchy(), doc.uuid)
+    background_tasks.add_task(SPDVBackground().add_all_sections, doc.uuid, template)
     return result['uuid']
   else:
     raise HTTPException(status_code=409, detail=result['error'])

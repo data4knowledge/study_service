@@ -9,6 +9,8 @@ from .governance_date import GovernanceDate
 from .narrative_content import NarrativeContent
 from .section_number import SectionNumber
 from .element.element import Element
+from .template.template_manager import TemplatetManager
+from .template.template import Template
 from d4kms_generic import *
 from d4kms_service import *
 from uuid import uuid4
@@ -18,11 +20,13 @@ class SPDVBackground():
   def __init__(self):
     self.index = 0
 
-  def add_all_sections(self, sections, uuid):
+  def add_all_sections(self, uuid, template_uuid):
     self.index = 1
     cypher = []
     cypher.append("MATCH (spdv:StudyProtocolDocumentVersion {uuid: '%s'})\nWITH spdv" % (uuid))
-    self.add_section_cypher(cypher, sections)
+    template_manager = TemplatetManager()
+    template = template_manager.template(template_uuid)
+    self.add_section_cypher(cypher, template.section_hierarchy())
     db = Neo4jConnection()
     with db.session() as session:
       session.run("\n".join(cypher))
@@ -168,29 +172,29 @@ class StudyProtocolDocumentVersion(NodeId):
     result = {'root': sections}
     return result
   
-  def section_hierarchy(self):
-    section_defs = self._read_section_definitions()
-    sections = self._read_section_list()
-    parent = [{'item': {'name':	'ROOT', 'section_number': '-1', 'section_title':	'Root', 'text': ''}, 'children': []}]
-    current_level = 1
-    previous_item = None
-    for section in sections:
-      section_number = SectionNumber(section['section_number'])
-      section['header_only'] = section_defs[section['key']]['header_only']
-      item = {'item': section, 'children': []}
-      if section_number.level == current_level:
-        parent[-1]['children'].append(item)
-      elif section_number.level > current_level:
-        parent.append(previous_item)
-        parent[-1]['children'].append(item)
-        current_level = section_number.level
-      elif section_number.level < current_level:
-        parent.pop()
-        parent[-1]['children'].append(item)
-        current_level = section_number.level
-      current_level = section_number.level
-      previous_item = item
-    return parent[0]
+  # def section_hierarchy(self):
+  #   section_defs = self._read_section_definitions()
+  #   sections = self._read_section_list()
+  #   parent = [{'item': {'name':	'ROOT', 'section_number': '-1', 'section_title':	'Root', 'text': ''}, 'children': []}]
+  #   current_level = 1
+  #   previous_item = None
+  #   for section in sections:
+  #     section_number = SectionNumber(section['section_number'])
+  #     section['header_only'] = section_defs[section['key']]['header_only']
+  #     item = {'item': section, 'children': []}
+  #     if section_number.level == current_level:
+  #       parent[-1]['children'].append(item)
+  #     elif section_number.level > current_level:
+  #       parent.append(previous_item)
+  #       parent[-1]['children'].append(item)
+  #       current_level = section_number.level
+  #     elif section_number.level < current_level:
+  #       parent.pop()
+  #       parent[-1]['children'].append(item)
+  #       current_level = section_number.level
+  #     current_level = section_number.level
+  #     previous_item = item
+  #   return parent[0]
 
   def _read_section_definition(self, key):
     data = self._read_as_yaml_file("data/m11_to_usdm.yaml")

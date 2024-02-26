@@ -134,3 +134,4 @@ dmypy.json
 # Uploads folder
 /uploads/*
 !/uploads/placeholder.txt
+test.py
