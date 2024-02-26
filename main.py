@@ -78,6 +78,18 @@ async def get_study_file_status(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study file cannot be found")
 
+# Templates
+# =========
+
+from model.template.template_manager import TemplatetManager
+
+@app.get("/v1/templates", 
+  summary="Get templates",
+  description="Get the set of available templates",
+  response_model=list)
+async def get_temlates():
+  return TemplatetManager().templates()
+  
 # Studies
 # =======
 
