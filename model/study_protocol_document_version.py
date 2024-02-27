@@ -53,6 +53,7 @@ class StudyProtocolDocumentVersion(NodeId):
   contents: List[NarrativeContent] = []
   childIds: List[str] = []
   instanceType: Literal['StudyProtocolDocumentVersion']
+  templateUuid: str = None
 
   def set_study_version(self):
     self._study_version = None
@@ -164,13 +165,13 @@ class StudyProtocolDocumentVersion(NodeId):
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to element", e, UnexpectedError)
 
-  def section_list(self):
-    section_defs = self._read_section_definitions()
-    sections = self._read_section_list()
-    for section in sections:
-      section['header_only'] = section_defs[section['key']]['header_only']
-    result = {'root': sections}
-    return result
+  # def section_list(self):
+  #   section_defs = self._read_section_definitions()
+  #   sections = self._read_section_list()
+  #   for section in sections:
+  #     section['header_only'] = section_defs[section['key']]['header_only']
+  #   result = {'root': sections}
+  #   return result
   
   # def section_hierarchy(self):
   #   section_defs = self._read_section_definitions()

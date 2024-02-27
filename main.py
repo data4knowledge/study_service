@@ -107,7 +107,8 @@ async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   status_code=201,
   response_model=str)
 async def create_study(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
-  result = Study.create(name, description, label)
+  print(f"TEMPLATE: {template}")
+  result = Study.create(name, description, label, template)
   if not 'error' in result:
     doc = StudyProtocolDocumentVersion.find_from_study(result['uuid'])
     background_tasks.add_task(SPDVBackground().add_all_sections, doc.uuid, template)

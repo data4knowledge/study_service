@@ -17,11 +17,11 @@ class Study(NodeNameLabelDesc):
     return cls.base_list("MATCH (n:Study)", "ORDER BY n.name ASC", page, size, filter)
 
   @classmethod
-  def create(cls, name, description, label):
+  def create(cls, name, description, label, template_uuid):
     try:
       db = Neo4jConnection()
       with db.session() as session:
-        result = session.execute_write(cls._create_study, name, description, label)
+        result = session.execute_write(cls._create_study, name, description, label, template_uuid)
         if not result:
           return {'error': "Failed to create study, operation failed"}
         return {'uuid': result}  
@@ -31,13 +31,13 @@ class Study(NodeNameLabelDesc):
       return {'error': f"Exception. Failed to create study"}
 
   @staticmethod
-  def _create_study(tx, name, description, label):
+  def _create_study(tx, name, description, label, template_uuid):
     query = """
       CREATE (s:Study {id: $s_id, name: $s_name, description: $s_description, label: $s_label, uuid: $s_uuid1, instanceType: 'Study'})
       CREATE (sv:StudyVersion {id: $sv_id, name: $sv_name, description: $sv_description, label: $sv_label, rationale: $sv_rationale, versionIdentifier: $sv_version, 
         uuid: $sv_uuid, instanceType: 'StudyVersion'})
       CREATE (spd:StudyProtocolDocument {id: $spd_id, name: $spd_name, description: $spd_description, label: $spd_label, uuid: $spd_uuid, instanceType: 'StudyProtocolDocument'})
-      CREATE (spdv:StudyProtocolDocumentVersion {id: $spdv_id, protocolVersion: $spdv_version, uuid: $spdv_uuid, instanceType: 'StudyProtocolDocumentVersion'})
+      CREATE (spdv:StudyProtocolDocumentVersion {id: $spdv_id, protocolVersion: $spdv_version, uuid: $spdv_uuid, instanceType: 'StudyProtocolDocumentVersion', templateUuid: $spdv_template})
       
       CREATE (st1:StudyTitle {id: $st1_id, text: $st_brief_title, uuid: $st1_uuid, instanceType: 'StudyTitle'})
       CREATE (st2:StudyTitle {id: $st2_id, text: $st_official_title, uuid: $st2_uuid, instanceType: 'StudyTitle'})
@@ -81,6 +81,7 @@ class Study(NodeNameLabelDesc):
       spd_label="Protocol document", 
       spdv_id='STUDY_PROTOCOL_1',
       spdv_version="0.1",
+      spdv_template=template_uuid,
       st1_id="STUDY_TITLE_1",
       st2_id="STUDY_TITLE_2",
       st3_id="STUDY_TITLE_3",
