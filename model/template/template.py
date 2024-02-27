@@ -24,11 +24,11 @@ class Template(TemplateBase):
 
   def section_list(self):
     order = self._section_order()
-    return [{'key': x, 'sectionNumber': self._definition[x]['sectionNumber'], 'sectionTitle': self._definition[x]['sectionTitle']} for x in order]
+    return [dict(self._sections[x], **{'key': x}) for x in order]
 
   def top_level_section_list(self):
     order = self._section_order()
-    return [{'key': x, 'sectionNumber': self._definition[x]['sectionNumber'], 'sectionTitle': self._definition[x]['sectionTitle']} for x in order if self._level(self._definition[x]['sectionNumber']) == 1]
+    return [dict(self._sections[x], **{'key': x}) for x in order if self._level(self._definition[x]['sectionNumber']) == 1]
  
   def section_hierarchy(self):
     order = self._section_order()

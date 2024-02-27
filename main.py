@@ -145,7 +145,7 @@ async def get_protocol_document(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study version cannot be found")
 
-@app.get("/v1/protocolDocumentVersions/{uuid}/section_list", 
+@app.get("/v1/protocolDocumentVersions/{uuid}/sectionList", 
   summary="Get the protocol document version section list",
   description="Get the protococl document section list for a study.",
   response_model=dict)

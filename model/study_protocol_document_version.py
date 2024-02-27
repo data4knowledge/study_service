@@ -127,14 +127,6 @@ class StudyProtocolDocumentVersion(NodeId):
     with db.session() as session:
       return session.execute_read(cls._find_from_study, uuid)
 
-  @staticmethod
-  def _find_from_study(tx, uuid):
-    query = "MATCH (s:Study {uuid: $uuid})-[:DOCUMENTED_BY_REL]->(spd:StudyProtocolDocument)-[:VERSIONS_REL]->(spdv:StudyProtocolDocumentVersion) RETURN spdv"
-    result = tx.run(query, uuid=uuid)
-    for row in result:
-      return StudyProtocolDocumentVersion.wrap(row['spdv'])
-    return None
-  
   def section(self, key):
     section_def = self._read_section_definition(key)
     nc = self._narrative_content_get(key)
@@ -165,13 +157,10 @@ class StudyProtocolDocumentVersion(NodeId):
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to element", e, UnexpectedError)
 
-  # def section_list(self):
-  #   section_defs = self._read_section_definitions()
-  #   sections = self._read_section_list()
-  #   for section in sections:
-  #     section['header_only'] = section_defs[section['key']]['header_only']
-  #   result = {'root': sections}
-  #   return result
+  def section_list(self):
+    template = TemplatetManager().template(self.templateUuid)
+    result = {'root': template.section_list()}
+    return result
   
   # def section_hierarchy(self):
   #   section_defs = self._read_section_definitions()
@@ -197,6 +186,14 @@ class StudyProtocolDocumentVersion(NodeId):
   #     previous_item = item
   #   return parent[0]
 
+  @staticmethod
+  def _find_from_study(tx, uuid):
+    query = "MATCH (s:Study {uuid: $uuid})-[:DOCUMENTED_BY_REL]->(spd:StudyProtocolDocument)-[:VERSIONS_REL]->(spdv:StudyProtocolDocumentVersion) RETURN spdv"
+    result = tx.run(query, uuid=uuid)
+    for row in result:
+      return StudyProtocolDocumentVersion.wrap(row['spdv'])
+    return None
+  
   def _read_section_definition(self, key):
     data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
     return data[key]
