@@ -11,5 +11,5 @@ class SectionNumber():
       self.title_sheet = True
 
   def part(self, level):
-    return self._parts[level -1] if level <= self.level else None
+    return self._parts[level - 1] if level <= self.level else None
   

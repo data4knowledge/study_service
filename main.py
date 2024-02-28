@@ -156,30 +156,42 @@ async def get_protocol_section_list(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
-@app.get("/v1/protocolDocumentVersions/{uuid}/section/{key}", 
+@app.get("/v1/protocolDocumentVersions/{uuid}/sectionDefinition/{section_uuid}", 
   summary="Get the protocol document version section",
   description="Get the protococl document section for a study.",
   response_model=dict)
-async def get_section(uuid: str, key: str):
+async def get_section(uuid: str, section_uuid: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
-    result = doc.section(key)
+    result = doc.section_definition(section_uuid)
     return result
   else:
-    raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
+    raise HTTPException(status_code=404, detail="The requested protocol document section cannot be found")
+
+@app.get("/v1/protocolDocumentVersions/{uuid}/section/{section_uuid}", 
+  summary="Get the protocol document version section",
+  description="Get the protococl document section for a study.",
+  response_model=dict)
+async def get_section(uuid: str, section_uuid: str):
+  doc = StudyProtocolDocumentVersion.find(uuid)
+  if not 'error' in doc:
+    result = doc.section_read(section_uuid)
+    return result
+  else:
+    raise HTTPException(status_code=404, detail="The requested protocol document section cannot be found")
 
 class TextBody(BaseModel):
     text: str
 
-@app.post("/v1/protocolDocumentVersions/{uuid}/section/{key}", 
+@app.post("/v1/protocolDocumentVersions/{uuid}/section/{section_uuid}", 
   summary="Set the protocol document version section",
   description="Set the protococl document section for a study.",
   status_code=201,
   response_model=dict)
-async def get_section(uuid: str, key: str, item: TextBody):
+async def get_section(uuid: str, section_uuid: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
-    result = doc.section_write(key, item.text)
+    result = doc.section_write(section_uuid, item.text)
     return result
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")

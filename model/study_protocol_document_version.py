@@ -10,7 +10,7 @@ from .narrative_content import NarrativeContent
 from .section_number import SectionNumber
 from .element.element import Element
 from .template.template_manager import TemplatetManager
-from .template.template import Template
+from .template.template_definition import TemplateDefinition
 from d4kms_generic import *
 from d4kms_service import *
 from uuid import uuid4
@@ -81,7 +81,7 @@ class StudyProtocolDocumentVersion(NodeId):
         for section in self.section_list()['root']:
           try:
             #print(f"SECTION: {section}")
-            content = items[section['key']]
+            content = items[section['section_number']]
           except Exception as e:
             application_logger.warning(f"Protocol document section {section['key']} not found")
             uuid = str(uuid4())
@@ -127,18 +127,24 @@ class StudyProtocolDocumentVersion(NodeId):
     with db.session() as session:
       return session.execute_read(cls._find_from_study, uuid)
 
-  def section(self, key):
-    section_def = self._read_section_definition(key)
-    nc = self._narrative_content_get(key)
-    section_def['text'] = nc.text if nc else ''
-    return section_def
-
   def element(self, key):
     return self._read_element_definition(key)
 
-  def section_write(self, key, text):
+  def section_definition(self, uuid):
+    template = TemplatetManager().template(self.templateUuid)
+    section_def = template.section_definition(uuid)
+    nc = self._narrative_content_get(section_def.section_number)
+    return {'definition': section_def, 'data': nc.uuid}
+
+  def section_read(self, uuid):
+    nc = NarrativeContent.find(uuid)
+    return nc.text if nc else ''
+
+  def section_write(self, uuid, text):
     try:
-      result = self._narrative_content_post(key, text)
+      template = TemplatetManager().template(self.templateUuid)
+      section_def = template.section_definition(uuid)
+      result = self._narrative_content_post(section_def.section_number, text)
       return {'uuid': result}  
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to section", e, UnexpectedError)
@@ -194,9 +200,9 @@ class StudyProtocolDocumentVersion(NodeId):
       return StudyProtocolDocumentVersion.wrap(row['spdv'])
     return None
   
-  def _read_section_definition(self, key):
-    data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
-    return data[key]
+  # def _read_section_definition(self, key):
+  #   data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
+  #   return data[key]
 
   def _read_element_definition(self, key):
     data = self._read_as_yaml_file("data/m11_elements.yaml")

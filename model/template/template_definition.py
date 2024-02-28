@@ -1,10 +1,10 @@
 import os
-from model.template.template_base import TemplateBase
-from model.template.section import Section
-from model.section_number import SectionNumber
-from d4kms_generic.logger import application_logger
+from model.utility.utility import read_yaml_file
+from .section_definition import SectionDefinition
+from .section_number import SectionNumber
+from d4kms_generic import application_logger
 
-class Template(TemplateBase):
+class TemplateDefinition():
 
   class MissingSection(Exception):
     pass
@@ -12,11 +12,11 @@ class Template(TemplateBase):
   def __init__(self, definition, dir):
     self._definition = definition
     self._dir = dir
-    self._sections = self._read_sections()
-
-  def section(self, uuid):
-    if uuid in self._definitions:
-      return Section(self._definitions[uuid])
+    self._sections = read_yaml_file(os.path.join(self._dir, self._definition['file']))
+    
+  def section_definition(self, uuid: str) -> SectionDefinition:
+    if uuid in self._sections:
+      return SectionDefinition(self._sections[uuid], self._dir)
     else:
       message = f"Missing section '{uuid}'"
       application_logger.error(message)
@@ -24,11 +24,11 @@ class Template(TemplateBase):
 
   def section_list(self):
     order = self._section_order()
-    return [dict(self._sections[x], **{'key': x}) for x in order]
+    return [dict(self._sections[x], **{'uuid': x}) for x in order]
 
   def top_level_section_list(self):
     order = self._section_order()
-    return [dict(self._sections[x], **{'key': x}) for x in order if self._level(self._definition[x]['sectionNumber']) == 1]
+    return [dict(self._sections[x], **{'uuid': x}) for x in order if self._level(self._definition[x]['sectionNumber']) == 1]
  
   def section_hierarchy(self):
     order = self._section_order()
@@ -38,7 +38,7 @@ class Template(TemplateBase):
     previous_item = None
     for uuid in order:
       section = self._sections[uuid]
-      print(f"SECTION: {section}")
+      #print(f"SECTION: {section}")
       section_number = SectionNumber(section['section_number'])
       item = {'item': section, 'children': []}
       if section_number.level == current_level:
@@ -66,4 +66,4 @@ class Template(TemplateBase):
       application_logger.exception("Exception during section ordering", e)
 
   def _read_sections(self):
-    return self.read_yaml_file(os.path.join(self._dir, self._definition['file']))
+    return read_yaml_file(os.path.join(self._dir, self._definition['file']))

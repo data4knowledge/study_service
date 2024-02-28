@@ -1,9 +1,9 @@
 import os
 from d4kms_generic.logger import application_logger
-from model.template.template_base import TemplateBase
-from model.template.template import Template
+from .template_definition import TemplateDefinition
+from model.utility.utility import read_yaml_file
 
-class TemplatetManager(TemplateBase):
+class TemplatetManager():
 
   class MissingTemplate(Exception):
     pass
@@ -12,18 +12,15 @@ class TemplatetManager(TemplateBase):
   FILENAME = 'templates.yaml'
 
   def __init__(self):
-    self._definitions = self.read_yaml_file(os.path.join(self.DIR, self.FILENAME))
+    self._definitions = read_yaml_file(os.path.join(self.DIR, self.FILENAME))
 
   def templates(self):
-    print(f"DEFS: {self._definitions}")
-    #result = [v for k,v in self._definitions.items()]
     result = [dict(v, **{'id': k}) for k,v in self._definitions.items()]
-    print(f"TEMPLATES: {result}")
     return result
   
-  def template(self, uuid: str) -> Template:
+  def template(self, uuid: str) -> TemplateDefinition:
     if uuid in self._definitions:
-      return Template(self._definitions[uuid], self.DIR)
+      return TemplateDefinition(self._definitions[uuid], self.DIR)
     else:
       message = f"Missing template '{uuid}'"
       application_logger.error(message)
