@@ -8,7 +8,7 @@ full_title:
   add: False
   status: "ok"
   root:
-    query: "MATCH (sv:StudyVersionuuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Codecode: 'C99905x1'})"
+    query: "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C99905x1'})"
   read:
     query: "RETURN st.text as value"
   write:
@@ -25,7 +25,7 @@ study_acronym:
   add: False
   status: "ok"
   root:
-    query: "MATCH (sv:StudyVersion uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Codecode: 'C94108'})"
+    query: "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C94108'})"
   read:
     query: "RETURN st.text as value"
   write:
@@ -42,7 +42,7 @@ version_number:
   add: False
   status: "ok"
   root:
-    query: "MATCH (sv:StudyVersionuuid: $uuid})"
+    query: "MATCH (sv:StudyVersion {uuid: $uuid})"
   read:
     query: "RETURN sv.versionIdentifier as value"
   write:
@@ -55,7 +55,7 @@ protocol_identifier:
   add: False
   status: "ok"
   root:
-    query: "MATCH (sv:StudyVersionuuid: $uuid})-[]->(si:StudyIdentifiers)-[]->(c:Codecode: 'C70793'})"
+    query: "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(si:StudyIdentifiers)-[]->(c:Code {code: 'C70793'})"
   read:
     query: "RETURN si.text as value"
   write:
@@ -138,20 +138,18 @@ organization_name_and_address:
 #   ]
 #   return self._set_of_references(results)
 
-# amendment_identifier:
+amendment_identifier:
+  status: 'no map'
 #   type: text
 #   value: ''
 #   add: False
+
 amendment:
   status: 'no map'
 #   amendments = self._study_version.amendments
 #   results = [{'instance: amendments[-1], 'klass: 'StudyAmendment', 'attribute: 'number'}]
 #   return self._set_of_references(results)
 
-# amendment_scope:
-#   type: text
-#   value: ''
-#   add: False
 amendment_scopes:
   status: 'no map'
 #   results = []

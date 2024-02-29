@@ -5,9 +5,10 @@ from model.base_node import NodeId
 
 class Element():
 
-  def __init__(self, study_version, definition):
+  def __init__(self, study_version, definition, name):
     self._study_version = study_version
     self._definition = definition
+    self._name = name
 
   def exists(self):
     return True
@@ -22,11 +23,12 @@ class Element():
         root = self._definition['root']
         item = self._definition['read']
         query = f"{root['query']} {item['query']}"
+        print(f"QUERY MERGE: {query}")
         result = self._read(query, params)
         if 'result' in result:
           return {'result': result['result']}
         else:
-          return {'error': f"Failed to read {self._element}"}
+          return {'error': f"Failed to read {self._name}"}
       except Exception as e:
         return self._log_error("read", e)
     else:
@@ -39,15 +41,16 @@ class Element():
         root = self._definition['root']
         item = self._definition['reference']
         query = f"{root['query']} {item['query']}"
+        print(f"QUERY MERGE: {query}")
         result = self._read(query, params)
         if 'result' in result:
           return {'result': {'instance': NodeId.wrap(result['result']), 'klass': item['klass'], 'attribute': item['attribute']}}
         else:
-          return {'error': f"Failed to get reference for {self._element}"}
+          return {'error': f"Failed to get reference for {self._name}"}
       except Exception as e:
         return self._log_error("reference", e)
     else:
-      return {'error': f"No implementation for element {self._element} yet"}
+      return {'error': f"No implementation for element {self._name} yet"}
 
   def write(self, value):
     if self._implemented():
@@ -68,7 +71,7 @@ class Element():
       print(f"READ: {query}, {params}")  
       result = session.execute_read(self._read_method, query, params)
       if not result:
-        return {'error': f"Failed to read {self._element}"}
+        return {'error': f"Failed to read {self._name}"}
       return {'result': result['value']}  
 
   def _write(self, query, params):
@@ -76,13 +79,13 @@ class Element():
     with db.session() as session:
       result = session.execute_write(self._write_method, query, params)
       if not result:
-        return {'error': f"Failed to update {self._element}"}
+        return {'error': f"Failed to update {self._name}"}
       return {'result': result['value']}  
 
   def _log_error(self, operation, e):
-    logging.error(f"Exception raised during {operation} operation on element '{self._element}'")
+    logging.error(f"Exception raised during {operation} operation on element '{self._name}'")
     logging.error(f"Exception {e}\n{traceback.format_exc()}")
-    return {'error': f"Exception. Failed during {operation} operation on element '{self._element}'"}
+    return {'error': f"Exception. Failed during {operation} operation on element '{self._name}'"}
 
   def _implemented(self):
     return True if self._definition['status'] == "ok" else False

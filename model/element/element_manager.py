@@ -17,7 +17,7 @@ class ElementManager():
 
   def element(self, element_name: str) -> Element:
     if element_name in self._definitions:
-      return Element(self._study_version, self._definitions[element_name])
+      return Element(self._study_version, self._definitions[element_name], element_name)
     else:
       message = f"Missing element '{element_name}'"
       application_logger.error(message)
