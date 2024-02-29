@@ -9,11 +9,13 @@ from .governance_date import GovernanceDate
 from .narrative_content import NarrativeContent
 from .section_number import SectionNumber
 from .element.element import Element
+from .element.element_manager import ElementManager
 from .template.template_manager import TemplatetManager
 from .template.template_definition import TemplateDefinition
 from d4kms_generic import *
 from d4kms_service import *
 from uuid import uuid4
+from .utility.utility import read_yaml_file
 
 class SPDVBackground():
 
@@ -151,14 +153,14 @@ class StudyProtocolDocumentVersion(NodeId):
 
   def element_read(self, key):
     try:
-      result = Element(self._study_version, key).read()
+      result = ElementManager(self._study_version).element(key).read()
       return result
     except Exception as e:
       application_logger.exception(f"Exception raised while reading from  element", e, UnexpectedError)
 
   def element_write(self, key, text):
     try:
-      result = Element(self._study_version, key).write(text)
+      result = ElementManager(self._study_version).element(key).write(text)
       return result
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to element", e, UnexpectedError)
@@ -205,19 +207,19 @@ class StudyProtocolDocumentVersion(NodeId):
   #   return data[key]
 
   def _read_element_definition(self, key):
-    data = self._read_as_yaml_file("data/m11_elements.yaml")
+    data = read_yaml_file("data/elements.yaml")
     return data[key]
 
-  def _read_section_definitions(self):
-    return self._read_as_yaml_file("data/m11_to_usdm.yaml")
+  # def _read_section_definitions(self):
+  #   return self._read_as_yaml_file("data/m11_to_usdm.yaml")
 
-  def _read_section_list(self):
-    return self._read_as_yaml_file("data/m11_sections.yaml")
+  # def _read_section_list(self):
+  #   return self._read_as_yaml_file("data/m11_sections.yaml")
   
-  def _read_as_yaml_file(self, filepath):
-    with open(filepath, "r") as f:
-      data = yaml.load(f, Loader=yaml.FullLoader)
-    return data
+  # def _read_as_yaml_file(self, filepath):
+  #   with open(filepath, "r") as f:
+  #     data = yaml.load(f, Loader=yaml.FullLoader)
+  #   return data
   
   def _narrative_content_get(self, section):
     db = Neo4jConnection()

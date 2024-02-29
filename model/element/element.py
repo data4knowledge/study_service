@@ -7,7 +7,7 @@ class Element():
 
   def __init__(self, study_version, definition):
     self._study_version = study_version
-    self._definiton = definition
+    self._definition = definition
 
   def exists(self):
     return True

@@ -196,16 +196,16 @@ async def get_section(uuid: str, section_uuid: str, item: TextBody):
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
-@app.get("/v1/protocolDocumentVersions/{uuid}/element/{key}", 
+@app.get("/v1/protocolDocumentVersions/{uuid}/element/{name}", 
   summary="Get the protocol document version element",
   description="Get the protococl document element for a study.",
   response_model=dict)
-async def get_element(uuid: str, key: str):
+async def get_element(uuid: str, name: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
     doc.set_study_version()
-    data = doc.element(key)
-    result = doc.element_read(key)
+    data = doc.element(name)
+    result = doc.element_read(name)
     print(f"RESULT: {result}")
     if not 'error' in result:
       data['value'] = result['result']

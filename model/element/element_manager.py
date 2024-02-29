@@ -15,7 +15,7 @@ class ElementManager():
     self._study_version = study_version
     self._definitions = read_yaml_file(os.path.join(self.DIR, self.FILENAME))
 
-  def get(self, element_name: str) -> Element:
+  def element(self, element_name: str) -> Element:
     if element_name in self._definitions:
       return Element(self._study_version, self._definitions[element_name])
     else:
