@@ -40,7 +40,7 @@ class SPDVBackground():
     query = """
       CREATE (%s:NarrativeContent {id: '%s', name: '%s', description: '', label: '', sectionNumber: '%s', sectionTitle: '%s', text: '%s', uuid: '%s', instanceType: 'NarrativeContent'})
       CREATE (spdv)-[:CONTENTS_REL]->(%s)
-    """ % (node_label, f"SECTION_{section['item']['section_number']}", f"SECTION_{section['item']['section_number']}", section['item']['section_number'], section['item']['section_title'], section['item']['text'], uuid, node_label)
+    """ % (node_label, f"SECTION_{section['item']['section_number']}", f"SECTION_{section['item']['section_number']}", section['item']['section_number'], section['item']['section_title'], '', uuid, node_label)
     cypher.append(query)
     for child in section['children']:
       child_label = self.add_section_cypher(cypher, child)
