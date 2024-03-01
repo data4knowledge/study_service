@@ -215,17 +215,17 @@ async def get_element(uuid: str, name: str):
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
-@app.post("/v1/protocolDocumentVersions/{uuid}/element/{key}", 
+@app.post("/v1/protocolDocumentVersions/{uuid}/element/{name}", 
   summary="Set the protocol document version element",
   description="Set the protococl document element for a study.",
   status_code=201,
   response_model=dict)
-async def write_element(uuid: str, key: str, item: TextBody):
+async def write_element(uuid: str, name: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
     doc.set_study_version()
-    data = doc.element(key)
-    result = doc.element_write(key, item.text)
+    data = doc.element(name)
+    result = doc.element_write(name, item.text)
     if not 'error' in result:
       data['value'] = result['result']
       return {'uuid': uuid, 'definition': data}
@@ -236,9 +236,9 @@ async def write_element(uuid: str, key: str, item: TextBody):
 
 @app.get("/v1/protocolDocumentVersions/{uuid}/document", 
   summary="Get a view of the protocol document version",
-  description="Get the document view. Either whole document or specific section",
+  description="Get the document view of the whole document or a section",
   response_model=str)
-async def get_section(uuid: str, section: str = None):
+async def get_document_or_section(uuid: str, section: str = None):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if doc:
     try:

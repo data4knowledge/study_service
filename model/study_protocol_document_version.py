@@ -79,7 +79,7 @@ class StudyProtocolDocumentVersion(NodeId):
       with doc.tag('body'):
         #doc.asis(self._front_sheet(self.briefTitle))    
         items = self._all_narrative_content()
-        #print(f"ITEMS: {items}")
+        print(f"ITEMS: {items}")
         for section in self.section_list()['root']:
           try:
             #print(f"SECTION: {section}")
