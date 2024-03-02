@@ -1,6 +1,7 @@
 import os
 from model.utility.utility import read_text_file
 from pydantic import BaseModel
+from .macros import Macros
 
 class SectionDefinition(BaseModel):
   header_only: bool
@@ -12,4 +13,8 @@ class SectionDefinition(BaseModel):
 
   def __init__(self, definition, dir):
     super().__init__(**definition)
-    self.form = read_text_file(os.path.join(dir, definition['file']))
+    self._form = read_text_file(os.path.join(dir, definition['file']))
+    self._macros = Macros()
+
+  def resolve(self):
+    return self._macros.resolve(self._form, Macros.AS_REFERENCE)

@@ -3,6 +3,7 @@ from d4kms_service import Node, Neo4jConnection
 class BaseNode(Node):
   uuid: str
 
+
   @classmethod
   def build_filter_clause(cls, filter, properties):
     filter_clause_parts = []
@@ -81,6 +82,23 @@ class BaseNode(Node):
 class NodeId(BaseNode):
   id: str
 
+  @classmethod
+  def find_by_id(cls, label, id):
+    db = Neo4jConnection()
+    with db.session() as session:
+      result = session.execute_read(cls._find_by_id, cls, label, id)
+    db.close()
+    return result
+
+  @staticmethod
+  def _find(tx, cls, label, id):
+    node_clause = f"a:{label}"
+    query = "MATCH (%s {id: $id }) RETURN a" % (node_clause)
+    result = tx.run(query, id=id)
+    for row in result:
+      return cls.as_dict(row['a'])
+    return None
+  
 class NodeName(NodeId):
   name: str
 
