@@ -19,25 +19,26 @@ from uuid import uuid4
 
 class SPDVBackground():
 
-  def __init__(self):
-    self.index = 0
+  def __init__(self, study_version):
+    self._index = 0
+    self._template_manager = TemplatetManager(study_version)
 
-  def add_all_sections(self, uuid, template_uuid):
-    self.index = 1
+  def add_all_sections(self, uuids, template_uuid):
+    self._index = 1
     cypher = []
-    cypher.append("MATCH (spdv:StudyProtocolDocumentVersion {uuid: '%s'})\nWITH spdv" % (uuid))
-    template_manager = TemplatetManager()
-    template = template_manager.template(template_uuid)
-    self.add_section_cypher(cypher, template.section_hierarchy(), template_manager)
+    cypher.append("MATCH (spdv:StudyProtocolDocumentVersion {uuid: '%s'})\nWITH spdv" % (uuids['StudyProtocolDocumentVersion']))
+    template = self._template_manager.template(template_uuid)
+    self.add_section_cypher(cypher, template.section_hierarchy(), template)
     db = Neo4jConnection()
     with db.session() as session:
       session.run("\n".join(cypher))
 
   def add_section_cypher(self, cypher, section, template: TemplateDefinition):
     uuid = uuid4()
-    node_label = f"nc{self.index}"
-    self.index += 1
+    node_label = f"nc{self._index}"
+    self._index += 1
     section_item = section['item']
+    print(f"SECTION ITEM: {section_item}")
     section_definition = template.section_definition(section_item['uuid']) if section_item['uuid'] else None
     section_text = section_definition.resolve() if section_definition else '<div></div>'
     query = """
@@ -46,7 +47,7 @@ class SPDVBackground():
     """ % (node_label, f"SECTION_{section_item['section_number']}", f"SECTION_{section_item['section_number']}", section_item['section_number'], section_item['section_title'], section_text, uuid, node_label)
     cypher.append(query)
     for child in section['children']:
-      child_label = self.add_section_cypher(cypher, child)
+      child_label = self.add_section_cypher(cypher, child, template)
       query = "CREATE (%s)-[:CHILD_REL]->(%s)" % (node_label, child_label)
       cypher.append(query)
     return node_label
@@ -102,7 +103,7 @@ class StudyProtocolDocumentVersion(NodeId):
   #   return self._read_element_definition(key)
 
   def section_definition(self, uuid):
-    template = TemplatetManager().template(self.templateUuid)
+    template = self._template_manager.template(self.templateUuid)
     section_def = template.section_definition(uuid)
     nc = self._narrative_content_get(section_def.section_number)
     return {'definition': section_def, 'data': nc.uuid}
@@ -113,7 +114,7 @@ class StudyProtocolDocumentVersion(NodeId):
 
   def section_write(self, uuid, text):
     try:
-      template = TemplatetManager().template(self.templateUuid)
+      template = self._template_manager.template(self.templateUuid)
       section_def = template.section_definition(uuid)
       result = self._narrative_content_post(section_def.section_number, text)
       return {'uuid': result}  
@@ -121,7 +122,7 @@ class StudyProtocolDocumentVersion(NodeId):
       application_logger.exception(f"Exception raised while writing to section", e, UnexpectedError)
 
   def section_list(self):
-    template = TemplatetManager().template(self.templateUuid)
+    template = self._template_manager.template(self.templateUuid)
     result = {'root': template.section_list()}
     return result
 

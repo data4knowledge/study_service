@@ -9,14 +9,15 @@ class TemplateDefinition():
   class MissingSection(Exception):
     pass
 
-  def __init__(self, definition, dir):
+  def __init__(self, definition, dir, study_version):
     self._definition = definition
     self._dir = dir
+    self._study_version = study_version
     self._sections = read_yaml_file(os.path.join(self._dir, self._definition['file']))
     
   def section_definition(self, uuid: str) -> SectionDefinition:
     if uuid in self._sections:
-      return SectionDefinition(self._sections[uuid], self._dir)
+      return SectionDefinition(self._sections[uuid], self._dir, self._study_version)
     else:
       message = f"Missing section '{uuid}'"
       application_logger.error(message)
@@ -38,7 +39,7 @@ class TemplateDefinition():
     previous_item = None
     for uuid in order:
       section = self._sections[uuid]
-      section['uiud'] = uuid
+      section['uuid'] = uuid
       #print(f"SECTION: {section}")
       section_number = SectionNumber(section['section_number'])
       item = {'item': section, 'children': []}

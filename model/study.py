@@ -32,6 +32,7 @@ class Study(NodeNameLabelDesc):
 
   @staticmethod
   def _create_study(tx, name, description, label, template_uuid):
+    uuids = {'study': str(uuid4()), 'StudyVersion': str(uuid4()), 'StudyProtocolDocument': str(uuid4()), 'spdv:StudyProtocolDocumentVersion': str(uuid4())}
     query = """
       CREATE (s:Study {id: $s_id, name: $s_name, description: $s_description, label: $s_label, uuid: $s_uuid1, instanceType: 'Study'})
       CREATE (sv:StudyVersion {id: $sv_id, name: $sv_name, description: $sv_description, label: $sv_label, rationale: $sv_rationale, versionIdentifier: $sv_version, 
@@ -98,9 +99,10 @@ class Study(NodeNameLabelDesc):
       c4_id='CODE_4',
       c5_id='CODE_5',
       c6_id='CODE_6',
-      s_uuid1=str(uuid4()), 
-      sv_uuid=str(uuid4()),
-      spd_uuid=str(uuid4()), 
+      s_uuid1=uuids['Study'], 
+      sv_uuid=uuids['StudyVersion'],
+      spd_uuid=uuids['StudyProtocolVersion'],
+      spdv_uuid=uuids['StudyProtocolDocumentVersion'],
       c1_uuid=str(uuid4()), 
       c2_uuid=str(uuid4()), 
       c3_uuid=str(uuid4()), 
@@ -111,11 +113,10 @@ class Study(NodeNameLabelDesc):
       st2_uuid=str(uuid4()), 
       st3_uuid=str(uuid4()), 
       st4_uuid=str(uuid4()), 
-      st5_uuid=str(uuid4()), 
-      spdv_uuid=str(uuid4())
+      st5_uuid=str(uuid4())
     )
     for row in result:
-      return row["uuid"]
+      return uuids
     return None
 
  

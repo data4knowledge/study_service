@@ -4,7 +4,7 @@ import warnings
 from bs4 import BeautifulSoup
 from d4kms_generic import application_logger
 from model.element.element_manager import ElementManager
-from base_node import *
+from model.base_node import *
 
 class Macros():
 
@@ -14,7 +14,7 @@ class Macros():
   AS_VALUE = "value"
   AS_REFERENCE = "reference"
 
-  def __init__(self, study_version=None):
+  def __init__(self, study_version):
     self._study_version = study_version
     self._element_manager = ElementManager(study_version)
     # self.study_design = self.study_version.studyDesigns[0]
@@ -24,12 +24,13 @@ class Macros():
     # self.plain = TemplatePlain(parent, self.study)
     # self.template_map = {'m11': self.m11, 'plain': self.plain}
   
-  def resolve(self, content_text: str, resolution_type=AS_VALUE) -> str:
-    soup = self._get_soup(content_text)
+  def resolve(self, text: str, resolution_type=AS_VALUE) -> str:
+    soup = self._get_soup(text)
     for ref in soup(['usdm:ref','usdm:macro']):
       try:
         attributes = ref.attrs
-        method = f"_{attributes['id'].lower()}" if ref.tag == 'usdm:macro' else f"_ref"
+        print(f"RESOLVE: T={ref.name}, A={attributes}")
+        method = f"_{attributes['id'].lower()}" if ref.name == 'usdm:macro' else f"_ref"
         if self._valid_method(method):            
           getattr(self, method)(attributes, soup, ref, resolution_type)
         else:
@@ -40,7 +41,7 @@ class Macros():
         ref.replace_with('Missing content: exception')
     return str(soup)
 
-  def _ref(self, attributes, soup, ref) -> None:
+  def _ref(self, attributes, soup, ref, type) -> None:
     instance = NodeId.find_by_id(attributes['klass'], attributes['id'])
     text = getattr(instance, attributes['attribute'])
     ref.replace_with(text)
@@ -66,6 +67,13 @@ class Macros():
       replacement = self._usdm_reference(self, soup, info['result']['instance'], info['result']['attribute'])
     ref.replace_with(self._get_soup(replacement))
 
+  def _text_section(self, attributes, soup, ref, type) -> None:
+    if type == self.AS_VALUE:
+      replacement = "<div></div>"
+    else:
+      replacement = "<div></div>"
+    ref.replace_with(self._get_soup(replacement))
+
   # def _section(self, attributes, soup, ref) -> None:
   #   method = attributes['name'].lower()
   #   template = attributes['template'] if 'template' in attributes else 'plain' 
@@ -87,7 +95,7 @@ class Macros():
   #   ref.replace_with(get_soup(text, self.parent))
 
   def _valid_method(self, name):
-    return name in ['_element', '_ref']
+    return name in ['_element', '_ref', '_text_section']
     #return name in ['_xref', '_image', '_element', '_section', '_note']
   
   # def _resolve_template(self, template) -> object:
@@ -111,7 +119,7 @@ class Macros():
     ref_tag.attrs = {'klass': instance.__class__.__name__, 'id': instance.id, 'attribute': attribute}
     return ref_tag
 
-  def _get_soup(text):
+  def _get_soup(self, text):
     try:
       with warnings.catch_warnings(record=True) as warning_list:
         result =  BeautifulSoup(text, 'html.parser')

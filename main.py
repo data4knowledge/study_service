@@ -110,8 +110,8 @@ async def create_study(name: str, background_tasks: BackgroundTasks, description
   print(f"TEMPLATE: {template}")
   result = Study.create(name, description, label, template)
   if not 'error' in result:
-    doc = StudyProtocolDocumentVersion.find_from_study(result['uuid'])
-    background_tasks.add_task(SPDVBackground().add_all_sections, doc.uuid, template)
+    sv = StudyVersion.find(result['StudyVersion'])
+    background_tasks.add_task(SPDVBackground(sv).add_all_sections, result, template)
     return result['uuid']
   else:
     raise HTTPException(status_code=409, detail=result['error'])

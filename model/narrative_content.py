@@ -1,8 +1,8 @@
 from .base_node import *
 from typing import List, Union, Literal
 from d4kms_generic import application_logger
-from template.macros import Macros
-from template.section_number import SectionNumber
+from .template.macros import Macros
+from .template.section_number import SectionNumber
 
 class NarrativeContent(NodeName):
   sectionNumber: str
