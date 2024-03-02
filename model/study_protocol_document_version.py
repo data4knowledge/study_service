@@ -110,8 +110,10 @@ class StudyProtocolDocumentVersion(NodeId):
     except Exception as e:
       application_logger.exception(f"Exception raised while building protocol document section", e, UnexpectedError)
 
-  # def element(self, key):
-  #   return self._read_element_definition(key)
+  def element(self, key):
+    element_manager = ElementManager(self._study_version)
+    return element_manager.element(key).definition()
+    return self._read_element_definition(key)
 
   def section_definition(self, uuid):
     template = self._template_manager.template(self.templateUuid, self._study_version)
@@ -215,9 +217,9 @@ class StudyProtocolDocumentVersion(NodeId):
   #   data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
   #   return data[key]
 
-  # def _read_element_definition(self, key):
-  #   data = read_yaml_file("data/elements.yaml")
-  #   return data[key]
+  def _read_element_definition(self, key):
+    data = read_yaml_file("data/elements.yaml")
+    return data[key]
 
   # def _read_section_definitions(self):
   #   return self._read_as_yaml_file("data/m11_to_usdm.yaml")

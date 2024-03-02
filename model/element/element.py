@@ -10,6 +10,9 @@ class Element():
     self._definition = definition
     self._name = name
 
+  def definition(self):
+    return self._definition
+  
   def exists(self):
     return True
   
