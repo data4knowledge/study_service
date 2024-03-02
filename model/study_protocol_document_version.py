@@ -69,8 +69,10 @@ class StudyProtocolDocumentVersion(NodeId):
 
   def __init__(self, *a, **kw):
     super().__init__(*a, **kw)
+    self._study_version = None
     self._set_study_version()
-
+    self._template_manager = TemplateManager()
+    
   @classmethod
   def find_from_study(cls, uuid):
     db = Neo4jConnection()
@@ -78,7 +80,6 @@ class StudyProtocolDocumentVersion(NodeId):
       return session.execute_read(cls._find_from_study, uuid)
 
   def _set_study_version(self):
-    self._study_version = None
     db = Neo4jConnection()
     with db.session() as session:
       result = session.execute_read(self._find_from_spdv, self.uuid)
@@ -93,7 +94,7 @@ class StudyProtocolDocumentVersion(NodeId):
         #print(f"ITEMS: {items}")
         for section in self.section_list()['root']:
           if section['section_number'] in items:
-            doc.asis(items[section['section_number']].to_html())
+            doc.asis(items[section['section_number']].to_html(self._study_version))
           else:
             doc.asis(f"Missing section {section['section_number']}")
       return doc.getvalue()
@@ -115,6 +116,7 @@ class StudyProtocolDocumentVersion(NodeId):
   def section_definition(self, uuid):
     template = self._template_manager.template(self.templateUuid, self._study_version)
     section_def = template.section_definition(uuid)
+    print(f"SECTIOn DEF: {section_def}")
     nc = self._narrative_content_get(section_def.section_number)
     return {'definition': section_def, 'data': nc.uuid}
 
@@ -132,7 +134,7 @@ class StudyProtocolDocumentVersion(NodeId):
       application_logger.exception(f"Exception raised while writing to section", e, UnexpectedError)
 
   def section_list(self):
-    template = self._template_manager.template(self.templateUuid, )
+    template = self._template_manager.template(self.templateUuid, self._study_version)
     result = {'root': template.section_list()}
     return result
 

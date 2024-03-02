@@ -43,7 +43,8 @@ class Macros():
 
   def _ref(self, attributes, soup, ref, type) -> None:
     instance = NodeId.find_by_id(attributes['klass'], attributes['id'])
-    text = getattr(instance, attributes['attribute'])
+    print(f"INSTANCE: {instance}")
+    text = instance[attributes['attribute']]
     ref.replace_with(text)
 
   # def _image(self, attributes, soup, ref) -> None:

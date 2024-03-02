@@ -13,7 +13,7 @@ class SectionDefinition(BaseModel):
 
   def __init__(self, definition, dir, study_version):
     super().__init__(**definition)
-    self._form = read_text_file(os.path.join(dir, definition['file']))
+    self.form = read_text_file(os.path.join(dir, definition['file']))
     self._macros = Macros(study_version)
 
   def resolve(self):
