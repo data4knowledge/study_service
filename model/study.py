@@ -24,7 +24,7 @@ class Study(NodeNameLabelDesc):
         result = session.execute_write(cls._create_study, name, description, label, template_uuid)
         if not result:
           return {'error': "Failed to create study, operation failed"}
-        return {'uuid': result}  
+        return result 
     except Exception as e:
       logging.error(f"Exception raised while creating study")
       logging.error(f"Exception {e}\n{traceback.format_exc()}")
@@ -32,7 +32,7 @@ class Study(NodeNameLabelDesc):
 
   @staticmethod
   def _create_study(tx, name, description, label, template_uuid):
-    uuids = {'study': str(uuid4()), 'StudyVersion': str(uuid4()), 'StudyProtocolDocument': str(uuid4()), 'spdv:StudyProtocolDocumentVersion': str(uuid4())}
+    uuids = {'Study': str(uuid4()), 'StudyVersion': str(uuid4()), 'StudyProtocolDocument': str(uuid4()), 'StudyProtocolDocumentVersion': str(uuid4())}
     query = """
       CREATE (s:Study {id: $s_id, name: $s_name, description: $s_description, label: $s_label, uuid: $s_uuid1, instanceType: 'Study'})
       CREATE (sv:StudyVersion {id: $sv_id, name: $sv_name, description: $sv_description, label: $sv_label, rationale: $sv_rationale, versionIdentifier: $sv_version, 
@@ -101,7 +101,7 @@ class Study(NodeNameLabelDesc):
       c6_id='CODE_6',
       s_uuid1=uuids['Study'], 
       sv_uuid=uuids['StudyVersion'],
-      spd_uuid=uuids['StudyProtocolVersion'],
+      spd_uuid=uuids['StudyProtocolDocument'],
       spdv_uuid=uuids['StudyProtocolDocumentVersion'],
       c1_uuid=str(uuid4()), 
       c2_uuid=str(uuid4()), 

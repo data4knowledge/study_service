@@ -18,7 +18,7 @@ from model.study_protocol_document_version import StudyProtocolDocumentVersion, 
 # from model.study_data import StudyData, StudyDataIn
 # from model.encounter import Encounter, EncounterIn, EncounterLink
 # from typing import List
-import traceback
+from model.template.template_manager import TemplateManager
 from d4kms_generic import ServiceEnvironment
 from d4kms_generic import application_logger
 
@@ -81,14 +81,12 @@ async def get_study_file_status(uuid: str):
 # Templates
 # =========
 
-from model.template.template_manager import TemplatetManager
-
 @app.get("/v1/templates", 
   summary="Get templates",
   description="Get the set of available templates",
   response_model=list)
 async def get_temlates():
-  return TemplatetManager().templates()
+  return TemplateManager().templates()
   
 # Studies
 # =======
@@ -112,7 +110,7 @@ async def create_study(name: str, background_tasks: BackgroundTasks, description
   if not 'error' in result:
     sv = StudyVersion.find(result['StudyVersion'])
     background_tasks.add_task(SPDVBackground(sv).add_all_sections, result, template)
-    return result['uuid']
+    return result['Study']
   else:
     raise HTTPException(status_code=409, detail=result['error'])
 
@@ -203,7 +201,7 @@ async def get_section(uuid: str, section_uuid: str, item: TextBody):
 async def get_element(uuid: str, name: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
-    doc.set_study_version()
+    #doc.set_study_version()
     data = doc.element(name)
     result = doc.element_read(name)
     print(f"RESULT: {result}")
@@ -223,7 +221,7 @@ async def get_element(uuid: str, name: str):
 async def write_element(uuid: str, name: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
-    doc.set_study_version()
+    #doc.set_study_version()
     data = doc.element(name)
     result = doc.element_write(name, item.text)
     if not 'error' in result:
@@ -242,7 +240,7 @@ async def get_document_or_section(uuid: str, section: str = None):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if doc:
     try:
-      doc.set_study_version()
+      #doc.set_study_version()
       if section: 
         return doc.section_as_html(section)
       else:

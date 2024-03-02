@@ -91,7 +91,7 @@ class NodeId(BaseNode):
     return result
 
   @staticmethod
-  def _find(tx, cls, label, id):
+  def _find_by_id(tx, cls, label, id):
     node_clause = f"a:{label}"
     query = "MATCH (%s {id: $id }) RETURN a" % (node_clause)
     result = tx.run(query, id=id)

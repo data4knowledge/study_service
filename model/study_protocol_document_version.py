@@ -3,15 +3,15 @@ import yaml
 from yattag import Doc
 #from bs4 import BeautifulSoup   
 from typing import List, Literal
-from .base_node import *
-from .code import Code
-from .governance_date import GovernanceDate
-from .narrative_content import NarrativeContent
+from model.base_node import *
+from model.code import Code
+from model.governance_date import GovernanceDate
+from model.narrative_content import NarrativeContent
 #from .section_number import SectionNumber
 #from .element.element import Element
-from .element.element_manager import ElementManager
-from .template.template_manager import TemplatetManager
-from .template.template_definition import TemplateDefinition
+from model.element.element_manager import ElementManager
+from model.template.template_manager import TemplateManager
+from model.template.template_definition import TemplateDefinition
 from d4kms_generic import *
 from d4kms_service import *
 from uuid import uuid4
@@ -21,13 +21,17 @@ class SPDVBackground():
 
   def __init__(self, study_version):
     self._index = 0
-    self._template_manager = TemplatetManager(study_version)
+    self._template_manager = TemplateManager()
 
   def add_all_sections(self, uuids, template_uuid):
+
+    from model.study_version import StudyVersion
+
     self._index = 1
     cypher = []
     cypher.append("MATCH (spdv:StudyProtocolDocumentVersion {uuid: '%s'})\nWITH spdv" % (uuids['StudyProtocolDocumentVersion']))
-    template = self._template_manager.template(template_uuid)
+    study_version = StudyVersion.find(uuids['StudyVersion'])
+    template = self._template_manager.template(template_uuid, study_version)
     self.add_section_cypher(cypher, template.section_hierarchy(), template)
     db = Neo4jConnection()
     with db.session() as session:
@@ -61,13 +65,19 @@ class StudyProtocolDocumentVersion(NodeId):
   instanceType: Literal['StudyProtocolDocumentVersion']
   templateUuid: str = None
 
+  #from model.study_version import StudyVersion
+
+  def __init__(self, *a, **kw):
+    super().__init__(*a, **kw)
+    self._set_study_version()
+
   @classmethod
   def find_from_study(cls, uuid):
     db = Neo4jConnection()
     with db.session() as session:
       return session.execute_read(cls._find_from_study, uuid)
 
-  def set_study_version(self):
+  def _set_study_version(self):
     self._study_version = None
     db = Neo4jConnection()
     with db.session() as session:
@@ -103,7 +113,7 @@ class StudyProtocolDocumentVersion(NodeId):
   #   return self._read_element_definition(key)
 
   def section_definition(self, uuid):
-    template = self._template_manager.template(self.templateUuid)
+    template = self._template_manager.template(self.templateUuid, self._study_version)
     section_def = template.section_definition(uuid)
     nc = self._narrative_content_get(section_def.section_number)
     return {'definition': section_def, 'data': nc.uuid}
@@ -114,7 +124,7 @@ class StudyProtocolDocumentVersion(NodeId):
 
   def section_write(self, uuid, text):
     try:
-      template = self._template_manager.template(self.templateUuid)
+      template = self._template_manager.template(self.templateUuid, self._study_version)
       section_def = template.section_definition(uuid)
       result = self._narrative_content_post(section_def.section_number, text)
       return {'uuid': result}  
@@ -122,7 +132,7 @@ class StudyProtocolDocumentVersion(NodeId):
       application_logger.exception(f"Exception raised while writing to section", e, UnexpectedError)
 
   def section_list(self):
-    template = self._template_manager.template(self.templateUuid)
+    template = self._template_manager.template(self.templateUuid, )
     result = {'root': template.section_list()}
     return result
 
