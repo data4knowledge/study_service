@@ -50,6 +50,10 @@ version_number:
     data: 
     - 'uuid'
     - 'value'
+  reference:
+    query: "RETURN sv as value"
+    klass: 'StudyVersion'
+    attribute: 'versionIdentifier'
 protocol_identifier:
   type: text
   add: False

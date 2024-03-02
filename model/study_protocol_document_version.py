@@ -42,7 +42,7 @@ class SPDVBackground():
     node_label = f"nc{self._index}"
     self._index += 1
     section_item = section['item']
-    print(f"SECTION ITEM: {section_item}")
+    #print(f"SECTION ITEM: {section_item}")
     section_definition = template.section_definition(section_item['uuid']) if section_item['uuid'] else None
     section_text = section_definition.resolve() if section_definition else '<div></div>'
     query = """

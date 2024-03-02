@@ -29,7 +29,7 @@ class Macros():
     for ref in soup(['usdm:ref','usdm:macro']):
       try:
         attributes = ref.attrs
-        print(f"RESOLVE: T={ref.name}, A={attributes}")
+        #print(f"RESOLVE: T={ref.name}, A={attributes}")
         method = f"_{attributes['id'].lower()}" if ref.name == 'usdm:macro' else f"_ref"
         if self._valid_method(method):            
           getattr(self, method)(attributes, soup, ref, resolution_type)
@@ -61,10 +61,14 @@ class Macros():
     name = attributes['name'].lower()
     element = self._element_manager.element(name)
     info = element.reference()
-    if type == self.AS_VALUE:
-      replacement = getattr(info['result']['instance'], info['result']['attribute'])
+    print(f"INFO: {info}")
+    if 'result' in info:
+      if type == self.AS_VALUE:
+        replacement = getattr(info['result']['instance'], info['result']['attribute'])
+      else:
+        replacement = self._usdm_reference(soup, info['result']['klass'], info['result']['instance'].id, info['result']['attribute'])
     else:
-      replacement = self._usdm_reference(self, soup, info['result']['instance'], info['result']['attribute'])
+      replacement = f"Failed to find element {name}"
     ref.replace_with(self._get_soup(replacement))
 
   def _text_section(self, attributes, soup, ref, type) -> None:
@@ -114,10 +118,10 @@ class Macros():
   #     self.parent._general_error(f"Failed to open image file '{filename}', ignored")
   #     return None
 
-  def _usdm_reference(self, soup, instance, attribute):
+  def _usdm_reference(self, soup, klass, id, attribute):
     ref_tag = soup.new_tag("usdm:ref")
-    ref_tag.attrs = {'klass': instance.__class__.__name__, 'id': instance.id, 'attribute': attribute}
-    return ref_tag
+    ref_tag.attrs = {'klass': klass, 'id': id, 'attribute': attribute}
+    return str(ref_tag)
 
   def _get_soup(self, text):
     try:
