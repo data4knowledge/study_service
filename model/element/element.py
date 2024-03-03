@@ -25,7 +25,7 @@ class Element():
         root = self._definition['root']
         item = self._definition['read']
         query = f"{root['query']} {item['query']}"
-        print(f"QUERY MERGE: {query}")
+        #print(f"QUERY MERGE: {query}")
         result = self._read(query, params)
         if 'result' in result:
           return {'result': result['result']}
@@ -43,7 +43,7 @@ class Element():
         root = self._definition['root']
         item = self._definition['reference']
         query = f"{root['query']} {item['query']}"
-        print(f"QUERY MERGE: {query}")
+        #print(f"QUERY MERGE: {query}")
         result = self._read(query, params)
         if 'result' in result:
           return {'result': {'instance': NodeId.wrap(result['result']), 'klass': item['klass'], 'attribute': item['attribute']}}
@@ -70,7 +70,7 @@ class Element():
   def _read(self, query, params):
     db = Neo4jConnection()
     with db.session() as session:
-      print(f"READ: {query}, {params}")  
+      #print(f"READ: {query}, {params}")  
       result = session.execute_read(self._read_method, query, params)
       if not result:
         return {'error': f"Failed to read {self._name}"}

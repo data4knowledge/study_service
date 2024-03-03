@@ -204,7 +204,7 @@ async def get_element(uuid: str, name: str):
     #doc.set_study_version()
     data = doc.element(name)
     result = doc.element_read(name)
-    print(f"RESULT: {result}")
+    #print(f"RESULT: {result}")
     if not 'error' in result:
       data['value'] = result['result']
       return {'uuid': uuid, 'definition': data}

@@ -43,7 +43,7 @@ class Macros():
 
   def _ref(self, attributes, soup, ref, type) -> None:
     instance = NodeId.find_by_id(attributes['klass'], attributes['id'])
-    print(f"INSTANCE: {instance}")
+    #print(f"INSTANCE: {instance}")
     text = instance[attributes['attribute']]
     ref.replace_with(text)
 
@@ -62,14 +62,14 @@ class Macros():
     name = attributes['name'].lower()
     element = self._element_manager.element(name)
     info = element.reference()
-    print(f"INFO: {info}")
-    if 'result' in info:
+    #print(f"INFO ELEMENT: {info}")
+    if 'result' in info and 'instance' in info['result']:
       if type == self.AS_VALUE:
         replacement = getattr(info['result']['instance'], info['result']['attribute'])
       else:
         replacement = self._usdm_reference(soup, info['result']['klass'], info['result']['instance'].id, info['result']['attribute'])
     else:
-      replacement = f"Failed to find element {name}"
+      replacement = f"Element {name} not implemented yet"
     ref.replace_with(self._get_soup(replacement))
 
   def _text_section(self, attributes, soup, ref, type) -> None:

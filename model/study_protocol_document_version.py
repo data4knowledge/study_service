@@ -35,6 +35,7 @@ class SPDVBackground():
     self.add_section_cypher(cypher, template.section_hierarchy(), template)
     db = Neo4jConnection()
     with db.session() as session:
+      print(f"CYPHER: {cypher}")
       session.run("\n".join(cypher))
 
   def add_section_cypher(self, cypher, section, template: TemplateDefinition):
@@ -44,6 +45,7 @@ class SPDVBackground():
     section_item = section['item']
     #print(f"SECTION ITEM: {section_item}")
     section_definition = template.section_definition(section_item['uuid']) if section_item['uuid'] else None
+    print(f"SECTION DEF: {section_definition}")
     section_text = section_definition.resolve() if section_definition else '<div></div>'
     query = """
       CREATE (%s:NarrativeContent {id: '%s', name: '%s', description: '', label: '', sectionNumber: '%s', sectionTitle: '%s', text: '%s', uuid: '%s', instanceType: 'NarrativeContent'})
@@ -110,15 +112,10 @@ class StudyProtocolDocumentVersion(NodeId):
     except Exception as e:
       application_logger.exception(f"Exception raised while building protocol document section", e, UnexpectedError)
 
-  def element(self, key):
-    element_manager = ElementManager(self._study_version)
-    return element_manager.element(key).definition()
-    return self._read_element_definition(key)
-
   def section_definition(self, uuid):
     template = self._template_manager.template(self.templateUuid, self._study_version)
     section_def = template.section_definition(uuid)
-    print(f"SECTIOn DEF: {section_def}")
+    #print(f"SECTION DEF: {section_def}")
     nc = self._narrative_content_get(section_def.section_number)
     return {'definition': section_def, 'data': nc.uuid}
 
@@ -140,16 +137,20 @@ class StudyProtocolDocumentVersion(NodeId):
     result = {'root': template.section_list()}
     return result
 
-  def element_read(self, key):
+  def element(self, name):
+    element_manager = ElementManager(self._study_version)
+    return element_manager.element(name).definition()
+
+  def element_read(self, name):
     try:
-      result = ElementManager(self._study_version).element(key).read()
+      result = ElementManager(self._study_version).element(name).read()
       return result
     except Exception as e:
       application_logger.exception(f"Exception raised while reading from  element", e, UnexpectedError)
 
-  def element_write(self, key, text):
+  def element_write(self, name, text):
     try:
-      result = ElementManager(self._study_version).element(key).write(text)
+      result = ElementManager(self._study_version).element(name).write(text)
       return result
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to element", e, UnexpectedError)
@@ -217,9 +218,9 @@ class StudyProtocolDocumentVersion(NodeId):
   #   data = self._read_as_yaml_file("data/m11_to_usdm.yaml")
   #   return data[key]
 
-  def _read_element_definition(self, key):
-    data = read_yaml_file("data/elements.yaml")
-    return data[key]
+  # def _read_element_definition(self, key):
+  #   data = read_yaml_file("data/elements.yaml")
+  #   return data[key]
 
   # def _read_section_definitions(self):
   #   return self._read_as_yaml_file("data/m11_to_usdm.yaml")
@@ -258,7 +259,7 @@ class StudyProtocolDocumentVersion(NodeId):
   
   @staticmethod
   def _all_narrative_content_read(tx, uuid):
-    print(f"NC ALL {uuid}")
+    #print(f"NC ALL {uuid}")
     query = """
       MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent) RETURN nc
     """
