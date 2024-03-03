@@ -1,5 +1,4 @@
-import logging
-import traceback
+from d4kms_generic import application_logger
 from d4kms_service import Neo4jConnection
 from model.base_node import NodeId
 
@@ -35,8 +34,8 @@ class Element():
       except Exception as e:
         return self._log_error("read", e)
     else:
-      return self._implemented_status()
-
+      return self._not_implemented_result()
+    
   def reference(self):
     if self._implemented():
       try:
@@ -53,7 +52,7 @@ class Element():
       except Exception as e:
         return self._log_error("reference", e)
     else:
-      return {'error': f"No implementation for element {self._name} yet"}
+      return self._not_implemented_result()
 
   def write(self, value):
     if self._implemented():
@@ -66,7 +65,7 @@ class Element():
       except Exception as e:
         return self._log_error("write", e)
     else:
-      return self._implemented_status()
+      return self._not_implemented_result()
 
   def _read(self, query, params):
     db = Neo4jConnection()
@@ -86,15 +85,14 @@ class Element():
       return {'result': result['value']}  
 
   def _log_error(self, operation, e):
-    logging.error(f"Exception raised during {operation} operation on element '{self._name}'")
-    logging.error(f"Exception {e}\n{traceback.format_exc()}")
+    application_logger.exception(f"Exception raised during {operation} operation on element '{self._name}'", e)
     return {'error': f"Exception. Failed during {operation} operation on element '{self._name}'"}
 
   def _implemented(self):
     return True if self._definition['status'] == "ok" else False
 
-  def _implemented_status(self):
-    return {'result': f"{self._definition['status']}"}
+  def _not_implemented_result(self):
+    return {'result': f"Element '{self._name}' not implemented yet"}
 
   def _build_params(self, value):
     params = {}
