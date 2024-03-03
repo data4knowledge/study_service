@@ -40,6 +40,9 @@ class Study(NodeNameLabelDesc):
       CREATE (spd:StudyProtocolDocument {id: $spd_id, name: $spd_name, description: $spd_description, label: $spd_label, uuid: $spd_uuid, instanceType: 'StudyProtocolDocument'})
       CREATE (spdv:StudyProtocolDocumentVersion {id: $spdv_id, protocolVersion: $spdv_version, uuid: $spdv_uuid, instanceType: 'StudyProtocolDocumentVersion', templateUuid: $spdv_template})
       
+      CREATE (si:StudyIdentifier {id: $si_id, studyIdentifier: 'ACME_001', uuid: $si_uuid, instanceType: 'StudyIdentifier'})
+      CREATE (org:Organization {id: $org_id, identifierScheme: 'DUNS', identifier: '123456789', uuid: $org_uuid, instanceType: 'Organization'})
+      
       CREATE (st1:StudyTitle {id: $st1_id, text: $st_brief_title, uuid: $st1_uuid, instanceType: 'StudyTitle'})
       CREATE (st2:StudyTitle {id: $st2_id, text: $st_official_title, uuid: $st2_uuid, instanceType: 'StudyTitle'})
       CREATE (st3:StudyTitle {id: $st3_id, text: $st_public_title, uuid: $st3_uuid, instanceType: 'StudyTitle'})
@@ -51,7 +54,8 @@ class Study(NodeNameLabelDesc):
       CREATE (c3:Code {id: $c3_id, code: 'C99905x2', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Official Study Title', uuid: $c3_uuid, instanceType: 'Code'})
       CREATE (c4:Code {id: $c4_id, code: 'C99905x3', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Public Study Title', uuid: $c4_uuid, instanceType: 'Code'})
       CREATE (c5:Code {id: $c5_id, code: 'C99905x4', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Scientific Study Title', uuid: $c5_uuid, instanceType: 'Code'})
-      CREATE (c6:Code {id: $c6_id, code: 'C94108', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Study Acronym', uuid: $c6_uuid, instanceType: 'Code'})
+      CREATE (c6:Code {id: $c6_id, code: 'C94108', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Study Acronym', uuid: $c6_uuid, instanceType: 'Code'}) 
+      CREATE (c7:Code {id: $c7_id, code: 'C70793', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Clinical Study Sponsor', uuid: $c7_uuid, instanceType: 'Code'})
       
       CREATE (s)-[:VERSIONS_REL]->(sv)
       CREATE (s)-[:DOCUMENTED_BY_REL]->(spd)
@@ -63,6 +67,7 @@ class Study(NodeNameLabelDesc):
       CREATE (sv)-[:TITLES_REL]->(st3)-[:TYPE_REL]->(c4)
       CREATE (sv)-[:TITLES_REL]->(st4)-[:TYPE_REL]->(c5)
       CREATE (sv)-[:TITLES_REL]->(st5)-[:TYPE_REL]->(c6)
+      CREATE (sv)-[:STUDY_IDENTIFIERS_REL]->(si)-[:STUDY_IDENTIFIER_SCOPE_REL]->(org)-[:ORGANIZATION_TYPE_REL]->(c7)
       RETURN s.uuid as uuid
     """
     result = tx.run(query, 
@@ -83,6 +88,8 @@ class Study(NodeNameLabelDesc):
       spdv_id='STUDY_PROTOCOL_1',
       spdv_version="0.1",
       spdv_template=template_uuid,
+      org_id='ORGANIZATION_1',
+      si_id='STUDY_IDENTIFIER_1',
       st1_id="STUDY_TITLE_1",
       st2_id="STUDY_TITLE_2",
       st3_id="STUDY_TITLE_3",
@@ -99,16 +106,20 @@ class Study(NodeNameLabelDesc):
       c4_id='CODE_4',
       c5_id='CODE_5',
       c6_id='CODE_6',
+      c7_id='CODE_7',
       s_uuid1=uuids['Study'], 
       sv_uuid=uuids['StudyVersion'],
       spd_uuid=uuids['StudyProtocolDocument'],
       spdv_uuid=uuids['StudyProtocolDocumentVersion'],
+      org_uuid=str(uuid4()), 
+      si_uuid=str(uuid4()), 
       c1_uuid=str(uuid4()), 
       c2_uuid=str(uuid4()), 
       c3_uuid=str(uuid4()), 
       c4_uuid=str(uuid4()), 
       c5_uuid=str(uuid4()), 
       c6_uuid=str(uuid4()), 
+      c7_uuid=str(uuid4()), 
       st1_uuid=str(uuid4()), 
       st2_uuid=str(uuid4()), 
       st3_uuid=str(uuid4()), 

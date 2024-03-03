@@ -59,9 +59,9 @@ protocol_identifier:
   add: False
   status: "ok"
   root:
-    query: "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(si:StudyIdentifiers)-[]->(c:Code {code: 'C70793'})"
+    query: "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(si:StudyIdentifier)-[]->(o:Organization)-[]->(c:Code {code: 'C70793'})"
   read:
-    query: "RETURN si.text as value"
+    query: "RETURN si.studyIdentifier as value"
   write:
     query: "SET si.studyIdentifier = $value RETURN si.studyIdentifier as value"
     data: 

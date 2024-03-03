@@ -17,4 +17,4 @@ class SectionDefinition(BaseModel):
     self._macros = Macros(study_version)
 
   def resolve(self):
-    return self._macros.resolve(self._form, Macros.AS_REFERENCE)
+    return self._macros.resolve(self.form, Macros.AS_REFERENCE)
