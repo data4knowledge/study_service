@@ -35,7 +35,7 @@ class SPDVBackground():
     self.add_section_cypher(cypher, template.section_hierarchy(), template)
     db = Neo4jConnection()
     with db.session() as session:
-      print(f"CYPHER: {cypher}")
+      #print(f"CYPHER: {cypher}")
       session.run("\n".join(cypher))
 
   def add_section_cypher(self, cypher, section, template: TemplateDefinition):
@@ -45,7 +45,7 @@ class SPDVBackground():
     section_item = section['item']
     #print(f"SECTION ITEM: {section_item}")
     section_definition = template.section_definition(section_item['uuid']) if section_item['uuid'] else None
-    print(f"SECTION DEF: {section_definition}")
+    #print(f"SECTION DEF: {section_definition}")
     section_text = section_definition.resolve() if section_definition else '<div></div>'
     query = """
       CREATE (%s:NarrativeContent {id: '%s', name: '%s', description: '', label: '', sectionNumber: '%s', sectionTitle: '%s', text: '%s', uuid: '%s', instanceType: 'NarrativeContent'})
@@ -91,12 +91,14 @@ class StudyProtocolDocumentVersion(NodeId):
   def document_as_html(self):
     try:
       doc = Doc()
+      template = self._template_manager.template(self.templateUuid, self._study_version)
       with doc.tag('body'):
         items = self._all_narrative_content()
         #print(f"ITEMS: {items}")
         for section in self.section_list()['root']:
           if section['section_number'] in items:
-            doc.asis(items[section['section_number']].to_html(self._study_version))
+            section_def = template.section_definition(section['uuid'])
+            doc.asis(items[section['section_number']].to_html(self._study_version, section_def))
           else:
             doc.asis(f"Missing section {section['section_number']}")
       return doc.getvalue()
@@ -106,8 +108,13 @@ class StudyProtocolDocumentVersion(NodeId):
   def section_as_html(self, section_number):
     try:
       doc = Doc()
+      template = self._template_manager.template(self.templateUuid, self._study_version)
+
+      section = self.section_list()['root'][section_number]
+      section_def = template.section_definition(section['uuid'])
+
       content = self._narrative_content_get(section_number)
-      doc.asis(content.to_html())
+      doc.asis(content.to_html(self._study_version, section_def))
       return doc.getvalue()
     except Exception as e:
       application_logger.exception(f"Exception raised while building protocol document section", e, UnexpectedError)

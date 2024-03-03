@@ -33,7 +33,7 @@ class TemplateDefinition():
  
   def section_hierarchy(self):
     order = self._section_order()
-    print(f"ORDER: {order}")
+    #print(f"ORDER: {order}")
     parent = [{'item': {'uuid': None, 'name':	'ROOT', 'section_number': '-1', 'section_title':	'Root', 'text': ''}, 'children': []}]
     current_level = 1
     previous_item = None
