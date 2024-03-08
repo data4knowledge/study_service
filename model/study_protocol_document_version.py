@@ -10,7 +10,7 @@ from model.narrative_content import NarrativeContent
 #from .section_number import SectionNumber
 #from .element.element import Element
 from model.element.element_manager import ElementManager
-from model.template.template_manager import TemplateManager
+from model.template.template_manager import template_manager
 from model.template.template_definition import TemplateDefinition
 from d4kms_generic import *
 from d4kms_service import *
@@ -21,7 +21,7 @@ class SPDVBackground():
 
   def __init__(self, study_version):
     self._index = 0
-    self._template_manager = TemplateManager()
+    #self._template_manager = TemplateManager()
 
   def add_all_sections(self, uuids, template_uuid):
 
@@ -31,7 +31,7 @@ class SPDVBackground():
     cypher = []
     cypher.append("MATCH (spdv:StudyProtocolDocumentVersion {uuid: '%s'})\nWITH spdv" % (uuids['StudyProtocolDocumentVersion']))
     study_version = StudyVersion.find(uuids['StudyVersion'])
-    template = self._template_manager.template(template_uuid, study_version)
+    template = template_manager.template(template_uuid, study_version)
     self.add_section_cypher(cypher, template.section_hierarchy(), template)
     db = Neo4jConnection()
     with db.session() as session:
@@ -73,7 +73,7 @@ class StudyProtocolDocumentVersion(NodeId):
     super().__init__(*a, **kw)
     self._study_version = None
     self._set_study_version()
-    self._template_manager = TemplateManager()
+    #self._template_manager = TemplateManager()
     
   @classmethod
   def find_from_study(cls, uuid):
@@ -91,7 +91,7 @@ class StudyProtocolDocumentVersion(NodeId):
   def document_as_html(self):
     try:
       doc = Doc()
-      template = self._template_manager.template(self.templateUuid, self._study_version)
+      template = template_manager.template(self.templateUuid, self._study_version)
       with doc.tag('body'):
         items = self._all_narrative_content()
         #print(f"ITEMS: {items}")
@@ -108,7 +108,7 @@ class StudyProtocolDocumentVersion(NodeId):
   def section_as_html(self, section_number):
     try:
       doc = Doc()
-      template = self._template_manager.template(self.templateUuid, self._study_version)
+      template = template_manager.template(self.templateUuid, self._study_version)
 
       section = self.section_list()['root'][section_number]
       section_def = template.section_definition(section['uuid'])
@@ -120,7 +120,7 @@ class StudyProtocolDocumentVersion(NodeId):
       application_logger.exception(f"Exception raised while building protocol document section", e, UnexpectedError)
 
   def document_definition(self):
-    template = self._template_manager.template(self.templateUuid, self._study_version)
+    template = template_manager.template(self.templateUuid, self._study_version)
     result = []
     items = self._all_narrative_content()
     for section in self.section_list()['root']:
@@ -130,7 +130,7 @@ class StudyProtocolDocumentVersion(NodeId):
     return {'items': result}
 
   def section_definition(self, uuid):
-    template = self._template_manager.template(self.templateUuid, self._study_version)
+    template = template_manager.template(self.templateUuid, self._study_version)
     section_def = template.section_definition(uuid)
     #print(f"SECTION DEF: {section_def}")
     nc = self._narrative_content_get(section_def.section_number)
@@ -142,15 +142,13 @@ class StudyProtocolDocumentVersion(NodeId):
 
   def section_write(self, uuid, text):
     try:
-      #template = self._template_manager.template(self.templateUuid, self._study_version)
-      #section_def = template.section_definition(uuid)
       result = self._narrative_content_post(uuid, text)
       return {'uuid': result}  
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to section", e, UnexpectedError)
 
   def section_list(self):
-    template = self._template_manager.template(self.templateUuid, self._study_version)
+    template = template_manager.template(self.templateUuid, self._study_version)
     result = {'root': template.section_list()}
     return result
 

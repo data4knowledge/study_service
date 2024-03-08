@@ -18,7 +18,7 @@ from model.study_protocol_document_version import StudyProtocolDocumentVersion, 
 # from model.study_data import StudyData, StudyDataIn
 # from model.encounter import Encounter, EncounterIn, EncounterLink
 # from typing import List
-from model.template.template_manager import TemplateManager
+from model.template.template_manager import template_manager
 from d4kms_generic import ServiceEnvironment
 from d4kms_generic import application_logger
 
@@ -86,7 +86,7 @@ async def get_study_file_status(uuid: str):
   description="Get the set of available templates",
   response_model=list)
 async def get_temlates():
-  return TemplateManager().templates()
+  return template_manager.templates()
   
 # Studies
 # =======

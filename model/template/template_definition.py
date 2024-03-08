@@ -14,10 +14,16 @@ class TemplateDefinition():
     self._dir = dir
     self._study_version = study_version
     self._sections = read_yaml_file(os.path.join(self._dir, self._definition['file']))
-    
+    self._section_cache = {}
+
   def section_definition(self, uuid: str) -> SectionDefinition:
     if uuid in self._sections:
-      return SectionDefinition(uuid, self._sections[uuid], self._dir, self._study_version)
+      if uuid in self._section_cache:
+        return self._section_cache[uuid]
+      else:
+        section = SectionDefinition(uuid, self._sections[uuid], self._dir, self._study_version)
+        self._section_cache[uuid] = section
+        return section
     else:
       message = f"Missing section '{uuid}'"
       application_logger.error(message)

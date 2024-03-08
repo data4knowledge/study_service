@@ -13,6 +13,7 @@ class TemplateManager():
 
   def __init__(self):
     self._definitions = read_yaml_file(os.path.join(self.DIR, self.FILENAME))
+    self._template_cache = {}
 
   def templates(self):
     result = [dict(v, **{'id': k}) for k,v in self._definitions.items()]
@@ -20,8 +21,15 @@ class TemplateManager():
   
   def template(self, uuid: str, study_version) -> TemplateDefinition:
     if uuid in self._definitions:
-      return TemplateDefinition(self._definitions[uuid], self.DIR, study_version)
+      if uuid in self._template_cache:
+        return self._template_cache[uuid]
+      else:
+        template = TemplateDefinition(self._definitions[uuid], self.DIR, study_version)
+        self._template_cache[uuid] = template
+        return template
     else:
       message = f"Missing template '{uuid}'"
       application_logger.error(message)
       raise self.MissingTemplate(message)
+
+template_manager = TemplateManager()
