@@ -78,17 +78,26 @@ protocol_identifier:
 #   add: False
 trial_phase:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   phase = self._study_version.studyPhase.standardCode
 #   results = [{'instance: phase, 'klass: 'Code', 'attribute: 'decode'}]
 #   return self._set_of_references(results)
 
 study_short_title:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   results = [{'instance: self.protocol_document_version, 'klass: 'StudyProtocolDocumentVersion', 'attribute: 'briefTitle'}]
 #   return self._set_of_references(results)
 
 study_full_title:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   #results = [{'instance: self.protocol_document_version, 'klass: 'StudyProtocolDocumentVersion', 'attribute: 'officialTitle'}]
 #   result = Element( self._study_version, 'full_title').reference()
 #   print(f"RESULT:result}")
@@ -97,17 +106,26 @@ study_full_title:
 
 study_version_identifier:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   results = [{'instance: self._study_version, 'klass: 'StudyVersion', 'attribute: 'versionIdentifier'}]
 #   return self._set_of_references(results)
 
 study_identifier:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   identifier = self._sponsor_identifier()
 #   results = [{'instance: identifier, 'klass: 'StudyIdentifier', 'attribute: 'studyIdentifier'}]
 #   return self._set_of_references(results)
 
 study_regulatory_identifiers:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   identifiers = self._study_version.studyIdentifiers
 #   for identifier in identifiers:
 #     if identifier.studyIdentifierScope.type.code == 'C188863' or identifier.studyIdentifierScope.type.code == 'C93453:
@@ -117,6 +135,9 @@ study_regulatory_identifiers:
 
 study_date:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   dates = self.protocol_document_version.dateValues
 #   for date in dates:
 #     if date.type.code == 'C99903x1:
@@ -126,6 +147,9 @@ study_date:
 
 approval_date:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   dates = self._study_version.dateValues
 #   for date in dates:
 #     if date.type.code == 'C132352:
@@ -135,6 +159,9 @@ approval_date:
 
 organization_name_and_address:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   identifier = self._sponsor_identifier()
 #   results = [
 #    instance: identifier.studyIdentifierScope, 'klass: 'Organization', 'attribute: 'name'}
@@ -144,18 +171,27 @@ organization_name_and_address:
 
 amendment_identifier:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   type: text
 #   value: ''
 #   add: False
 
 amendment:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   amendments = self._study_version.amendments
 #   results = [{'instance: amendments[-1], 'klass: 'StudyAmendment', 'attribute: 'number'}]
 #   return self._set_of_references(results)
 
 amendment_scopes:
   status: 'no map'
+  type: text
+  value: ''
+  add: False
 #   results = []
 #   amendment = self._study_version.amendments[-1]
 #   for item in amendment.enrollments:

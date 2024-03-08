@@ -221,9 +221,9 @@ async def get_element(uuid: str, name: str):
 async def write_element(uuid: str, name: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
-    #doc.set_study_version()
     data = doc.element(name)
     result = doc.element_write(name, item.text)
+    #print(f"ELEMENT: {name}={result}")
     if not 'error' in result:
       data['value'] = result['result']
       return {'uuid': uuid, 'definition': data}
