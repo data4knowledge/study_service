@@ -10,6 +10,7 @@ class SectionDefinition(BaseModel):
   section_number: str
   section_title: str
   display_heading: bool
+  section_uuid: str = None
   form: str = ""
 
   def __init__(self, uuid, definition, dir, study_version):

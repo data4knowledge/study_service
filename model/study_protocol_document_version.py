@@ -122,8 +122,11 @@ class StudyProtocolDocumentVersion(NodeId):
   def document_definition(self):
     template = self._template_manager.template(self.templateUuid, self._study_version)
     result = []
+    items = self._all_narrative_content()
     for section in self.section_list()['root']:
       definition = template.section_definition(section['uuid'])
+      if definition.section_number in items:
+        definition.section_uuid = items[definition.section_number].uuid
       result.append(definition)
     return {'definition': result}
 
