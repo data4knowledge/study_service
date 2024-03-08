@@ -142,9 +142,9 @@ class StudyProtocolDocumentVersion(NodeId):
 
   def section_write(self, uuid, text):
     try:
-      template = self._template_manager.template(self.templateUuid, self._study_version)
-      section_def = template.section_definition(uuid)
-      result = self._narrative_content_post(section_def.section_number, text)
+      #template = self._template_manager.template(self.templateUuid, self._study_version)
+      #section_def = template.section_definition(uuid)
+      result = self._narrative_content_post(uuid, text)
       return {'uuid': result}  
     except Exception as e:
       application_logger.exception(f"Exception raised while writing to section", e, UnexpectedError)
@@ -201,13 +201,13 @@ class StudyProtocolDocumentVersion(NodeId):
     with db.session() as session:
       return session.execute_read(self._narrative_content_read, self.uuid, section)
 
-  def _narrative_content_post(self, section, text):
+  def _narrative_content_post(self, uuid, text):
     db = Neo4jConnection()
     with db.session() as session:
-      if session.execute_read(self._section_exists, self.uuid, section):
-        return session.execute_write(self._narrative_content_write, self.uuid, section, text)
+      if session.execute_read(self._section_exists, self.uuid, uuid):
+        return session.execute_write(self._narrative_content_write, self.uuid, uuid, text)
       else:
-        application_logger.warning(f"Missing section {section} detected")
+        application_logger.warning(f"Missing section {uuid} detected")
         return None
 
   def _all_narrative_content(self):
@@ -262,15 +262,14 @@ class StudyProtocolDocumentVersion(NodeId):
     return None
 
   @staticmethod
-  def _narrative_content_write(tx, uuid, section, text):
+  def _narrative_content_write(tx, uuid, section_uuid, text):
     query = """
-      MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent {sectionNumber: $section})
+      MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent {uuid: $section_uuid})
       SET nc.text = $text
       RETURN nc.uuid as uuid
     """
-    rows = tx.run(query, uuid1=uuid, section=section, text=text)
+    rows = tx.run(query, uuid1=uuid, section_uuid=section_uuid, text=text)
     for row in rows:
-      print(f"NC WRITE {uuid}, {section} {row['uuid']}")
       return row['uuid']
     return None
   
@@ -289,9 +288,9 @@ class StudyProtocolDocumentVersion(NodeId):
     return results
   
   @staticmethod
-  def _section_exists(tx, uuid, section):
-    query = "MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent {sectionNumber: $section}) RETURN nc"
-    result = tx.run(query, uuid1=uuid, section=section)
+  def _section_exists(tx, uuid, section_uuid):
+    query = "MATCH (spdv:StudyProtocolDocumentVersion {uuid: $uuid1})-[:CONTENTS_REL]->(nc:NarrativeContent {uuid: $uuid2}) RETURN nc"
+    result = tx.run(query, uuid1=uuid, uuid2=section_uuid)
     return True if result.peek() else False
 
   # def _content_to_html(self, content, doc):
