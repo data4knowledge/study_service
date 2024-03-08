@@ -17,7 +17,7 @@ class TemplateDefinition():
     
   def section_definition(self, uuid: str) -> SectionDefinition:
     if uuid in self._sections:
-      return SectionDefinition(self._sections[uuid], self._dir, self._study_version)
+      return SectionDefinition(uuid, self._sections[uuid], self._dir, self._study_version)
     else:
       message = f"Missing section '{uuid}'"
       application_logger.error(message)

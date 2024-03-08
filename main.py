@@ -128,20 +128,20 @@ async def list_study_versions(request: Request, page: int = 0, size: int = 0, fi
 # Protocol Document Versions
 # ==========================
 
-@app.get("/v1/studyVersions/{uuid}/protocolDocument", 
-  summary="Get the protocol document for a study version",
-  description="Get the protococl document for a study version",
-  response_model=str)
-async def get_protocol_document(uuid: str):
-  study_version = StudyVersion.find(uuid)
-  if study_version:
-    result = study_version.protocol_document()
-    if not 'error' in result:
-      return result['uuid']
-    else:
-      raise HTTPException(status_code=404, detail=result['error'])
-  else:
-    raise HTTPException(status_code=404, detail="The requested study version cannot be found")
+# @app.get("/v1/studyVersions/{uuid}/protocolDocument", 
+#   summary="Get the protocol document for a study version",
+#   description="Get the protococl document for a study version",
+#   response_model=str)
+# async def get_protocol_document(uuid: str):
+#   study_version = StudyVersion.find(uuid)
+#   if study_version:
+#     result = study_version.protocol_document()
+#     if not 'error' in result:
+#       return result['uuid']
+#     else:
+#       raise HTTPException(status_code=404, detail=result['error'])
+#   else:
+#     raise HTTPException(status_code=404, detail="The requested study version cannot be found")
 
 @app.get("/v1/protocolDocumentVersions/{uuid}/sectionList", 
   summary="Get the protocol document version section list",
@@ -154,11 +154,23 @@ async def get_protocol_section_list(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
+@app.get("/v1/protocolDocumentVersions/{uuid}/documentDefinition", 
+  summary="Get the protocol document version definition",
+  description="Get the protococl document definition",
+  response_model=dict)
+async def get_document_definition(uuid: str):
+  doc = StudyProtocolDocumentVersion.find(uuid)
+  if not 'error' in doc:
+    result = doc.document_definition()
+    return result
+  else:
+    raise HTTPException(status_code=404, detail="The requested protocol document section cannot be found")
+
 @app.get("/v1/protocolDocumentVersions/{uuid}/sectionDefinition/{section_uuid}", 
   summary="Get the protocol document version section",
   description="Get the protococl document section for a study.",
   response_model=dict)
-async def get_section(uuid: str, section_uuid: str):
+async def get_section_definition(uuid: str, section_uuid: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
     result = doc.section_definition(section_uuid)

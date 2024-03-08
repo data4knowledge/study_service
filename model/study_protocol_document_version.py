@@ -119,6 +119,14 @@ class StudyProtocolDocumentVersion(NodeId):
     except Exception as e:
       application_logger.exception(f"Exception raised while building protocol document section", e, UnexpectedError)
 
+  def document_definition(self):
+    template = self._template_manager.template(self.templateUuid, self._study_version)
+    result = []
+    for section in self.section_list()['root']:
+      definition = template.section_definition(section['uuid'])
+      result.append(definition)
+    return {'definition': result}
+
   def section_definition(self, uuid):
     template = self._template_manager.template(self.templateUuid, self._study_version)
     section_def = template.section_definition(uuid)
