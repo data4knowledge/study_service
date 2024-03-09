@@ -215,12 +215,11 @@ async def get_element(uuid: str, name: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
     #doc.set_study_version()
-    data = doc.element(name)
+    definition = doc.element(name)
     result = doc.element_read(name)
-    #print(f"RESULT: {result}")
+    print(f"RESULT: {name}={result}")
     if not 'error' in result:
-      data['value'] = result['result']
-      return {'uuid': uuid, 'definition': data}
+      return {'uuid': uuid, 'definition': definition, 'data': result['result']}
     else:
       raise HTTPException(status_code=500, detail=result['error'])
   else:
@@ -234,12 +233,11 @@ async def get_element(uuid: str, name: str):
 async def write_element(uuid: str, name: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
-    data = doc.element(name)
+    definition = doc.element(name)
     result = doc.element_write(name, item.text)
-    #print(f"ELEMENT: {name}={result}")
+    print(f"ELEMENT: {name}={result}")
     if not 'error' in result:
-      data['value'] = result['result']
-      return {'uuid': uuid, 'definition': data}
+      return {'uuid': uuid, 'definition': definition, 'data': result['result']}
     else:
       raise HTTPException(status_code=500, detail=result['error'])
   else:
