@@ -1,12 +1,12 @@
 sponsor_confidentiality_statement:
+  status: 'no map'
   type: text
   value: ''
   add: False
-  status: 'no map'
 full_title:
+  status: "ok"
   type: text
   add: False
-  status: "ok"
   root:
     query: "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C99905x1'})"
   read:
@@ -21,9 +21,9 @@ full_title:
     klass: 'StudyTitle'
     attribute: 'text'
 study_acronym:
+  status: "ok"
   type: text
   add: False
-  status: "ok"
   root:
     query: "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(st:StudyTitle)-[]->(c:Code {code: 'C94108'})"
   read:
@@ -38,9 +38,9 @@ study_acronym:
     klass: 'StudyTitle'
     attribute: 'text'
 version_number:
+  status: "ok"
   type: text
   add: False
-  status: "ok"
   root:
     query: "MATCH (sv:StudyVersion {uuid: $uuid})"
   read:
@@ -55,9 +55,9 @@ version_number:
     klass: 'StudyVersion'
     attribute: 'versionIdentifier'
 protocol_identifier:
+  status: "ok"
   type: text
   add: False
-  status: "ok"
   root:
     query: "MATCH (sv:StudyVersion {uuid: $uuid})-[]->(si:StudyIdentifier)-[]->(o:Organization)-[]->(c:Code {code: 'C70793'})"
   read:
@@ -71,20 +71,42 @@ protocol_identifier:
     query: "RETURN si as value"
     klass: 'StudyIdentifier'
     attribute: 'studyIdentifier'
-
-# trial_phase:
-#   type: code_list
-#   value: ''
-#   add: False
 trial_phase:
-  status: 'no map'
-  type: text
-  value: ''
+  status: 'ok'
+  type: code
+  codes:
+    C48660: 'Not Applicable'
+    C54721: 'Phase 0 Trial'
+    C15600: 'Phase I Trial'
+    C15693: 'Phase I/II Trial'
+    C198366: 'Phase I/II/III Trial'
+    C198367: 'Phase I/III Trial'
+    C199990: 'Phase Ia Trial'
+    C199989: 'Phase Ib Trial'
+    C15601: 'Phase II Trial'
+    C15694: 'Phase II/III Trial'
+    C49686: 'Phase IIa Trial'
+    C49688: 'Phase IIb Trial'
+    C15602: 'Phase III Trial'
+    C49687: 'Phase IIIa Trial'
+    C49689: 'Phase IIIb Trial'
+    C15603: 'Phase IV Trial'
+    C47865: 'Phase V Trial'
   add: False
-#   phase = self._study_version.studyPhase.standardCode
-#   results = [{'instance: phase, 'klass: 'Code', 'attribute: 'decode'}]
-#   return self._set_of_references(results)
-
+  root:
+    query: "MATCH (sv:StudyVersion {uuid: $uuid})-[:STUDY_PHASE_REL]->(ac:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)"
+  read:
+    query: "RETURN c.decode as value"
+  write:
+    query: "SET c.code = $code, c.decode = $decode RETURN c.decode as value"
+    data: 
+    - 'uuid'
+    - 'code'
+    - 'decode'
+  reference:
+    query: "RETURN c as value"
+    klass: 'Code'
+    attribute: 'decode'
 study_short_title:
   status: 'no map'
   type: text

@@ -30,6 +30,7 @@ class Element():
         if 'result' in result:
           return {'result': result['result']}
         else:
+          application_logger.error( f"Failed to read {self._name}")
           return {'error': f"Failed to read {self._name}"}
       except Exception as e:
         return self._log_error("read", e)
@@ -48,6 +49,7 @@ class Element():
         if 'result' in result:
           return {'result': {'instance': NodeId.wrap(result['result']), 'klass': item['klass'], 'attribute': item['attribute']}}
         else:
+          application_logger.error( f"Failed to get reference for {self._name}")
           return {'error': f"Failed to get reference for {self._name}"}
       except Exception as e:
         return self._log_error("reference", e)
@@ -57,7 +59,7 @@ class Element():
   def write(self, value):
     if self._implemented():
       try:
-        params = self._build_params(value)
+        params=self._prep_write_params(value)
         root = self._definition['root']
         item = self._definition['write']
         query = f"{root['query']} {item['query']}"
@@ -66,6 +68,22 @@ class Element():
         return self._log_error("write", e)
     else:
       return self._not_implemented_result()
+
+  def _prep_write_params(self, value):
+    if self._implemented():
+      params = {}
+      print(f"DEFINITION: {self._definition}")
+      for param in self._definition['write']['data']:
+        if param == 'uuid':
+          params[param] = self._study_version.uuid
+        elif param == 'value':
+          params[param] = value
+        elif param == 'code':
+          params[param] = value
+          params['decode'] = self._definition['codes'][value]
+      return params
+    else:
+      return {}
 
   def _read(self, query, params):
     db = Neo4jConnection()
@@ -93,15 +111,6 @@ class Element():
 
   def _not_implemented_result(self):
     return {'result': f"Element '{self._name}' not implemented yet"}
-
-  def _build_params(self, value):
-    params = {}
-    for param in self._definition['write']['data']:
-      if param == 'uuid':
-        params[param] = self._study_version.uuid
-      elif param == 'value':
-        params[param] = value
-    return params
   
   @staticmethod
   def _read_method(tx, query, params):

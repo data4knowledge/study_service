@@ -56,6 +56,9 @@ class Study(NodeNameLabelDesc):
       CREATE (c5:Code {id: $c5_id, code: 'C99905x4', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Scientific Study Title', uuid: $c5_uuid, instanceType: 'Code'})
       CREATE (c6:Code {id: $c6_id, code: 'C94108', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Study Acronym', uuid: $c6_uuid, instanceType: 'Code'}) 
       CREATE (c7:Code {id: $c7_id, code: 'C70793', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Clinical Study Sponsor', uuid: $c7_uuid, instanceType: 'Code'})
+      CREATE (c8:Code {id: $c8_id, code: 'C48660', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'Not Applicable', uuid: $c8_uuid, instanceType: 'Code'})
+
+      CREATE (ac1:AliasCode {id: $ac1_id, uuid: $ac1_uuid, instanceType: 'AliasCode'})
       
       CREATE (s)-[:VERSIONS_REL]->(sv)
       CREATE (s)-[:DOCUMENTED_BY_REL]->(spd)
@@ -68,6 +71,8 @@ class Study(NodeNameLabelDesc):
       CREATE (sv)-[:TITLES_REL]->(st4)-[:TYPE_REL]->(c5)
       CREATE (sv)-[:TITLES_REL]->(st5)-[:TYPE_REL]->(c6)
       CREATE (sv)-[:STUDY_IDENTIFIERS_REL]->(si)-[:STUDY_IDENTIFIER_SCOPE_REL]->(org)-[:ORGANIZATION_TYPE_REL]->(c7)
+      CREATE (sv)-[:STUDY_PHASE_REL]->(ac1)-[:STANDARD_CODE_REL]->(c8)
+      
       RETURN s.uuid as uuid
     """
     result = tx.run(query, 
@@ -107,6 +112,8 @@ class Study(NodeNameLabelDesc):
       c5_id='CODE_5',
       c6_id='CODE_6',
       c7_id='CODE_7',
+      c8_id='CODE_8',
+      ac1_id='ALIAS_CODE_1',
       s_uuid1=uuids['Study'], 
       sv_uuid=uuids['StudyVersion'],
       spd_uuid=uuids['StudyProtocolDocument'],
@@ -120,6 +127,8 @@ class Study(NodeNameLabelDesc):
       c5_uuid=str(uuid4()), 
       c6_uuid=str(uuid4()), 
       c7_uuid=str(uuid4()), 
+      c8_uuid=str(uuid4()), 
+      ac1_uuid=str(uuid4()), 
       st1_uuid=str(uuid4()), 
       st2_uuid=str(uuid4()), 
       st3_uuid=str(uuid4()), 
