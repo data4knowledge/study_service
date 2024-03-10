@@ -46,7 +46,7 @@ class TemplateManager():
         'file': 'text_section.html',
         'header_only': False,
         'level': section_number.level,
-        'section_number': section_number.number,
+        'section_number': nc.sectionNumber,
         'section_title': nc.sectionTitle,
         'display_heading': True
       }

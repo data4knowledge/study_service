@@ -131,8 +131,10 @@ class StudyProtocolDocumentVersion(NodeId):
     return {'definition': section_def, 'data': nc.uuid}
 
   def section_read(self, uuid):
+    template = template_manager.template(self.templateUuid, self._study_version)
     nc = NarrativeContent.find(uuid)
-    return nc.text if nc else ''
+    section_def = template.section_definition_by_section_number(nc.sectionNumber)
+    return nc.to_html(self._study_version, section_def) if nc else ''
 
   def section_write(self, uuid, text):
     try:

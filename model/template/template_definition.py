@@ -18,6 +18,9 @@ class TemplateDefinition():
     else:
       self._sections = {}
     self._section_cache = {}
+    self._section_map = {}
+    for k,v in self._sections.items():
+      self._section_map[v['section_number']] = k
 
   def section_definition(self, uuid: str) -> SectionDefinition:
     if uuid in self._sections:
@@ -32,9 +35,13 @@ class TemplateDefinition():
       application_logger.error(message)
       raise self.MissingSection(message)
 
+  def section_definition_by_section_number(self, section_number):
+    return self.section_definition(self._section_map[section_number])
+
   def add_section_definition(self, uuid, data):
     print(f"ADD: {uuid}={data}")
     self._sections[uuid] = data
+    self._section_map[data['section_number']] = uuid
 
   def section_list(self):
     order = self._section_order()
