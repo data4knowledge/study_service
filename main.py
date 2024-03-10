@@ -61,11 +61,11 @@ async def create_study_file(request: Request, background_tasks: BackgroundTasks)
   contents = await form['upload_file'].read()
   sf = StudyFile()
   success = sf.create(filename, contents)
-  if not success:
-    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
-  else:
+  if success:
     background_tasks.add_task(sf.execute)
     return sf.uuid
+  else:
+    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
 
 @app.get("/v1/studyFiles/{uuid}/status", 
   summary="Get study file status",

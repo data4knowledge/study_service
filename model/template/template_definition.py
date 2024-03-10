@@ -1,5 +1,5 @@
 import os
-from model.utility.utility import read_yaml_file
+from model.utility.utility import read_yaml_file, section_ordering
 from .section_definition import SectionDefinition
 from .section_number import SectionNumber
 from d4kms_generic import application_logger
@@ -64,14 +64,14 @@ class TemplateDefinition():
     return parent[0]
 
   def _section_order(self):
-    ordered = sorted(self._sections.items(), key=self._section_ordering)
+    ordered = sorted(self._sections.items(), key=section_ordering)
     return [x[0] for x in ordered]
 
-  def _section_ordering(self, s):
-    try:
-      return [int(_) for _ in s[1]['section_number'].split(".")]
-    except Exception as e:
-      application_logger.exception("Exception during section ordering", e)
+  # def _section_ordering(self, s):
+  #   try:
+  #     return [int(_) for _ in s[1]['section_number'].split(".")]
+  #   except Exception as e:
+  #     application_logger.exception("Exception during section ordering", e)
 
   def _read_sections(self):
     return read_yaml_file(os.path.join(self._dir, self._definition['file']))

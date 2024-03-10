@@ -81,12 +81,6 @@ class StudyProtocolDocumentVersion(NodeId):
     with db.session() as session:
       return session.execute_read(cls._find_from_study, uuid)
 
-  def _set_study_version(self):
-    db = Neo4jConnection()
-    with db.session() as session:
-      result = session.execute_read(self._find_from_spdv, self.uuid)
-      if not 'error' in result:
-        self._study_version = result['result']
 
   def document_as_html(self):
     try:
@@ -193,6 +187,13 @@ class StudyProtocolDocumentVersion(NodeId):
   #     current_level = section_number.level
   #     previous_item = item
   #   return parent[0]
+
+  def _set_study_version(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      result = session.execute_read(self._find_from_spdv, self.uuid)
+      if not 'error' in result:
+        self._study_version = result['result']
 
   def _narrative_content_get(self, section):
     db = Neo4jConnection()
