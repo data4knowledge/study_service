@@ -81,37 +81,6 @@ class StudyProtocolDocumentVersion(NodeId):
     with db.session() as session:
       return session.execute_read(cls._find_from_study, uuid)
 
-  # def document_as_html(self):
-  #   try:
-  #     doc = Doc()
-  #     template = template_manager.template(self.templateUuid, self._study_version)
-  #     with doc.tag('body'):
-  #       items = self._all_narrative_content()
-  #       #print(f"ITEMS: {items}")
-  #       for section in self.section_list()['root']:
-  #         if section['section_number'] in items:
-  #           section_def = template.section_definition(section['uuid'])
-  #           doc.asis(items[section['section_number']].to_html(self._study_version, section_def))
-  #         else:
-  #           doc.asis(f"Missing section {section['section_number']}")
-  #     return doc.getvalue()
-  #   except Exception as e:
-  #     application_logger.exception(f"Exception raised while building protocol document", e, UnexpectedError)
-
-  # def section_as_html(self, section_number):
-  #   try:
-  #     doc = Doc()
-  #     template = template_manager.template(self.templateUuid, self._study_version)
-
-  #     section = self.section_list()['root'][section_number]
-  #     section_def = template.section_definition(section['uuid'])
-
-  #     content = self._narrative_content_get(section_number)
-  #     doc.asis(content.to_html(self._study_version, section_def))
-  #     return doc.getvalue()
-  #   except Exception as e:
-  #     application_logger.exception(f"Exception raised while building protocol document section", e, UnexpectedError)
-
   def document_definition(self):
     result = []
     template = self._get_template()
@@ -131,10 +100,10 @@ class StudyProtocolDocumentVersion(NodeId):
     return {'definition': section_def, 'data': nc.uuid}
 
   def section_read(self, uuid):
-    template = template_manager.template(self.templateUuid, self._study_version)
+    #template = template_manager.template(self.templateUuid, self._study_version)
     nc = NarrativeContent.find(uuid)
-    section_def = template.section_definition_by_section_number(nc.sectionNumber)
-    return nc.to_html(self._study_version, section_def) if nc else ''
+    #section_def = template.section_definition_by_section_number(nc.sectionNumber)
+    return nc.to_html(self._study_version) if nc else ''
 
   def section_write(self, uuid, text):
     try:
