@@ -13,7 +13,10 @@ class TemplateDefinition():
     self._definition = definition
     self._dir = dir
     self._study_version = study_version
-    self._sections = read_yaml_file(os.path.join(self._dir, self._definition['file']))
+    if self._definition['file']:
+      self._sections = read_yaml_file(os.path.join(self._dir, self._definition['file']))
+    else:
+      self._sections = {}
     self._section_cache = {}
 
   def section_definition(self, uuid: str) -> SectionDefinition:
@@ -28,6 +31,10 @@ class TemplateDefinition():
       message = f"Missing section '{uuid}'"
       application_logger.error(message)
       raise self.MissingSection(message)
+
+  def add_section_definition(self, uuid, data):
+    print(f"ADD: {uuid}={data}")
+    self._sections[uuid] = data
 
   def section_list(self):
     order = self._section_order()

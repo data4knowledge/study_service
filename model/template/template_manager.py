@@ -1,7 +1,9 @@
 import os
 from d4kms_generic.logger import application_logger
-from .template_definition import TemplateDefinition
+from model.template.template_definition import TemplateDefinition
+from model.template.section_number import SectionNumber
 from model.utility.utility import read_yaml_file
+from uuid import uuid4
 
 class TemplateManager():
 
@@ -31,5 +33,24 @@ class TemplateManager():
       message = f"Missing template '{uuid}'"
       application_logger.error(message)
       raise self.MissingTemplate(message)
+
+  def template_from_sections(self, ncs, study_version) -> TemplateDefinition:
+    uuid = str(uuid4())
+    self._definitions[uuid] = {'name': uuid, 'file': None}
+    template = TemplateDefinition(self._definitions[uuid], self.DIR, study_version)
+    self._template_cache[uuid] = template
+    for section, nc in ncs.items():
+      print(f"ITEM: {nc.sectionNumber}")
+      section_number = SectionNumber(nc.sectionNumber)
+      data = {
+        'file': 'text_section.html',
+        'header_only': False,
+        'level': section_number.level,
+        'section_number': section_number.number,
+        'section_title': nc.sectionTitle,
+        'display_heading': True
+      }
+      template.add_section_definition(str(uuid4()), data)
+    return uuid, template
 
 template_manager = TemplateManager()

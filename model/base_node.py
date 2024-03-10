@@ -3,7 +3,6 @@ from d4kms_service import Node, Neo4jConnection
 class BaseNode(Node):
   uuid: str
 
-
   @classmethod
   def build_filter_clause(cls, filter, properties):
     filter_clause_parts = []
@@ -78,6 +77,19 @@ class BaseNode(Node):
       #print(f"FILTER COUNT: {query}")
       query_results = session.run(query)
       return len(query_results.data())
+
+  def set(self, name):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (a:%s {uuid: '%s'})
+        SET a.%s='%s'
+        RETURN a
+      """ % (self.__class__.__name__, self.uuid, name, getattr(self, name))
+      query_results = session.run(query)
+      for result in query_results:
+        return result['a']
+      return None
 
 class NodeId(BaseNode):
   id: str
