@@ -63,9 +63,8 @@ class StudyDesign(NodeNameLabelDesc):
 #     with db.session() as session:
 #       return session.execute_read(self._workflows, self.uuid)
 
-
-#   def data_contract(self, page, size, filter):
-#     return StudyDesignDataContract.read(self.uuid, page, size, filter)
+  def data_contract(self, page, size, filter):
+    return StudyDesignDataContract.read(self.uuid, page, size, filter)
 
 #   def subject_data(self, page, size, filter):
 #     return StudyDesignSubjectData.read(self.uuid, page, size, filter)

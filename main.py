@@ -358,18 +358,16 @@ async def get_study_design_soa(uuid: str):
 #   else:
 #     return study.add_ct_dot_gov_identifier(params.identifier)
 
-
-
-# @app.get("/v1/studyDesigns/{uuid}/dataContract", 
-#   summary="Get the data contract for a study design",
-#   description="Provides the data contract for a given study design.",
-#   response_model=dict)
-# async def get_study_design_data_contract(uuid: str, page: int=0, size: int=0, filter: str=""):
-#   study_design = StudyDesign.find(uuid)
-#   if study_design == None:
-#     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
-#   else:
-#     return study_design.data_contract(page, size, filter)
+@app.get("/v1/studyDesigns/{uuid}/dataContract", 
+  summary="Get the data contract for a study design",
+  description="Provides the data contract for a given study design.",
+  response_model=dict)
+async def get_study_design_data_contract(uuid: str, page: int=0, size: int=0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.data_contract(page, size, filter)
 
 # @app.get("/v1/studyDesigns/{uuid}/sdtmDomains", 
 #   summary="Get the SDTM domains for a study design",
