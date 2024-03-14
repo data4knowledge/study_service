@@ -1,12 +1,14 @@
+import re
 from d4kms_service import Neo4jConnection
 
 class StudyDesignDataContract():
 
   @classmethod
-  def create(cls, name):
+  def create(cls, name, uri_root):
+    name = cls._parse_name(name)
     db = Neo4jConnection()
     with db.session() as session:
-      session.execute_write(cls._set_data_contract, name)
+      session.execute_write(cls._set_data_contract, name, uri_root)
 
   @classmethod
   def read(cls, uuid, page, size, filter):
@@ -49,8 +51,12 @@ class StudyDesignDataContract():
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
 
+  @classmethod
+  def _parse_name(cls, name):
+    return re.sub('[^0-9a-zA-Z]+', '-', name.lower())
+
   @staticmethod
-  def _set_data_contract(tx, name):
+  def _set_data_contract(tx, name, uri_root):
     query= """
       MATCH(Study{name:'%s'})-[:VERSIONS_REL]->(StudyVersion)-[:STUDY_DESIGNS_REL]->(sd:StudyDesign)
       OPTIONAL MATCH (sd)-[:ACTIVITIES_REL]-(act:Activity)

@@ -4,6 +4,7 @@ from d4kms_generic import application_logger
 from .study_file_nodes_and_edges import StudyFileNodesAndEdges
 from service.github_service import GithubService
 from service.aura_service import AuraService
+from service.ra_service import RAService
 from uuid import uuid4
 from usdm_excel import USDMExcel
 from .study_design_data_contract import StudyDesignDataContract
@@ -56,7 +57,7 @@ class StudyFile(BaseNode):
             self.set_status("initialised", "Uploaded file", 0)
             return True
 
-  def execute(self):
+  def execute(self, uri_root):
     try:
 
       self.set_status("running", "Processing excel file", 0)
@@ -88,7 +89,8 @@ class StudyFile(BaseNode):
 
       self.set_status("running", "Creating data contract", 90)
       name = excel.the_study().name
-      StudyDesignDataContract.create(name)
+      ns = RAService().namespace_by_name('d4k Study namespace')
+      StudyDesignDataContract.create(name, ns['value'])
 
       self.set_status("complete", "Finished", 100)
       return True
