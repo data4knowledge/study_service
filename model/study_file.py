@@ -6,6 +6,7 @@ from service.github_service import GithubService
 from service.aura_service import AuraService
 from uuid import uuid4
 from usdm_excel import USDMExcel
+from .study_design_data_contract import StudyDesignDataContract
 
 import os
 import yaml
@@ -84,6 +85,10 @@ class StudyFile(BaseNode):
       files = git.upload_file_list()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
+
+      self.set_status("running", "Creating data contract", 90)
+      name = excel.the_study.name
+      StudyDesignDataContract.create(name)
 
       self.set_status("complete", "Finished", 100)
       return True
