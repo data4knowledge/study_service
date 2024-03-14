@@ -57,7 +57,7 @@ class StudyFile(BaseNode):
             self.set_status("initialised", "Uploaded file", 0)
             return True
 
-  def execute(self, uri_root):
+  def execute(self):
     try:
 
       self.set_status("running", "Processing excel file", 0)

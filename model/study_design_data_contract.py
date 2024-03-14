@@ -5,10 +5,9 @@ class StudyDesignDataContract():
 
   @classmethod
   def create(cls, name, uri_root):
-    name = cls._parse_name(name)
     db = Neo4jConnection()
     with db.session() as session:
-      session.execute_write(cls._set_data_contract, name, uri_root)
+      session.execute_write(cls._set_data_contract, name, cls._parse_name(name), uri_root)
 
   @classmethod
   def read(cls, uuid, page, size, filter):
@@ -56,18 +55,19 @@ class StudyDesignDataContract():
     return re.sub('[^0-9a-zA-Z]+', '-', name.lower())
 
   @staticmethod
-  def _set_data_contract(tx, name, uri_root):
+  def _set_data_contract(tx, name, parsed_name, uri_root):
     query= """
-      MATCH(Study{name:'%s'})-[:VERSIONS_REL]->(StudyVersion)-[:STUDY_DESIGNS_REL]->(sd:StudyDesign)
+      MATCH(s:Study{name:'%s'})-[:VERSIONS_REL]->(StudyVersion)-[:STUDY_DESIGNS_REL]->(sd:StudyDesign)
       OPTIONAL MATCH (sd)-[:ACTIVITIES_REL]-(act:Activity)
       OPTIONAL MATCH (act)<-[:ACTIVITY_REL]-(act_inst:ScheduledActivityInstance)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
       OPTIONAL MATCH (act)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)
       MATCH (bc)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)
-      WITH sd, act, tl, bc, act_inst, bc_prop
-      MERGE (dc:DataContract{uri:'/'+sd.uuid+'/'+bc_prop.uuid+'/'+act_inst.uuid})
+      WITH s, sd, act, tl, bc, act_inst, bc_prop
+      MERGE (dc:DataContract{uri:'%s' + '%s' + '/' + act_inst.uuid + '/' + bc_prop.uuid})
       MERGE (dc)-[:PROPERTIES_REL]->(bc_prop)
       MERGE (dc)-[:INSTANCES_REL]->(act_inst)
-    """ % (name)
+      SET s.uri = '%s' + '%s'
+    """ % (name, uri_root, parsed_name, uri_root, parsed_name)
     results = tx.run(query)
     #for row in results:
     #  return StudyFile.wrap(row['sf'])

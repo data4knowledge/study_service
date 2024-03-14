@@ -8,6 +8,7 @@ from d4kms_service import Neo4jConnection
 from uuid import uuid4
 
 class Study(NodeNameLabelDesc):
+  uri : Union[str, None] = None 
   versions: List[StudyVersion] = []
   documentedBy: Union[StudyProtocolDocument, None] = None
   instanceType: Literal['Study']
