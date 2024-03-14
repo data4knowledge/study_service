@@ -87,7 +87,7 @@ class StudyFile(BaseNode):
       aura.load(self.uuid, files)
 
       self.set_status("running", "Creating data contract", 90)
-      name = excel.the_study.name
+      name = excel.the_study().name
       StudyDesignDataContract.create(name)
 
       self.set_status("complete", "Finished", 100)
