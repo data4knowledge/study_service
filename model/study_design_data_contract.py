@@ -4,7 +4,9 @@ class StudyDesignDataContract():
 
   @classmethod
   def create(cls, uuid):
-    pass
+    db = Neo4jConnection()
+    with db.session() as session:
+      session.execute_write(cls._set_status, self.uuid, status, stage, percentage)
 
   @classmethod
   def read(cls, uuid, page, size, filter):
@@ -46,3 +48,15 @@ class StudyDesignDataContract():
         results.append(final_record)
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
+
+  @staticmethod
+  def _set_data_contract(tx, uuid, status, stage, percentage):
+    query = """
+      MATCH (sf:StudyFile {uuid: $uuid})
+      SET sf.status = $status, sf.stage = $stage, sf.percentage = $percentage
+      RETURN sf
+    """
+    results = tx.run(query, uuid=uuid, status=status, stage=stage, percentage=percentage)
+    for row in results:
+      return StudyFile.wrap(row['sf'])
+    return None
