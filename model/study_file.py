@@ -85,7 +85,7 @@ class StudyFile(BaseNode):
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
 
-      self.set_status("complete", "Finsihed", 100)
+      self.set_status("complete", "Finished", 100)
       return True
 
     except Exception as e:
