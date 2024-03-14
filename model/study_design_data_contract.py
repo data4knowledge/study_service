@@ -54,7 +54,7 @@ class StudyDesignDataContract():
     query= """
       MATCH(Study{name:'%s'})-[:VERSIONS_REL]->(StudyVersion)-[:STUDY_DESIGNS_REL]->(sd:StudyDesign)
       OPTIONAL MATCH (sd)-[:ACTIVITIES_REL]-(act:Activity)
-      OPTIONAL MATCH (act)<-[:ACTIVITIES_REL]-(act_inst:ScheduledActivityInstance)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
+      OPTIONAL MATCH (act)<-[:ACTIVITY_REL]-(act_inst:ScheduledActivityInstance)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
       OPTIONAL MATCH (act)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)
       MATCH (bc)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)
       WITH sd, act, tl, bc, act_inst, bc_prop
