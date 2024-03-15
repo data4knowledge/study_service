@@ -28,7 +28,7 @@ class StudyDesignDataContract():
         OPTIONAL MATCH(bc)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)
         MATCH(dc:DataContract)-[:PROPERTIES_REL]->(bc_prop)
         MATCH(dc)-[:INSTANCES_REL]->(act_inst)
-        MATCH(act_inst)-[:ENCOUNTER_REL]->(e:Encounter)
+        OPTIONAL MATCH(act_inst)-[:ENCOUNTER_REL]->(e:Encounter)
         RETURN COUNT(dc) as count
         """ % (uuid)
       print(f"QUERY 1: {query}")
