@@ -42,13 +42,10 @@ class StudyDesignDataContract():
       #   WITH a.activityName as activity, v.encounterName as visit, bc.name as bc_name, bc.reference_uri as bc_uri, i.name as item, dt.name as data_type, dtp.name as property, dtp.uri as data_uri 
       #   RETURN DISTINCT activity, visit, bc_name, bc_uri, data_uri, item, data_type, property ORDER BY visit, activity, bc_name, item %s""" % (uuid, skip_offset_clause)
       query = """
-        MATCH(sd:StudyDesign {uuid: '%s'})
-        call apoc.cypher.run("MATCH(study:Study{name:$s})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
-        MATCH(sd)-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline) where not (tl)<-[:TIMELINE_REL]-()
+        call apoc.cypher.run("MATCH(sd:StudyDesign{uuid:$s})-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline) where not (tl)<-[:TIMELINE_REL]-()
         MATCH(tl)-[r4:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)-[r5:ACTIVITY_REL]->(act:Activity)-[r6:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)-[r7:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)<-[r8:PROPERTIES_REL]-(dc:DataContract)-[r9:INSTANCES_REL]->(act_inst_main)
         MATCH(tl)-[r11:TIMINGS_REL]->(tpt:Timing)-[r12:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]->(act_inst_main)-[r13:ENCOUNTER_REL]->(e:Encounter)
-        return distinct study, 
-        sd, 
+        return distinct sd, 
         tl, 
         e,
         tpt,
@@ -59,12 +56,10 @@ class StudyDesignDataContract():
         bc_prop,
         dc
               UNION
-        MATCH(study:Study{name:$s})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
-        MATCH(sd)-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline)<-[r4:TIMELINE_REL]-(act_main)<-[r5:ACTIVITY_REL]-(act_inst_main:ScheduledActivityInstance)
+        MATCH(sd:StudyDesign{uuid:$s})-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline)<-[r4:TIMELINE_REL]-(act_main)<-[r5:ACTIVITY_REL]-(act_inst_main:ScheduledActivityInstance)
         MATCH(tl)-[r6:INSTANCES_REL]->(act_inst:ScheduledActivityInstance)-[r7:ACTIVITY_REL]->(act:Activity)-[r8:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)-[r9:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)<-[r10:PROPERTIES_REL]-(dc:DataContract)-[r11:INSTANCES_REL]->(act_inst_main),(tl)-[r12:TIMINGS_REL]->(tpt:Timing)-[r13:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]->(act_inst)<-[:INSTANCES_REL]-(dc)
         MATCH(act_inst_main)-[r14:ENCOUNTER_REL]->(e:Encounter)
-        return distinct study, 
-        sd, 
+        return distinct sd, 
         tl, 
         e,
         tpt,
@@ -73,9 +68,8 @@ class StudyDesignDataContract():
         act_inst,  
         bc,
         bc_prop,
-        dc",{s:%s'}) YIELD value
-        WITH value.study as study, 
-        value.sd as sd, 
+        dc",{s:'%s'}) YIELD value
+        WITH value.sd as sd, 
         value.tl as tl,
         value.e as e,
         value.tpt as tpt, 
@@ -85,7 +79,7 @@ class StudyDesignDataContract():
         value.bc as bc, 
         value.bc_prop as bc_prop, 
         value. dc as dc
-        WITH study,sd,tl,e,tpt,act,act_inst_main,act_inst,bc,bc_prop,dc 
+        WITH sd,tl,e,tpt,act,act_inst_main,act_inst,bc,bc_prop,dc 
           return act.label as activity,
             e.label as visit,
             tpt.value as timepoint,
