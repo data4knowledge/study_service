@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, status, Request, BackgroundTasks
 from model.system import SystemOut
 from model.study_file import StudyFile
+from model.data_file import DataFile
 from model.study import Study
 from model.study_version import StudyVersion
 from model.study_design import StudyDesign
@@ -49,6 +50,9 @@ async def read_root():
 async def delete_clean():
   db = Neo4jConnection()
   db.clear()
+
+# Study Files
+# ===========
 
 @app.post('/v1/studyFiles', 
   summary="Load a study",
@@ -396,19 +400,29 @@ async def get_study_design_data_contract(uuid: str, page: int=0, size: int=0, fi
   description="Upload and process a CSV file loading the data into the database", 
   status_code=status.HTTP_201_CREATED,
   response_model=str)
-async def create_study_file(request: Request, background_tasks: BackgroundTasks):
+async def create_study_data_file(request: Request, background_tasks: BackgroundTasks):
   form = await request.form()
   filename = form['upload_file'].filename
   data_type = form['dataType']
   contents = await form['upload_file'].read()
-  #sf = DataFile()
-  #success = sf.create(filename, contents)
-  #if success:
-    #background_tasks.add_task(sf.execute)
-  from uuid import uuid4
-  return str(uuid4())
-  #else:
-    #raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
+  df = DataFile()
+  success = df.create(filename, contents, data_type)
+  if success:
+    background_tasks.add_task(df.execute)
+    return df.uuid
+  else:
+    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
+
+@app.get("/v1/studyDesigns/{uuid}/dataFiles/{file_uuid}/status", 
+  summary="Get study design data file status",
+  description="Get the status of the processing for a given study desing data file",
+  response_model=dict)
+async def get_study_data_file_status(uuid: str, file_uuid: str):
+  df = DataFile.find(file_uuid)
+  if df:
+    return df.get_status()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design data file cannot be found")
 
 # Timelines
 # =========
