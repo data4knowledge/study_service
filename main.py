@@ -22,7 +22,7 @@ from model.template.template_manager import template_manager
 from d4kms_generic import ServiceEnvironment
 from d4kms_generic import application_logger
 
-VERSION = "0.9"
+VERSION = "0.10"
 SYSTEM_NAME = "d4k Study Microservice"
 
 app = FastAPI(
@@ -390,6 +390,25 @@ async def get_study_design_data_contract(uuid: str, page: int=0, size: int=0, fi
 #     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 #   else:
 #     return study_design.subject_data(page, size, filter)
+
+@app.post('/v1/studyDesigns/{uuid}/dataFiles', 
+  summary="Load study design data",
+  description="Upload and process a CSV file loading the data into the database", 
+  status_code=status.HTTP_201_CREATED,
+  response_model=str)
+async def create_study_file(request: Request, background_tasks: BackgroundTasks):
+  form = await request.form()
+  filename = form['upload_file'].filename
+  data_type = form['dataType']
+  contents = await form['upload_file'].read()
+  #sf = DataFile()
+  #success = sf.create(filename, contents)
+  #if success:
+    #background_tasks.add_task(sf.execute)
+  from uuid import uuid4
+  return str(uuid4())
+  #else:
+    #raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
 
 # Timelines
 # =========
