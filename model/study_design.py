@@ -66,8 +66,8 @@ class StudyDesign(NodeNameLabelDesc):
   def data_contract(self, page, size, filter):
     return StudyDesignDataContract.read(self.uuid, page, size, filter)
 
-#   def subject_data(self, page, size, filter):
-#     return StudyDesignSubjectData.read(self.uuid, page, size, filter)
+  def subject_data(self, page, size, filter):
+    return StudyDesignSubjectData.read(self.uuid, page, size, filter)
 
 #   def sdtm_domains(self, page, size, filter):
 #     return StudyDesignSDTM.domains(self.uuid, page, size, filter)
