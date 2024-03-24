@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, status, Request, BackgroundTasks
+from model.crm import CRM
 from model.system import SystemOut
 from model.study_file import StudyFile
 from model.study import Study
@@ -46,9 +47,11 @@ async def read_root():
   summary="Delete database",
   description="Deletes the entire database.",
   status_code=204)
-async def delete_clean():
+async def delete_clean(background_tasks: BackgroundTasks):
   db = Neo4jConnection()
   db.clear()
+  crm = CRM()
+  background_tasks.add_task(crm.execute)
 
 @app.post('/v1/studyFiles', 
   summary="Load a study",
