@@ -1,14 +1,18 @@
+from uuid import uuid4
 from d4kms_service import Neo4jConnection
 from model.study_domain_instance import StudyDomainInstance
-from model.biomedical_concept import BiomedicalConcept
+from model.domain import Domain
+from model.variable import Variable
 from service.bc_service import BCService
+from service.sdtm_service import SDTMService
 
 class StudyDesignSDTM():
 
   @classmethod
-  async def create(cls, uuid):
+  async def create(cls, study_design):
     domains = {}
     bc_service = BCService()
+    sdtm_service = SDTMService()
     sdtm_bcs = await bc_service.biomedical_concepts('sdtm', 1, 1000)
     #print(f"BCS: {sdtm_bcs}")
     db = Neo4jConnection()
@@ -16,7 +20,7 @@ class StudyDesignSDTM():
       results = []
       query = """
         MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept) RETURN DISTINCT bc.name as name
-      """ % (uuid)
+      """ % (study_design.uuid)
       result = session.run(query)
       results = []
       for record in result:
@@ -32,7 +36,30 @@ class StudyDesignSDTM():
             if domain not in domains:
               domains[domain] = []
             domains[domain].append(name)
-          #print(f"RESPONSE: {response}")
+      domains_metadata = await sdtm_service.domains(1,100)
+      #print(f"DOMAINS: {domains_metadata}")
+      for domain, bcs in domains.items():
+        domain_metadata = next((item for item in domains_metadata['items'] if item["name"] == domain), None)
+        if domain_metadata:
+          domain_metadata = await sdtm_service.domain(domain_metadata['uuid'])
+          domain_metadata.pop('identified_by')
+          domain_metadata.pop('has_status')
+          domain_metadata.pop('bc_references')
+          variables = domain_metadata.pop('items')
+          domain_metadata['uuid'] = uuid4()
+          d = Domain.create(domain_metadata)
+          study_design.relationship(d, 'DOMAIN_REL')            
+          for variable in variables:
+            print(f"VAR: {variable}")
+            variable.pop('bc_references')
+            crm = variable.pop('crm_references')
+            #variable['crm_uri'] = crm['uri_reference'] if crm else ''
+            # ----- Temporary fix
+            variable['description'] = variable['description'].replace("'", "")
+            # -----
+            variable['uuid'] = uuid4()
+            v = Variable.create(variable)
+            d.relationship(v, 'VARIABLE_REL')            
     return {'results': domains}
   
   @classmethod

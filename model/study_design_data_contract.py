@@ -153,6 +153,7 @@ class StudyDesignDataContract():
             MERGE (dc)-[:INSTANCES_REL]->(act_inst_main)
             SET study.uri = '%s' + '%s'
     """ % (name, uri_root, parsed_name, uri_root, parsed_name)
+    print(f"SDC QUERY: {query}")
     results = tx.run(query)
     #for row in results:
     #  return StudyFile.wrap(row['sf'])

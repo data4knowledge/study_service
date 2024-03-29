@@ -54,6 +54,16 @@ async def delete_clean(background_tasks: BackgroundTasks):
   crm = CRM()
   background_tasks.add_task(crm.execute)
 
+@app.get("/test/{uuid}", 
+  response_model=dict)
+async def test(request: Request, uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    from model.study_design_sdtm import StudyDesignSDTM
+    return await StudyDesignSDTM.create(study_design)
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")  
+
 # Study Files
 # ===========
 
