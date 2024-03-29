@@ -57,9 +57,7 @@ class AuraService():
   def load_identifiers(self, dir, filename):
     try:
       session = self.driver.session(database=self.database)
-      print("Going to import subject and site with filename:",filename)
       file_path = os.path.join(self.project_root, dir, filename)
-      print("file_path:",file_path)
       query = f"""
           LOAD CSV WITH HEADERS FROM '{file_path}' AS site_row
           MATCH (design:StudyDesign {{name:'Study Design 1'}})
@@ -85,9 +83,7 @@ class AuraService():
   def load_datapoints(self, dir, filename):
     try:
       session = self.driver.session(database=self.database)
-      print("Going to import subject datapoints with filename:",filename)
       file_path = os.path.join(self.project_root, dir, filename)
-      print("file_path:",file_path)
       query = f"""
           LOAD CSV WITH HEADERS FROM '{file_path}' AS data_row
           MATCH (dc:DataContract {{uri:data_row['DC_URI']}})
@@ -98,12 +94,10 @@ class AuraService():
           MERGE (d)-[:FOR_SUBJECT_REL]->(s)
           RETURN count(*) as count
       """
-      application_logger.debug(f"QUERY: {query}")
+      # application_logger.debug(f"QUERY: {query}")
       result = session.run(query)
-      print("result",result)
       for record in result:
         return_value = {'datapoints': record['count']}
-      print("return_value",return_value)
       self.driver.close()
       application_logger.info(f"Loaded Aura, details: {return_value}")
       return True
