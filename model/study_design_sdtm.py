@@ -9,11 +9,11 @@ from service.sdtm_service import SDTMService
 class StudyDesignSDTM():
 
   @classmethod
-  async def create(cls, study_design):
+  def create(cls, study_design):
     domains = {}
     bc_service = BCService()
     sdtm_service = SDTMService()
-    sdtm_bcs = await bc_service.biomedical_concepts('sdtm', 1, 1000)
+    sdtm_bcs = bc_service.biomedical_concepts('sdtm', 1, 1000)
     #print(f"BCS: {sdtm_bcs}")
     db = Neo4jConnection()
     with db.session() as session:
@@ -30,18 +30,18 @@ class StudyDesignSDTM():
         if bc:
           #print(f"RESULTS: {bc}")
           uuid = bc['uuid']
-          response = await bc_service.biomedical_concept('sdtm', uuid)
+          response = bc_service.biomedical_concept('sdtm', uuid)
           if 'domain' in response:
             domain = response['domain']
             if domain not in domains:
               domains[domain] = []
             domains[domain].append(name)
-      domains_metadata = await sdtm_service.domains(1,100)
+      domains_metadata = sdtm_service.domains(1,100)
       #print(f"DOMAINS: {domains_metadata}")
       for domain, bcs in domains.items():
         domain_metadata = next((item for item in domains_metadata['items'] if item["name"] == domain), None)
         if domain_metadata:
-          domain_metadata = await sdtm_service.domain(domain_metadata['uuid'])
+          domain_metadata = sdtm_service.domain(domain_metadata['uuid'])
           domain_metadata.pop('identified_by')
           domain_metadata.pop('has_status')
           domain_metadata.pop('bc_references')
@@ -62,40 +62,40 @@ class StudyDesignSDTM():
             d.relationship(v, 'VARIABLE_REL')            
     return {'results': domains}
   
-  @classmethod
-  def domains(cls, uuid, page, size, filter):
-    skip_offset_clause = ""
-    if page != 0:
-      offset = (page - 1) * size
-      skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[]->(d:StudyDomainInstance) RETURN COUNT(d) AS count
-      """ % (uuid)
-      result = session.run(query)
-      count = 0
-      for record in result:
-        count = record['count']
-      query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[]->(d:StudyDomainInstance) RETURN d
-        ORDER BY d.name %s
-      """ % (uuid, skip_offset_clause)
-      #print(query)
-      result = session.run(query)
-      results = []
-      for record in result:
-        results.append(StudyDomainInstance.wrap(record['d']).__dict__)
-    result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
-    return result
+  # @classmethod
+  # def domains(cls, uuid, page, size, filter):
+  #   skip_offset_clause = ""
+  #   if page != 0:
+  #     offset = (page - 1) * size
+  #     skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     query = """
+  #       MATCH (sd:StudyDesign {uuid: '%s'})-[]->(d:StudyDomainInstance) RETURN COUNT(d) AS count
+  #     """ % (uuid)
+  #     result = session.run(query)
+  #     count = 0
+  #     for record in result:
+  #       count = record['count']
+  #     query = """
+  #       MATCH (sd:StudyDesign {uuid: '%s'})-[]->(d:StudyDomainInstance) RETURN d
+  #       ORDER BY d.name %s
+  #     """ % (uuid, skip_offset_clause)
+  #     #print(query)
+  #     result = session.run(query)
+  #     results = []
+  #     for record in result:
+  #       results.append(StudyDomainInstance.wrap(record['d']).__dict__)
+  #   result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
+  #   return result
 
-  @classmethod
-  def domain(cls, uuid):
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (d:StudyDomainInstance {uuid: '%s'}) RETURN d
-      """ % (uuid)
-      result = session.run(query)
-      for record in result:
-        print("DOMAIN:", record['d']['name'])
+  # @classmethod
+  # def domain(cls, uuid):
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     query = """
+  #       MATCH (d:StudyDomainInstance {uuid: '%s'}) RETURN d
+  #     """ % (uuid)
+  #     result = session.run(query)
+  #     for record in result:
+  #       print("DOMAIN:", record['d']['name'])

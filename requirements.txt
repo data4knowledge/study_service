@@ -12,4 +12,3 @@ pygithub
 stringcase
 pyyaml
 d4kms
-httpx
