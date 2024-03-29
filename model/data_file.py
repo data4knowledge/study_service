@@ -69,45 +69,39 @@ class DataFile(BaseNode):
       # -----------
       self.set_status("running", "Uploading to github", 15)
       git = GithubService()
-      print("self.dir_path",self.dir_path)
       file_count = git.file_list(self.dir_path, self.filename)
-      print("file_count",file_count)
-      print("git.files",git.files)
       for index in range(file_count):
-        print("index",index)
         more = git.next()
         count = git.progress()
         percent = 15 + int(65.0 * (float(count) / float(file_count)))
         self.set_status("running", "Uploading to github", percent)
       git.load()
 
-      # self.set_status("running", "Loading database", 80)
+      self.set_status("running", "Loading database", 80)
       aura = AuraService()
       files = git.upload_file_list()
-      print("files",files)
+      application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       sv = ServiceEnvironment()
       project_root = sv.get("GITHUB_BASE")
-      print("project_root",project_root)
       for git_filename in files:
-        print("git_filename",git_filename)
         file_path = os.path.join(project_root, self.dir_path, git_filename)
-        print("file_path",file_path)
-
         if self.data_type == 'identifier':
           try:
-            aura.load_identifiers(self.dir_path,git_filename)
-            # session.execute_write(self._load_identifiers, file_path)
+            # aura.load_identifiers(self.dir_path,git_filename)
+            aura.load_identifiers(self.uuid,git_filename)
           except Exception as e:
             self.error = f"Couldn't load file"
             application_logger.exception(self.error, e)
             return False
-        # elif self.data_type == 'subject': 
-        #   try:
-        #     session.execute_write(self._load_data, file_path)
-        #   except Exception as e:
-        #     self.error = f"Couldn't load file"
-        #     application_logger.exception(self.error, e)
-        #     return False
+        elif self.data_type == 'subject': 
+          try:
+            print("loading datapoints")
+            aura.load_datapoints(self.uuid,git_filename)
+            print("datapoints loaded")
+          except Exception as e:
+            self.error = f"Couldn't load file"
+            application_logger.exception(self.error, e)
+            return False
         else:
           print("DataFile.execute: Unknown data_type")
 
