@@ -1,12 +1,40 @@
 from d4kms_service import Neo4jConnection
 from model.study_domain_instance import StudyDomainInstance
+from model.biomedical_concept import BiomedicalConcept
+from service.bc_service import BCService
 
 class StudyDesignSDTM():
 
   @classmethod
-  def create(cls, uuid):
-    pass
-
+  async def create(cls, uuid):
+    domains = {}
+    bc_service = BCService()
+    sdtm_bcs = await bc_service.biomedical_concepts('sdtm', 1, 1000)
+    #print(f"BCS: {sdtm_bcs}")
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept) RETURN DISTINCT bc.name as name
+      """ % (uuid)
+      result = session.run(query)
+      results = []
+      for record in result:
+        results.append(record['name'])
+      for name in results:
+        bc = next((item for item in sdtm_bcs['items'] if item["name"] == name), None)
+        if bc:
+          #print(f"RESULTS: {bc}")
+          uuid = bc['uuid']
+          response = await bc_service.biomedical_concept('sdtm', uuid)
+          if 'domain' in response:
+            domain = response['domain']
+            if domain not in domains:
+              domains[domain] = []
+            domains[domain].append(name)
+          #print(f"RESPONSE: {response}")
+    return {'results': domains}
+  
   @classmethod
   def domains(cls, uuid, page, size, filter):
     skip_offset_clause = ""
