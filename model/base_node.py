@@ -91,6 +91,19 @@ class BaseNode(Node):
         return result['a']
       return None
 
+  def relationship(self, to, relationship):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (a {uuid: '%s'}), (b {uuid: '%s'})
+        MERGE (a)-[:%s]->(b)
+        RETURN a
+      """ % (self.uuid, to.uuid, relationship)
+      query_results = session.run(query)
+      for result in query_results:
+        return result['a']
+      return None
+
 class NodeId(BaseNode):
   id: str
 

@@ -69,8 +69,8 @@ class StudyDesign(NodeNameLabelDesc):
   def subject_data(self, page, size, filter):
     return StudyDesignSubjectData.read(self.uuid, page, size, filter)
 
-#   def sdtm_domains(self, page, size, filter):
-#     return StudyDesignSDTM.domains(self.uuid, page, size, filter)
+  def sdtm_domains(self, page, size, filter):
+    return StudyDesignSDTM.domains(self.uuid, page, size, filter)
 
 #   @staticmethod
 #   def _create_workflow(tx, uuid, name, description):
