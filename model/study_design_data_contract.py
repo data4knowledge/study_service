@@ -31,7 +31,7 @@ class StudyDesignDataContract():
         OPTIONAL MATCH(act_inst)-[:ENCOUNTER_REL]->(e:Encounter)
         RETURN COUNT(dc) as count
         """ % (uuid)
-      print(f"QUERY 1: {query}")
+      #print(f"QUERY 1: {query}")
       result = session.run(query)
       count = 0
       for record in result:
@@ -88,7 +88,7 @@ class StudyDesignDataContract():
             tl.name as timeline,
             dc.uri as uri order by toInteger(substring(e.name,1)), activity, bc_name, property %s 
         """ % (uuid, skip_offset_clause)
-      print(f"QUERY 2: {query}")
+      #print(f"QUERY 2: {query}")
       result = session.run(query)
       results = []
       for record in result:
