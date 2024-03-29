@@ -74,6 +74,7 @@ class DataFile(BaseNode):
       print("file_count",file_count)
       print("git.files",git.files)
       for index in range(file_count):
+        print("index",index)
         more = git.next()
         count = git.progress()
         percent = 15 + int(65.0 * (float(count) / float(file_count)))
@@ -88,33 +89,32 @@ class DataFile(BaseNode):
       project_root = sv.get("GITHUB_BASE")
       print("project_root",project_root)
       for git_filename in files:
+        print("git_filename",git_filename)
         file_path = os.path.join(project_root, self.dir_path, git_filename)
         print("file_path",file_path)
 
-        db = Neo4jConnection()
-        with db.session() as session:
-
-          if self.data_type == 'identifier':
-            try:
-              session.execute_write(self._load_identifiers, file_path)
-            except Exception as e:
-              self.error = f"Couldn't load file"
-              application_logger.exception(self.error, e)
-              return False
-          elif self.data_type == 'subject': 
-            try:
-              session.execute_write(self._load_data, file_path)
-            except Exception as e:
-              self.error = f"Couldn't load file"
-              application_logger.exception(self.error, e)
-              return False
-          else:
-            print("DataFile.execute: Unknown data_type")
+        if self.data_type == 'identifier':
+          try:
+            aura.load_identifiers(self.dir_path,git_filename)
+            # session.execute_write(self._load_identifiers, file_path)
+          except Exception as e:
+            self.error = f"Couldn't load file"
+            application_logger.exception(self.error, e)
+            return False
+        # elif self.data_type == 'subject': 
+        #   try:
+        #     session.execute_write(self._load_data, file_path)
+        #   except Exception as e:
+        #     self.error = f"Couldn't load file"
+        #     application_logger.exception(self.error, e)
+        #     return False
+        else:
+          print("DataFile.execute: Unknown data_type")
 
       self.set_status("complete", "Finished", 100)
       return True
     except Exception as e:
-      self.error = f"Failed to process and load study. Was {self.status}"
+      self.error = f"Failed to process and load datapoints/identifiers. Was {self.status}"
       application_logger.exception(self.error, e)
       return False
 
