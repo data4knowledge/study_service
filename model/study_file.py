@@ -92,7 +92,7 @@ class StudyFile(BaseNode):
       self.set_status("running", "Creating data contract", 80)
       name = study.name
       ns = RAService().namespace_by_name('d4k Study namespace')
-      #StudyDesignDataContract.create(name, ns['value'])
+      StudyDesignDataContract.create(name, ns['value'])
 
       self.set_status("running", "Adding SDTM domains", 90)
       study_design = study.versions[0].studyDesigns[0]
