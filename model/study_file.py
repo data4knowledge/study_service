@@ -97,7 +97,7 @@ class StudyFile(BaseNode):
       self.set_status("running", "Adding SDTM domains", 90)
       study_design = study.versions[0].studyDesigns[0]
       print(f"SD: {study_design}")
-      result = StudyDesignSDTM.create(study_design)
+      result = StudyDesignSDTM.create(study_design.name)
 
       self.set_status("complete", "Finished", 100)
       return True
