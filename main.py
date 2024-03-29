@@ -13,7 +13,7 @@ from model.activity import Activity
 from model.study_protocol_document_version import StudyProtocolDocumentVersion, SPDVBackground
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
-# from model.study_domain_instance import StudyDomainInstance
+from model.domain import Domain
 # from model.activity import Activity, ActivityIn
 # from model.study_epoch import StudyEpoch, StudyEpochIn
 # from model.study_arm import StudyArm, StudyArmIn
@@ -617,15 +617,15 @@ async def find_activity_study_data(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested activity cannot be found")
 
-# # Domains
-# # =======
+# Domains
+# =======
 
-# @app.get("/v1/domains/{uuid}", 
-#   summary="Returns an SDTM domain",
-#   description="Returns the SDTM.")
-# async def find_domain(uuid: str):
-#   item = StudyDomainInstance.find(uuid)
-#   if item == None:
-#     raise HTTPException(status_code=404, detail="The requested domain cannot be found")
-#   else:
-#     return item.data()
+@app.get("/v1/domains/{uuid}", 
+  summary="Returns an SDTM domain",
+  description="Returns the SDTM.")
+async def find_domain(uuid: str):
+  item = Domain.find(uuid)
+  if item:
+    return item.data()
+  else:
+    raise HTTPException(status_code=404, detail="The requested domain cannot be found")
