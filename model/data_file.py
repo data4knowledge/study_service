@@ -2,7 +2,10 @@ import os
 from .base_node import BaseNode
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
+from d4kms_generic import ServiceEnvironment
 from uuid import uuid4
+from service.github_service import GithubService
+from service.aura_service import AuraService
 
 class DataFile(BaseNode):
   uuid: str = ""
@@ -64,36 +67,46 @@ class DataFile(BaseNode):
       #   self.set_status("running", "Processing CSV file", count)
       #   time.sleep(1)
       # -----------
-      self.set_status("complete", "Finished", 100)
+      self.set_status("running", "Uploading to github", 15)
+      git = GithubService()
+      file_count = git.file_list(self.dir_path, self.filename)
+      for index in range(file_count):
+        more = git.next()
+        count = git.progress()
+        percent = 15 + int(65.0 * (float(count) / float(file_count)))
+        self.set_status("running", "Uploading to github", percent)
+      git.load()
 
-      db = Neo4jConnection()
-      with db.session() as session:
-        import_directory = session.execute_read(self._get_import_directory)
-        self._copy_file_to_db_import(os.path.join(os.getcwd(),self.full_path),import_directory)
-
+      self.set_status("running", "Loading database", 80)
+      aura = AuraService()
+      files = git.upload_file_list()
+      application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
+      sv = ServiceEnvironment()
+      project_root = sv.get("GITHUB_BASE")
+      for git_filename in files:
+        file_path = os.path.join(project_root, self.dir_path, git_filename)
         if self.data_type == 'identifier':
           try:
-            session.execute_write(self._load_identifiers, self.filename)
+            # aura.load_identifiers(self.dir_path,git_filename)
+            aura.load_identifiers(self.uuid,git_filename)
           except Exception as e:
             self.error = f"Couldn't load file"
             application_logger.exception(self.error, e)
-            application_logger.exception(self.error, "Babaloo")
             return False
         elif self.data_type == 'subject': 
           try:
-            session.execute_write(self._load_data, self.filename)
+            aura.load_datapoints(self.uuid,git_filename)
           except Exception as e:
             self.error = f"Couldn't load file"
             application_logger.exception(self.error, e)
-            application_logger.exception(self.error, "Babaloo")
             return False
         else:
-          print("DataFile.execute: Unknown data_type")
+          application_logger.info(f"DataFile.execute: Unknown data_type: {self.data_type}")
 
       self.set_status("complete", "Finished", 100)
       return True
     except Exception as e:
-      self.error = f"Failed to process and load study. Was {self.status}"
+      self.error = f"Failed to process and load datapoints/identifiers. Was {self.status}"
       application_logger.exception(self.error, e)
       return False
 

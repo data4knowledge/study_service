@@ -53,3 +53,55 @@ class AuraService():
       application_logger.error(f"Exception raised while uploading to Aura database")
       application_logger.error(f"Exception {e}\n{traceback.format_exc()}")
       raise self.UploadFail
+
+  def load_identifiers(self, dir, filename):
+    try:
+      session = self.driver.session(database=self.database)
+      file_path = os.path.join(self.project_root, dir, filename)
+      query = f"""
+          LOAD CSV WITH HEADERS FROM '{file_path}' AS site_row
+          MATCH (design:StudyDesign {{name:'Study Design 1'}})
+          MERGE (s:Subject {{identifier:site_row['USUBJID']}})
+          MERGE (site:StudySite {{name:site_row['SITEID']}})
+          MERGE (s)-[:ENROLLED_AT_SITE_REL]->(site)
+          MERGE (site)<-[:MANAGES_SITE]-(researchOrg)
+          MERGE (researchOrg)<-[:ORGANIZATIONS_REL]-(design)
+          RETURN count(*) as count
+      """
+      application_logger.debug(f"QUERY: {query}")
+      result = session.run(query)
+      for record in result:
+        return_value = {'subjects': record['count']}
+      self.driver.close()
+      application_logger.info(f"Loaded Aura, details: {return_value}")
+      return True
+    except Exception as e:
+      application_logger.error(f"Exception raised while uploading to Aura database")
+      application_logger.error(f"Exception {e}\n{traceback.format_exc()}")
+      raise self.UploadFail
+
+  def load_datapoints(self, dir, filename):
+    try:
+      session = self.driver.session(database=self.database)
+      file_path = os.path.join(self.project_root, dir, filename)
+      query = f"""
+          LOAD CSV WITH HEADERS FROM '{file_path}' AS data_row
+          MATCH (dc:DataContract {{uri:data_row['DC_URI']}})
+          MATCH (design:StudyDesign {{name:'Study Design 1'}})
+          MERGE (d:DataPoint {{uri: data_row['DATAPOINT_URI'], value: data_row['VALUE']}})
+          MERGE (s:Subject {{identifier:data_row['USUBJID']}})
+          MERGE (dc)<-[:FOR_DC_REL]-(d)
+          MERGE (d)-[:FOR_SUBJECT_REL]->(s)
+          RETURN count(*) as count
+      """
+      # application_logger.debug(f"QUERY: {query}")
+      result = session.run(query)
+      for record in result:
+        return_value = {'datapoints': record['count']}
+      self.driver.close()
+      application_logger.info(f"Loaded Aura, details: {return_value}")
+      return True
+    except Exception as e:
+      application_logger.error(f"Exception raised while uploading to Aura database")
+      application_logger.error(f"Exception {e}\n{traceback.format_exc()}")
+      raise self.UploadFail
