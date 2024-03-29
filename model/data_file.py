@@ -2,7 +2,10 @@ import os
 from .base_node import BaseNode
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
+from d4kms_generic import ServiceEnvironment
 from uuid import uuid4
+from service.github_service import GithubService
+from service.aura_service import AuraService
 
 class DataFile(BaseNode):
   uuid: str = ""
@@ -64,31 +67,49 @@ class DataFile(BaseNode):
       #   self.set_status("running", "Processing CSV file", count)
       #   time.sleep(1)
       # -----------
-      self.set_status("complete", "Finished", 100)
+      self.set_status("running", "Uploading to github", 15)
+      git = GithubService()
+      print("self.dir_path",self.dir_path)
+      file_count = git.file_list(self.dir_path, self.filename)
+      print("file_count",file_count)
+      print("git.files",git.files)
+      for index in range(file_count):
+        more = git.next()
+        count = git.progress()
+        percent = 15 + int(65.0 * (float(count) / float(file_count)))
+        self.set_status("running", "Uploading to github", percent)
+      git.load()
 
-      db = Neo4jConnection()
-      with db.session() as session:
-        import_directory = session.execute_read(self._get_import_directory)
-        self._copy_file_to_db_import(os.path.join(os.getcwd(),self.full_path),import_directory)
+      # self.set_status("running", "Loading database", 80)
+      aura = AuraService()
+      files = git.upload_file_list()
+      print("files",files)
+      sv = ServiceEnvironment()
+      project_root = sv.get("GITHUB_BASE")
+      print("project_root",project_root)
+      for git_filename in files:
+        file_path = os.path.join(project_root, self.dir_path, git_filename)
+        print("file_path",file_path)
 
-        if self.data_type == 'identifier':
-          try:
-            session.execute_write(self._load_identifiers, self.filename)
-          except Exception as e:
-            self.error = f"Couldn't load file"
-            application_logger.exception(self.error, e)
-            application_logger.exception(self.error, "Babaloo")
-            return False
-        elif self.data_type == 'subject': 
-          try:
-            session.execute_write(self._load_data, self.filename)
-          except Exception as e:
-            self.error = f"Couldn't load file"
-            application_logger.exception(self.error, e)
-            application_logger.exception(self.error, "Babaloo")
-            return False
-        else:
-          print("DataFile.execute: Unknown data_type")
+        db = Neo4jConnection()
+        with db.session() as session:
+
+          if self.data_type == 'identifier':
+            try:
+              session.execute_write(self._load_identifiers, file_path)
+            except Exception as e:
+              self.error = f"Couldn't load file"
+              application_logger.exception(self.error, e)
+              return False
+          elif self.data_type == 'subject': 
+            try:
+              session.execute_write(self._load_data, file_path)
+            except Exception as e:
+              self.error = f"Couldn't load file"
+              application_logger.exception(self.error, e)
+              return False
+          else:
+            print("DataFile.execute: Unknown data_type")
 
       self.set_status("complete", "Finished", 100)
       return True
@@ -136,17 +157,6 @@ class DataFile(BaseNode):
   @staticmethod
   def _load_identifiers(tx, filename):
     print("Going to import subject and site with filename:",filename)
-    query = """
-        LOAD CSV WITH HEADERS FROM 'file:///$filename' AS site_row
-        MATCH (design:StudyDesign {name:'Study Design 1'})
-        MERGE (s:Subject {identifier:site_row['USUBJID']})
-        MERGE (site:StudySite {name:site_row['SITEID']})
-        MERGE (s)-[:ENROLLED_AT_SITE_REL]->(site)
-        MERGE (site)<-[:MANAGES_SITE]-(researchOrg)
-        MERGE (researchOrg)<-[:ORGANIZATIONS_REL]-(design)
-        RETURN count(*)
-    """
-    # results = tx.run(query,filename=filename)
     query = f"""
         LOAD CSV WITH HEADERS FROM 'file:///{filename}' AS site_row
         MATCH (design:StudyDesign {{name:'Study Design 1'}})
@@ -157,6 +167,7 @@ class DataFile(BaseNode):
         MERGE (researchOrg)<-[:ORGANIZATIONS_REL]-(design)
         RETURN count(*)
     """
+    print("query",query)
     results = tx.run(query)
     data = [x.data() for x in results]
     print("---data",data)
