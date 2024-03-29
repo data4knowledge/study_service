@@ -42,7 +42,7 @@ class AuraService():
         else:
           relationships.append("{ fileName: '%s', type: '%s' }" % (file_item["filename"], file_item["type"]) )
       query = """CALL apoc.import.csv( [%s], [%s], {stringIds: true})""" % (", ".join(nodes), ", ".join(relationships))
-      application_logger.debug(f"QUERY: {query}")
+      #application_logger.debug(f"QUERY: {query}")
       result = session.run(query)
       for record in result:
         return_value = {'nodes': record['nodes'], 'relationships': record['relationships'], 'time': record['time']}
@@ -94,7 +94,7 @@ class AuraService():
           MERGE (d)-[:FOR_SUBJECT_REL]->(s)
           RETURN count(*) as count
       """
-      # application_logger.debug(f"QUERY: {query}")
+      application_logger.debug(f"QUERY: {query}")
       result = session.run(query)
       for record in result:
         return_value = {'datapoints': record['count']}

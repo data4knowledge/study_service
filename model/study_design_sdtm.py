@@ -15,9 +15,9 @@ class StudyDesignSDTM():
     sdtm_bcs = bc_service.biomedical_concepts('sdtm', 1, 1000)
     #print(f"BCS: {sdtm_bcs}")
     study_design = cls._get_study_design(name)
-    print(f"SD: {study_design.uuid}")
+    #print(f"SD: {study_design.uuid}")
     results = cls._get_bcs(study_design)
-    print(f"BCs: {results}")
+    #print(f"BCs: {results}")
     for name in results:
       bc = next((item for item in sdtm_bcs['items'] if item["name"] == name), None)
       if bc:
