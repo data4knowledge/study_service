@@ -20,9 +20,9 @@ class StudyDesignBC():
       vars = node.sdtm.split(',')
       for var in vars:
         crm_map[var] = node
-    print(f"MAP {crm_map}")
+    #print(f"MAP {crm_map}")
     for p in properties:
-      print(f"P: {p.name}")
+      #print(f"P: {p.name}")
       node = cls._match(p.name, crm_map)
       if node:
         p.relationship(node, 'IS_A_REL')                
@@ -35,10 +35,10 @@ class StudyDesignBC():
     generic_name = f"--{name[2:]}"
     #print(f"Match {name} {generic_name}")
     if name in map.keys():
-      print(f"Matched full {map[name].uri}")
+      #print(f"Matched full {map[name].uri}")
       return map[name]
     elif generic_name in map.keys():
-      print(f"Matched generic {map[generic_name].uri}")
+      #print(f"Matched generic {map[generic_name].uri}")
       return map[generic_name]
     return None
 
