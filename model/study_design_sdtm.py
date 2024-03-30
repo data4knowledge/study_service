@@ -1,5 +1,6 @@
 from uuid import uuid4
 from d4kms_service import Neo4jConnection
+from d4kms_generic import application_logger
 from model.domain import Domain
 from model.variable import Variable
 from service.bc_service import BCService
@@ -10,13 +11,13 @@ class StudyDesignSDTM():
 
   @classmethod
   def create(cls, name):
-    domains = {}
+    domains = {'DM': ['Age', 'Sex', 'Race', 'Ethnic']} # Need to fix that DM BCs have no SDTM representation yet.
     bc_service = BCService()
     sdtm_service = SDTMService()
     sdtm_bcs = bc_service.biomedical_concepts('sdtm', 1, 1000)
     #print(f"BCS: {sdtm_bcs}")
     crm_nodes = cls._get_crm()
-    print(f"CRM: {crm_nodes}")
+    #print(f"CRM: {crm_nodes}")
     study_design = cls._get_study_design(name)
     #print(f"SD: {study_design.uuid}")
     results = cls._get_bcs(study_design)
@@ -30,6 +31,7 @@ class StudyDesignSDTM():
         if 'domain' in response:
           domain = response['domain']
           if domain not in domains:
+            application_logger.info(f"Adding domain to load set '{domain}'")
             domains[domain] = []
           domains[domain].append(name)
     domains_metadata = sdtm_service.domains(1,100)
@@ -37,6 +39,7 @@ class StudyDesignSDTM():
     for domain, bcs in domains.items():
       domain_metadata = next((item for item in domains_metadata['items'] if item["name"] == domain), None)
       if domain_metadata:
+        application_logger.info(f"Processing domain '{domain}'")
         domain_metadata = sdtm_service.domain(domain_metadata['uuid'])
         domain_metadata.pop('identified_by')
         domain_metadata.pop('has_status')
@@ -46,7 +49,7 @@ class StudyDesignSDTM():
         d = Domain.create(domain_metadata)
         study_design.relationship(d, 'DOMAIN_REL')            
         for variable in variables:
-          print(f"VAR: {variable}")
+          #print(f"VAR: {variable}")
           variable.pop('bc_references')
           crm_references = variable.pop('crm_references')
           # ----- Temporary fix
@@ -56,11 +59,11 @@ class StudyDesignSDTM():
           v = Variable.create(variable)
           d.relationship(v, 'VARIABLE_REL')            
           for ref in crm_references:
-            print(f"CRM REF: {ref}")
-            if ref in crm_nodes:
-              c = crm_nodes[ref]
+            #print(f"CRM REF: {ref}")
+            if ref['uri_reference'] in crm_nodes:
+              c = crm_nodes[ref['uri_reference']]
               v.relationship(c, 'IS_A_REL')                
-              print(f"CRM REF: {v.name} -> {ref}")
+              application_logger.info(f"Created CRM reference for variable '{v.name}' -> '{ref}'")
     return {'results': domains}
   
   @classmethod
