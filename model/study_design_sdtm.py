@@ -4,6 +4,7 @@ from model.domain import Domain
 from model.variable import Variable
 from service.bc_service import BCService
 from service.sdtm_service import SDTMService
+from model.crm import CRMNode
 
 class StudyDesignSDTM():
 
@@ -14,6 +15,8 @@ class StudyDesignSDTM():
     sdtm_service = SDTMService()
     sdtm_bcs = bc_service.biomedical_concepts('sdtm', 1, 1000)
     #print(f"BCS: {sdtm_bcs}")
+    crm_nodes = cls._get_crm()
+    print(f"CRM: {crm_nodes}")
     study_design = cls._get_study_design(name)
     #print(f"SD: {study_design.uuid}")
     results = cls._get_bcs(study_design)
@@ -45,14 +48,19 @@ class StudyDesignSDTM():
         for variable in variables:
           print(f"VAR: {variable}")
           variable.pop('bc_references')
-          crm = variable.pop('crm_references')
-          #variable['crm_uri'] = crm['uri_reference'] if crm else ''
+          crm_references = variable.pop('crm_references')
           # ----- Temporary fix
           variable['description'] = variable['description'].replace("'", "")
           # -----
           variable['uuid'] = uuid4()
           v = Variable.create(variable)
           d.relationship(v, 'VARIABLE_REL')            
+          for ref in crm_references:
+            print(f"CRM REF: {ref}")
+            if ref in crm_nodes:
+              c = crm_nodes[ref]
+              v.relationship(c, 'IS_A_REL')                
+              print(f"CRM REF: {v.name} -> {ref}")
     return {'results': domains}
   
   @classmethod
@@ -119,4 +127,18 @@ class StudyDesignSDTM():
       result = session.run(query)
       for record in result:
         results.append(record['name'])
+      return results
+
+  @staticmethod
+  def _get_crm():
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = {}
+      query = """
+        MATCH (n:CRMNode) return n
+      """ 
+      records = session.run(query)
+      for record in records:
+        crm_node = CRMNode.wrap(record['n'])
+        results[crm_node.uri] = crm_node
       return results
