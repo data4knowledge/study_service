@@ -81,25 +81,25 @@ class StudyFile(BaseNode):
       for index in range(file_count):
         more = git.next()
         count = git.progress()
-        percent = 15 + int(55.0 * (float(count) / float(file_count)))
+        percent = 15 + int(50.0 * (float(count) / float(file_count)))
         self.set_status("running", "Uploading to github", percent)
       git.load()
 
-      self.set_status("running", "Loading database", 70)
+      self.set_status("running", "Loading database", 65)
       aura = AuraService()
       files = git.upload_file_list()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
 
-      self.set_status("running", "Creating data contract", 80)
+      self.set_status("running", "Creating data contract", 70)
       name = study.name
       ns = RAService().namespace_by_name('d4k Study namespace')
       StudyDesignDataContract.create(name, ns['value'])
 
-      self.set_status("running", "Adding SDTM domains", 90)
+      self.set_status("running", "Adding SDTM domains", 80)
       result = StudyDesignSDTM.create(study_design.name)
 
-      self.set_status("running", "Linking Biomedical Concepts", 95)
+      self.set_status("running", "Linking Biomedical Concepts", 90)
       result = StudyDesignBC.create(study_design.name)
 
       self.set_status("complete", "Finished", 100)
