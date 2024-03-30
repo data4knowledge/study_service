@@ -96,7 +96,7 @@ class StudyDesignSDTM():
       result = session.run(query)
       results = []
       for record in result:
-        results.append(Domain.wrap(record['d']).__dict__)
+        results.append(StudyDesignDomain.wrap(record['d']).__dict__)
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
 
@@ -105,7 +105,7 @@ class StudyDesignSDTM():
     db = Neo4jConnection()
     with db.session() as session:
       query = """
-        MATCH (d:Domain {uuid: '%s'}) RETURN d
+        MATCH (d:StudyDesignDomain {uuid: '%s'}) RETURN d
       """ % (uuid)
       result = session.run(query)
       for record in result:

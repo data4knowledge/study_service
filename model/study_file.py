@@ -9,6 +9,7 @@ from uuid import uuid4
 from usdm_excel import USDMExcel
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_sdtm import StudyDesignSDTM
+from model.study_design_bc import StudyDesignBC
 
 import os
 import yaml
@@ -64,6 +65,7 @@ class StudyFile(BaseNode):
       self.set_status("running", "Processing excel file", 0)
       excel = USDMExcel(self.full_path)
       study = excel.the_study()
+      study_design = study.versions[0].studyDesigns[0]
       nodes_and_edges = excel.to_neo4j_dict()
       filename = os.path.join("uploads", self.uuid, f"{self.uuid}.yaml")
       with open(f"{filename}", 'w') as f:
@@ -95,9 +97,10 @@ class StudyFile(BaseNode):
       StudyDesignDataContract.create(name, ns['value'])
 
       self.set_status("running", "Adding SDTM domains", 90)
-      study_design = study.versions[0].studyDesigns[0]
-      print(f"SD: {study_design}")
       result = StudyDesignSDTM.create(study_design.name)
+
+      self.set_status("running", "Linking Biomedical Concepts", 95)
+      result = StudyDesignBC.create(study_design.name)
 
       self.set_status("complete", "Finished", 100)
       return True
