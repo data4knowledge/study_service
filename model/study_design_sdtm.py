@@ -6,6 +6,7 @@ from model.variable import Variable
 from service.bc_service import BCService
 from service.sdtm_service import SDTMService
 from model.crm import CRMNode
+from model.biomedical_concept import BiomedicalConceptSimple
 
 class StudyDesignSDTM():
 
@@ -64,6 +65,12 @@ class StudyDesignSDTM():
               c = crm_nodes[ref['uri_reference']]
               v.relationship(c, 'IS_A_REL')                
               application_logger.info(f"Created CRM reference for variable '{v.name}' -> '{ref}'")
+        for name in bcs:
+          bc_set = cls._get_bcs_by_name(study_design, name)
+          #print(f"BC SET: For {name} = {bc_set}")
+          for bc in bc_set:
+            d.relationship(bc, 'USING_BC_REL')                
+            application_logger.info(f"Linked domain '{d.name}' -> '{bc.name}', '{bc.uuid}'")   
     return {'results': domains}
   
   @classmethod
@@ -130,6 +137,19 @@ class StudyDesignSDTM():
       result = session.run(query)
       for record in result:
         results.append(record['name'])
+      return results
+
+  @staticmethod
+  def _get_bcs_by_name(study_design, name):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept) WHERE bc.name = '%s' RETURN DISTINCT bc
+      """ % (study_design.uuid, name)
+      result = session.run(query)
+      for record in result:
+        results.append(BiomedicalConceptSimple.wrap(record['bc']))
       return results
 
   @staticmethod

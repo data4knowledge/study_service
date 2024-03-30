@@ -9,3 +9,7 @@ class BiomedicalConcept(NodeNameLabel):
   properties: List[BiomedicalConceptProperty] = []
   code: AliasCode
   instanceType: Literal['BiomedicalConcept']
+
+class BiomedicalConceptSimple(NodeNameLabel):
+  reference: str
+  instanceType: Literal['BiomedicalConcept']
