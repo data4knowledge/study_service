@@ -19,15 +19,30 @@ class StudyDesignBC():
     for uri, node in crm_nodes.items():
       vars = node.sdtm.split(',')
       for var in vars:
-        crm_map[var] = node
+        if var not in crm_map:
+          crm_map[var] = []  
+        crm_map[var].append(node)
     #print(f"MAP {crm_map}")
     for p in properties:
       #print(f"P: {p.name}")
-      node = cls._match(p.name, crm_map)
-      if node:
-        p.relationship(node, 'IS_A_REL')                
-        application_logger.info(f"Linked BC property '{p.name}' -> '{node.uri}'")   
-        results[p.name] = node.uri
+      nodes = cls._match(p.name, crm_map)
+      #print(f"N: {nodes}")
+      if nodes:
+        if len(nodes) == 1:
+          node = nodes[0]
+        else:
+          if p.name.endswith('ORRES') and p.responseCodes:
+            node = next((i for i in nodes if i.datatype == 'coded'), None)
+          else:
+            node = next((i for i in nodes if i.datatype == 'quantity'), None)
+        if node:
+          p.relationship(nodes[0], 'IS_A_REL')                
+          application_logger.info(f"Linked BC property '{p.name}' -> '{node.uri}'")   
+          results[p.name] = node.uri
+        else:
+          application_logger.error(f"Failed to link BC property '{p.name}', nodes '{nodes}' detected but no match")
+      else:
+        application_logger.error(f"Failed to link BC property '{p.name}', no nodes detected")
     return results
   
   @staticmethod

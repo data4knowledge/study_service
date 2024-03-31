@@ -9,6 +9,7 @@ class CRMNode(BaseNode):
   crm_uuid: str = ""
   uri: str = ""
   sdtm: str = ""
+  datatype: str = ""
 
 class CRM():
 
@@ -29,7 +30,7 @@ class CRM():
           if uri in nodes:
             nodes[uri]['sdtm'].append(entry['name'])
           else: 
-            nodes[uri] = {'uuid': str(uuid4()), 'crm_uuid': result['uuid'], 'uri': result['uri'], 'sdtm': [entry['name']]}
+            nodes[uri] = {'uuid': str(uuid4()), 'crm_uuid': result['uuid'], 'uri': result['uri'], 'datatype': ref['data_type'], 'sdtm': [entry['name']]}
       for k, v in nodes.items():
         v['sdtm'] = ",".join(v['sdtm'])
         CRMNode.create(v)
