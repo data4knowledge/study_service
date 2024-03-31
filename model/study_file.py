@@ -91,7 +91,10 @@ class StudyFile(BaseNode):
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
 
-      self.set_status("running", "Creating data contract", 70)
+      self.set_status("running", "Fix Biomedical Concepts", 70)
+      result = StudyDesignBC.fix(study_design.name)
+
+      self.set_status("running", "Creating data contract", 75)
       name = study.name
       ns = RAService().namespace_by_name('d4k Study namespace')
       StudyDesignDataContract.create(name, ns['value'])

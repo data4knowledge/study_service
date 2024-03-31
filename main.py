@@ -58,7 +58,7 @@ async def delete_clean(background_tasks: BackgroundTasks):
 @app.get("/test", response_model=dict)
 async def test(request: Request, name: str):
   from model.study_design_bc import StudyDesignBC
-  return StudyDesignBC.create(name)
+  return StudyDesignBC.fix(name)
 
 # Study Files
 # ===========

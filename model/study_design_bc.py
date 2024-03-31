@@ -1,19 +1,31 @@
+from uuid import uuid4
 from d4kms_generic import application_logger
 from d4kms_service import Neo4jConnection
 from model.base_node import Node
 from model.code import Code
 from model.alias_code import AliasCode
 from model.biomedical_concept_property import BiomedicalConceptProperty
+from model.biomedical_concept import BiomedicalConceptSimple
 from model.response_code import ResponseCode
 from model.crm import CRMNode
 
 class StudyDesignBC():
 
   @classmethod
+  def fix(cls, name):
+    results = {}
+    study_design = cls._get_study_design(name)
+    bcs = cls._get_bcs(study_design)
+    for bc in bcs:
+      results[bc.name] = cls._add_propety(bc)
+      application_logger.info(f"Inserted --DTC for '{bc.name}'")   
+    return results
+  
+  @classmethod
   def create(cls, name):
     results = {}
     study_design = cls._get_study_design(name)
-    properties = cls._get_properties_by_name(study_design)
+    properties = cls._get_properties(study_design)
     crm_nodes = cls._get_crm()
     crm_map = {}
     for uri, node in crm_nodes.items():
@@ -87,7 +99,7 @@ class StudyDesignBC():
       return results
     
   @staticmethod
-  def _get_properties_by_name(study_design):
+  def _get_properties(study_design):
     db = Neo4jConnection()
     with db.session() as session:
       results = []
@@ -119,3 +131,38 @@ class StudyDesignBC():
         if rc:
           p.responseCodes.append(rc)
       return results
+
+  @staticmethod
+  def _get_bcs(study_design):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)
+        RETURN DISTINCT bc
+      """ % (study_design.uuid)
+      result = session.run(query)
+      for record in result:
+        results.append(BiomedicalConceptSimple.wrap(record['bc']))
+      return results
+
+  @staticmethod
+  def _add_propety(bc):
+    uuids = {'property': str(uuid4()), 'code': str(uuid4()), 'aliasCode': str(uuid4())}
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        CREATE (c:Code {uuid: $s_uuid1, id: 'tbd', code: 'tbd', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'tbd', instanceType: 'Code'})
+        CREATE (ac:AliasCode {uuid: $s_uuid2, id: 'tbd', instanceType: 'AliasCode'})
+        CREATE (p:BiomedicalConceptProperty {uuid: $s_uuid3, id: 'tbd', name: '--DTC', label: 'Date Time', isRequired: 'true', isEnabled: 'true', datatype: 'datetime', instanceType: 'BiomedicalConceptProperty'})
+        CREATE (p)-[:CODE_REL]->(ac)
+        CREATE (ac)-[:STANDARD_CODE_REL]->(c)
+        RETURN p.uuid as uuid
+      """
+      result = session.run(query, 
+        s_uuid1=str(uuid4()), 
+        s_uuid2=str(uuid4()), 
+        s_uuid3=str(uuid4())
+      )
+      for row in result:
+        return uuids
