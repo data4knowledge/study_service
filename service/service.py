@@ -16,5 +16,5 @@ class Service():
         application_logger.error(f"Service request responded with error, error code {response.status_code}, response {response.text}")
         return {}
     except Exception as e:
-      application_logger.exception(e)
+      application_logger.exception("Exception raised in service", e)
       return {}
