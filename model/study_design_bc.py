@@ -156,13 +156,14 @@ class StudyDesignBC():
     db = Neo4jConnection()
     with db.session() as session:
       query = """
+        MATCH (bc:BiomedicalConcept {uuid: '%s'})
+        WITH bc
         CREATE (c:Code {uuid: $s_uuid1, id: 'tbd', code: 'tbd', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'tbd', instanceType: 'Code'})
         CREATE (ac:AliasCode {uuid: $s_uuid2, id: 'tbd', instanceType: 'AliasCode'})
         CREATE (p:BiomedicalConceptProperty {uuid: $s_uuid3, id: 'tbd', name: '--DTC', label: 'Date Time', isRequired: 'true', isEnabled: 'true', datatype: 'datetime', instanceType: 'BiomedicalConceptProperty'})
-        CREATE (p)-[:CODE_REL]->(ac)
-        CREATE (ac)-[:STANDARD_CODE_REL]->(c)
+        CREATE (bc)-[:PROPERTIES_REL]->(p)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
         RETURN p.uuid as uuid
-      """
+      """ % (bc.uuid)
       result = session.run(query, 
         s_uuid1=str(uuid4()), 
         s_uuid2=str(uuid4()), 
