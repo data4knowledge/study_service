@@ -96,28 +96,70 @@ class Domain(BaseNode):
         subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
         inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
     """ % (self.uuid)
+    query = """
+      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {name:'DM'})
+      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      WITH si, domain
+      MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
+      MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+      MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
+      MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
+      MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
+      MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      WHERE  var.label = bcp.label
+      return si.studyIdentifier as study
+      , domain.name as domain
+      , subj.identifier as usubjid
+      , apoc.map.fromLists(collect(var.name),collect(dp.value)) as results
+      , site.name as siteid
+      , e.label as visit
+      , epoch.label as epoch
+    """
     return query
 
   def findings_query(self):
+    # query = """
+    #   MATCH (sdp:DataPoint)-[:FOR_DATA_POINT]->(bdtp:StudyBCDataTypeProperty)<-[]-(bdt:StudyBCDataType)<-[]-(bi:StudyBCItem)<-[]-(bc:StudyBCInstance)
+    #     <-[:BC_REF]-(bcr:BiomedicalConceptRef)<-[:USING_BC]-(sdi:StudyDomainInstance {uuid: '%s'})
+    #   WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi
+    #   MATCH (sdi)-[:HAS_VARIABLE]->(sv:StudyVariable)-[:CLINICAL_RECORDING_REF]->(crr:ClinicalRecordingRef)<-[:CLINICAL_RECORDING_REF]-(bdtp)
+    #   WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr
+    #   MATCH (bc)<-[:HAS_STUDY_BC_INSTANCE]-(wfi:WorkflowItem)-[:WORKFLOW_ITEM_ENCOUNTER]->(v:Encounter)<-[]-(e:StudyEpoch)
+    #   WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e
+    #   MATCH (sdp)-[:FOR_SUBJECT]->(subj:Subject)-[:PARTICIPATES_IN]->(sd:StudyDesign)-[]->(sdi)
+    #   WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd
+    #   MATCH (sd)<-[]-(s:Study)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation)-[:ORGANISATION_TYPE]->
+    #     (c:Code {decode: 'Clinical Study Sponsor'})
+    #   WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd, si
+    #   MATCH (subj)-[:AT_SITE]->(site:Site)<-[:WORKS_AT]-(inv:Investigator)
+    #   WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd, si, site, inv
+    #   MATCH (bc)-[:HAS_STUDY_BC_ITEM]->(StudyBCItem {name: "Test"})-[:HAS_STUDY_BC_DATA_TYPE]->()-[:HAS_RESPONSE]->(ct:ValueSet)
+    #   RETURN DISTINCT sdi.name as domain, sv.name as variable, sdp.value as data, bc.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
+    #     subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
+    #     inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
+    # """ % (self.uuid)
     query = """
-      MATCH (sdp:DataPoint)-[:FOR_DATA_POINT]->(bdtp:StudyBCDataTypeProperty)<-[]-(bdt:StudyBCDataType)<-[]-(bi:StudyBCItem)<-[]-(bc:StudyBCInstance)
-        <-[:BC_REF]-(bcr:BiomedicalConceptRef)<-[:USING_BC]-(sdi:StudyDomainInstance {uuid: '%s'})
-      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi
-      MATCH (sdi)-[:HAS_VARIABLE]->(sv:StudyVariable)-[:CLINICAL_RECORDING_REF]->(crr:ClinicalRecordingRef)<-[:CLINICAL_RECORDING_REF]-(bdtp)
-      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr
-      MATCH (bc)<-[:HAS_STUDY_BC_INSTANCE]-(wfi:WorkflowItem)-[:WORKFLOW_ITEM_ENCOUNTER]->(v:Encounter)<-[]-(e:StudyEpoch)
-      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e
-      MATCH (sdp)-[:FOR_SUBJECT]->(subj:Subject)-[:PARTICIPATES_IN]->(sd:StudyDesign)-[]->(sdi)
-      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd
-      MATCH (sd)<-[]-(s:Study)-[:STUDY_IDENTIFIER]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE]->(o:Organisation)-[:ORGANISATION_TYPE]->
-        (c:Code {decode: 'Clinical Study Sponsor'})
-      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd, si
-      MATCH (subj)-[:AT_SITE]->(site:Site)<-[:WORKS_AT]-(inv:Investigator)
-      WITH DISTINCT sdp, bdtp, bdt, bi, bc, bcr, sdi, sv, crr, wfi, v, e, subj, sd, si, site, inv
-      MATCH (bc)-[:HAS_STUDY_BC_ITEM]->(StudyBCItem {name: "Test"})-[:HAS_STUDY_BC_DATA_TYPE]->()-[:HAS_RESPONSE]->(ct:ValueSet)
-      RETURN DISTINCT sdi.name as domain, sv.name as variable, sdp.value as data, bc.uuid as uuid, v.encounterName as visit, e.studyEpochName as epoch, 
-        subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
-        inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
+      match(domain:Domain{name:'VS'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
+      MATCH(dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
+      WITH domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
+      WITH domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
+      WITH domain, epoch,e_order,bc, apoc.map.fromLists(COLLECT(var.name), COLLECT(d.value)) as map, s,TP[timelines] as TPT ,visit, duration(TP['Main Timeline']) as ord
+      RETURN domain.name as DOMAIN,
+      s.identifier as USUBJID,
+      bc.name as VSTEST,
+      map['VSORRES'] as VSORRES,
+      map['VSORRESU'] as VSORRESU,
+      visit as VISIT,
+      TPT,
+      epoch[0] as  EPOCH 
+      order by DOMAIN, USUBJID, VSTEST, e_order,ord ,VISIT, TPT
     """ % (self.uuid)
     return query
 
