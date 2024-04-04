@@ -23,29 +23,35 @@ class Domain(BaseNode):
         query = self.findings_query()
       print(query)
       rows = session.run(query)
+      # print("rows",rows)
       for row in rows:
+        print("looping rows",row)
+        print(list(row.keys()))
+
         record = { 
-          'uuid': row["uuid"], 
+          # 'uuid': row["uuid"], 
           'variable': row["variable"], 
-          'value': row["data"], 
-          'DOMAIN': row["domain"], 
-          'STUDYID': row["studyid"], 
-          'SUBJID': row["subject"], 
-          'SITEID': row["siteid"],
-          'INVNAM': row["invnam"],
-          'INVID': row["invid"],  
-          'VISIT': row["visit"], 
-          'EPOCH': row["epoch"],
-          'COUNTRY': row["country"],  
-          'test_code': row["test_code"], 
+          'value': row["value"], 
+          'DOMAIN': row["DOMAIN"], 
+          'STUDYID': row["STUDYID"], 
+          'SUBJID': row["SUBJECT"], 
+          'SITEID': row["SITEID"],
+          # 'INVNAM': row["INVNAM"],
+          # 'INVID': row["INVID"],  
+          # 'VISIT': row["VISIT"], 
+          # 'EPOCH': row["EPOCH"],
+          # 'COUNTRY': row["COUNTRY"],  
+          # 'test_code': row["TEST_CODE"], 
         }
+        print("record",record)
         results.append(record)
       #print ("RESULTS:", results)
       if self.name == "DM":
         df = self.construct_dm_dataframe(results)
       else:
         df = self.construct_findings_dataframe(results)
-      result = df.to_dict('index')
+      # result = df.to_dict('index')
+      result = df.to_dict('records')
       return result
 
   def dm_query(self):
@@ -96,8 +102,9 @@ class Domain(BaseNode):
         subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
         inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
     """ % (self.uuid)
+    # Query as single row (transposed)
     query = """
-      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {name:'DM'})
+      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
       MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
       WITH si, domain
@@ -112,14 +119,46 @@ class Domain(BaseNode):
       MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
       MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
       WHERE  var.label = bcp.label
-      return si.studyIdentifier as study
-      , domain.name as domain
-      , subj.identifier as usubjid
-      , apoc.map.fromLists(collect(var.name),collect(dp.value)) as results
-      , site.name as siteid
-      , e.label as visit
-      , epoch.label as epoch
-    """
+      WITH si, domain, subj, apoc.map.fromLists(collect(var.name),collect(dp.value)) as map, site, e, epoch
+      return
+      si.studyIdentifier as STUDYID
+      , domain.name as DOMAIN
+      , subj.identifier as USUBJID
+      , subj.identifier as SUBJECT
+      , map['SEX'] as SEX
+      , map['RACE'] as RACE
+      , site.name as SITEID
+      , e.label as VISIT
+      , epoch.label as EPOCH
+    """ % (self.uuid)
+    # Query as vertical findings
+    query = """
+      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
+      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      WITH si, domain
+      MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
+      MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+      MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
+      MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
+      MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
+      MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      WHERE  var.label = bcp.label
+      return
+      si.studyIdentifier as STUDYID
+      , domain.name as DOMAIN
+      , subj.identifier as USUBJID
+      , subj.identifier as SUBJECT
+      , var.name as variable
+      , dp.value as value
+      , site.name as SITEID
+      , e.label as VISIT
+      , epoch.label as EPOCH
+    """ % (self.uuid)
     return query
 
   def findings_query(self):
@@ -167,7 +206,7 @@ class Domain(BaseNode):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
-    #print("COLS:", column_names)
+    # print("COLS:", column_names)
     final_results = {}
     for result in results:
       key = result["SUBJID"]
@@ -179,9 +218,9 @@ class Domain(BaseNode):
         final_results[key][column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
         final_results[key][column_names.index("SUBJID")] = result["SUBJID"]
         final_results[key][column_names.index("SITEID")] = result["SITEID"]
-        final_results[key][column_names.index("INVID")] = result["INVID"]
-        final_results[key][column_names.index("INVNAM")] = result["INVNAM"]
-        final_results[key][column_names.index("COUNTRY")] = result["COUNTRY"]
+        # final_results[key][column_names.index("INVID")] = result["INVID"]
+        # final_results[key][column_names.index("INVNAM")] = result["INVNAM"]
+        # final_results[key][column_names.index("COUNTRY")] = result["COUNTRY"]
       variable_index = [column_names.index(result["variable"])][0]
       variable_name = result["variable"]
       #print("Index:", variable_index)
@@ -247,9 +286,11 @@ class Domain(BaseNode):
     results = []
     db = Neo4jConnection()
     with db.session() as session:
-      query = """MATCH (sd:StudyDomainInstance)-[:HAS_VARIABLE]->(sv:StudyVariable) WHERE sd.uuid = "%s"
+      query = """
+        MATCH (sd:Domain)-[:VARIABLE_REL]->(sv:Variable) WHERE sd.uuid = "%s"
         RETURN sv.name as name ORDER BY toInteger(sv.ordinal)
       """ % (self.uuid)
+      print("var query",query)
       result = session.run(query)
       for record in result:
         name = record['name']
