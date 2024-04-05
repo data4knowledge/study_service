@@ -115,7 +115,6 @@ class Domain(BaseNode):
         ,epoch[0] as  EPOCH 
         ,bc.uri as uuid
       order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
-      limit 10
     """ % (self.uuid)
     return query
 
