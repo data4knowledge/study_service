@@ -26,30 +26,42 @@ class Domain(BaseNode):
       # print("rows",rows)
       for row in rows:
         print("looping rows",row)
-        print(list(row.keys()))
+        print("1",list(row.keys()))
         record = { 
           # 'uuid': row["uuid"], 
           'variable': row["variable"], 
           'value': row["value"], 
           'DOMAIN': row["DOMAIN"], 
-          'STUDYID': row["STUDYID"],
+          'STUDYID': row["STUDYID"], 
           'USUBJID': row["USUBJID"],
-          # 'VISIT': row["VISIT"], 
-          # 'EPOCH': row["EPOCH"],
-          # 'test_code': row["TEST_CODE"], 
         }
-        if 'TESTCD' in row:
-          record['TESTCD'] = row['TESTCD']
-        if 'uuid' in row:
-          print("add uuid")
+        # record = {}
+        # record['uuid'] = row["uuid"]
+        # record['variable'] = row["variable"]
+        # record['value'] = row["value"]
+        # record['DOMAIN'] = row["DOMAIN"]
+        # record['STUDYID'] = row["STUDYID"]
+        # record['USUBJID'] = row["USUBJID"]
+        if 'uuid' in row.keys():
           record['uuid'] = row['uuid']
+
         if self.name == "DM":
           record['SUBJID'] = row["SUBJECT"]
           record['SITEID'] = row["SITEID"]
           # record['COUNTRY'] = row["COUNTRY"] 
           # record['INVNAM'] = row["INVNAM"]
           # record['INVID'] = row["INVID"]
-        print("record",record)
+        else:
+          if 'test_code' in row.keys():
+            record['test_code'] = row['test_code']
+          if 'VISIT' in row.keys():
+            record['VISIT'] = row["VISIT"]
+          if 'TPT' in row.keys():
+            record['TPT'] = row["TPT"]
+          if 'EPOCH' in row.keys():
+            record['EPOCH'] = row["EPOCH"]
+
+        print(2,"record",list(record.keys()))
         results.append(record)
       #print ("RESULTS:", results)
       if self.name == "DM":
@@ -108,35 +120,6 @@ class Domain(BaseNode):
         subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
         inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
     """ % (self.uuid)
-    # Query as single row (transposed)
-    query = """
-      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
-      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-      WITH si, domain
-      MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
-      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
-      MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-      MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
-      MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
-      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
-      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
-      MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
-      MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
-      MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      WHERE  var.label = bcp.label
-      WITH si, domain, subj, apoc.map.fromLists(collect(var.name),collect(dp.value)) as map, site, e, epoch
-      return
-      si.studyIdentifier as STUDYID
-      , domain.name as DOMAIN
-      , subj.identifier as USUBJID
-      , subj.identifier as SUBJECT
-      , map['SEX'] as SEX
-      , map['RACE'] as RACE
-      , site.name as SITEID
-      , e.label as VISIT
-      , epoch.label as EPOCH
-    """ % (self.uuid)
     # Query as vertical findings
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
@@ -188,25 +171,6 @@ class Domain(BaseNode):
     #     subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
     #     inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
     # """ % (self.uuid)
-    # Query as single row (transposed)
-    query = """
-      match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
-      OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
-      MATCH(dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
-      WITH domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
-      WITH domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
-      WITH domain, epoch,e_order,bc, apoc.map.fromLists(COLLECT(var.name), COLLECT(d.value)) as map, s,TP[timelines] as TPT ,visit, duration(TP['Main Timeline']) as ord
-      RETURN domain.name as DOMAIN,
-      s.identifier as USUBJID,
-      bc.name as VSTEST,
-      map['VSORRES'] as VSORRES,
-      map['VSORRESU'] as VSORRESU,
-      visit as VISIT,
-      TPT,
-      epoch[0] as  EPOCH 
-      order by DOMAIN, USUBJID, VSTEST, e_order,ord ,VISIT, TPT
-    """ % (self.uuid)
     # Query as vertical findings
     query = """
       match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
@@ -215,13 +179,13 @@ class Domain(BaseNode):
       MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
       MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
       MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
-      WITH code.decode as testcd, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
-      WITH testcd, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
+      WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
+      WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
       RETURN 
         si.studyIdentifier as STUDYID
         ,domain.name as DOMAIN
         ,s.identifier as USUBJID
-        ,testcd as TESTCD
+        ,test_code as test_code
         ,bc.name as TEST
         ,var.name as variable
         ,d.value as value
@@ -229,8 +193,8 @@ class Domain(BaseNode):
         ,duration(TP['Main Timeline']) as ord
         ,TP[timelines] as TPT
         ,epoch[0] as  EPOCH 
-        ,dc.uri as uuid
-      order by DOMAIN, USUBJID, TESTCD, e_order,ord ,VISIT, TPT
+        ,bc.uri as uuid
+      order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
       limit 10
     """ % (self.uuid)
     print("query",query)
@@ -294,12 +258,17 @@ class Domain(BaseNode):
     return df
 
   def construct_findings_dataframe(self, results):
-    topic = self.topic()
+    # topic = self.topic()
+    topic = self.name+"TESTCD"
+    print("self",self)
     column_names = self.variable_list()
+    print(3,"column_names",column_names)
     final_results = {}
     for result in results:
+      print(3,"result",list(result.keys()))
+
       # key = "%s.%s" % (result['SUBJID'], result['uuid'])
-      key = "%s.%s" % (result['USUBJID'], result['uuid'])
+      key = "%s.%s.%s.%s" % (result['USUBJID'],result['test_code'], result['VISIT'], result['TPT'])
       if not key in final_results:
         record = [""] * len(column_names)
         record[column_names.index("STUDYID")] = result["STUDYID"]
@@ -308,12 +277,15 @@ class Domain(BaseNode):
         record[column_names.index("USUBJID")] = result["USUBJID"]
         record[column_names.index(topic)] = result["test_code"]
         record[column_names.index("VISIT")] = result["VISIT"]
+        if 'TPT' in result.keys():
+          record[column_names.index(self.name+"TPT")] = result["TPT"]
         record[column_names.index("EPOCH")] = result["EPOCH"]
         final_results[key] = record
       else:
         record = final_results[key]
       variable_index = [column_names.index(result["variable"])][0]
       record[variable_index] = result["value"]
+      print(4,"record",record)
     df = pd.DataFrame(columns=column_names)
     for key, result in final_results.items():
       df.loc[len(df.index)] = result
@@ -336,10 +308,11 @@ class Domain(BaseNode):
 
   def hide_variable(self, name):
     # TODO This is a quick fix, needs enable/disable flag on Study Domain 
+    # "--TPT", 
     domain_hide_list = [
       "--GRPID", "--REFID", "--SPID", "--NAM",	"--LOINC", "--ANMETH", "--TMTHSN", "--LOBXFL",
       "--DRVFL", "--TOX", "--TOXGR", "--CLSIG",
-      "--TPT", "--TPTNUM", "--ELTM", "--TPTREF", "--RFTDTC", "--PTFL", "--PDUR",
+      "--TPTNUM", "--ELTM", "--TPTREF", "--RFTDTC", "--PTFL", "--PDUR",
       "--TSTCND", "--BDAGNT", "--TSTOPO", "--STRESC", "--STRESN", "--STRESU"
     ]
     full_hide_list = [
