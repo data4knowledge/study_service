@@ -27,22 +27,28 @@ class Domain(BaseNode):
       for row in rows:
         print("looping rows",row)
         print(list(row.keys()))
-
         record = { 
           # 'uuid': row["uuid"], 
           'variable': row["variable"], 
           'value': row["value"], 
           'DOMAIN': row["DOMAIN"], 
-          'STUDYID': row["STUDYID"], 
-          'SUBJID': row["SUBJECT"], 
-          'SITEID': row["SITEID"],
-          # 'INVNAM': row["INVNAM"],
-          # 'INVID': row["INVID"],  
+          'STUDYID': row["STUDYID"],
+          'USUBJID': row["USUBJID"],
           # 'VISIT': row["VISIT"], 
           # 'EPOCH': row["EPOCH"],
-          # 'COUNTRY': row["COUNTRY"],  
           # 'test_code': row["TEST_CODE"], 
         }
+        if 'TESTCD' in row:
+          record['TESTCD'] = row['TESTCD']
+        if 'uuid' in row:
+          print("add uuid")
+          record['uuid'] = row['uuid']
+        if self.name == "DM":
+          record['SUBJID'] = row["SUBJECT"]
+          record['SITEID'] = row["SITEID"]
+          # record['COUNTRY'] = row["COUNTRY"] 
+          # record['INVNAM'] = row["INVNAM"]
+          # record['INVID'] = row["INVID"]
         print("record",record)
         results.append(record)
       #print ("RESULTS:", results)
@@ -152,7 +158,7 @@ class Domain(BaseNode):
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
       , subj.identifier as USUBJID
-      , subj.identifier as SUBJECT
+      , right(subj.identifier,6) as SUBJECT
       , var.name as variable
       , dp.value as value
       , site.name as SITEID
@@ -182,8 +188,9 @@ class Domain(BaseNode):
     #     subj.identifier as subject, ct.notation as test_code, site.identifier as siteid, 
     #     inv.name as invnam, inv.identifier as invid, site.country_code as country, si.studyIdentifier as studyid ORDER BY subject LIMIT 2000
     # """ % (self.uuid)
+    # Query as single row (transposed)
     query = """
-      match(domain:Domain{name:'VS'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
       OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
       OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
       MATCH(dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
@@ -200,6 +207,33 @@ class Domain(BaseNode):
       epoch[0] as  EPOCH 
       order by DOMAIN, USUBJID, VSTEST, e_order,ord ,VISIT, TPT
     """ % (self.uuid)
+    # Query as vertical findings
+    query = """
+      match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
+      MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
+      MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
+      WITH code.decode as testcd, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
+      WITH testcd, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
+      RETURN 
+        si.studyIdentifier as STUDYID
+        ,domain.name as DOMAIN
+        ,s.identifier as USUBJID
+        ,testcd as TESTCD
+        ,bc.name as TEST
+        ,var.name as variable
+        ,d.value as value
+        ,visit as VISIT
+        ,duration(TP['Main Timeline']) as ord
+        ,TP[timelines] as TPT
+        ,epoch[0] as  EPOCH 
+        ,dc.uri as uuid
+      order by DOMAIN, USUBJID, TESTCD, e_order,ord ,VISIT, TPT
+      limit 10
+    """ % (self.uuid)
+    print("query",query)
     return query
 
   def construct_dm_dataframe(self, results):
@@ -215,7 +249,8 @@ class Domain(BaseNode):
         final_results[key] = [""] * len(column_names)
         final_results[key][column_names.index("STUDYID")] = result["STUDYID"]
         final_results[key][column_names.index("DOMAIN")] = result["DOMAIN"]
-        final_results[key][column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
+        # final_results[key][column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
+        final_results[key][column_names.index("USUBJID")] = result["USUBJID"]
         final_results[key][column_names.index("SUBJID")] = result["SUBJID"]
         final_results[key][column_names.index("SITEID")] = result["SITEID"]
         # final_results[key][column_names.index("INVID")] = result["INVID"]
@@ -263,12 +298,14 @@ class Domain(BaseNode):
     column_names = self.variable_list()
     final_results = {}
     for result in results:
-      key = "%s.%s" % (result['SUBJID'], result['uuid'])
+      # key = "%s.%s" % (result['SUBJID'], result['uuid'])
+      key = "%s.%s" % (result['USUBJID'], result['uuid'])
       if not key in final_results:
         record = [""] * len(column_names)
         record[column_names.index("STUDYID")] = result["STUDYID"]
         record[column_names.index("DOMAIN")] = result["DOMAIN"]
-        record[column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
+        # record[column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
+        record[column_names.index("USUBJID")] = result["USUBJID"]
         record[column_names.index(topic)] = result["test_code"]
         record[column_names.index("VISIT")] = result["VISIT"]
         record[column_names.index("EPOCH")] = result["EPOCH"]
@@ -290,7 +327,6 @@ class Domain(BaseNode):
         MATCH (sd:Domain)-[:VARIABLE_REL]->(sv:Variable) WHERE sd.uuid = "%s"
         RETURN sv.name as name ORDER BY toInteger(sv.ordinal)
       """ % (self.uuid)
-      print("var query",query)
       result = session.run(query)
       for record in result:
         name = record['name']
