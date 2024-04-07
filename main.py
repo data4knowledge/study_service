@@ -650,6 +650,26 @@ async def domain_bcs(uuid: str, page: int = 0, size: int = 0, filter: str=""):
   else:
     raise HTTPException(status_code=404, detail="The requested domain cannot be found")
 
+@app.get("/v1/domains/{uuid}/biomedicalConcepts/unlink", 
+  summary="Returns BCs for a domain",
+  description="Returns the Biomedical Concepts linked to a specific SDTM domain.")
+async def domain_unlink_bcs(uuid: str, name: str):
+  item = Domain.find(uuid)
+  if item:
+    return item.unlink(name)
+  else:
+    raise HTTPException(status_code=404, detail="The requested domain cannot be found")
+
+@app.get("/v1/domains/{uuid}/biomedicalConcepts/link", 
+  summary="Returns BCs for a domain",
+  description="Returns the Biomedical Concepts linked to a specific SDTM domain.")
+async def domain_link_bcs(uuid: str, name: str):
+  item = Domain.find(uuid)
+  if item:
+    return item.link(name)
+  else:
+    raise HTTPException(status_code=404, detail="The requested domain cannot be found")
+
 # Biomedical Concepts
 # ===================
 

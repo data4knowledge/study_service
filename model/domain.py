@@ -42,6 +42,34 @@ class Domain(BaseNode):
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
 
+  def unlink(self, name):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (d:Domain {uuid: '%s'})-[r:USING_BC_REL]->(bc:BiomedicalConcept) WHERE bc.name='%s'
+        DELETE r
+        RETURN DISTINCT(bc.name) as name
+      """ % (self.uuid, name)
+      print(f"QUERY: {query}")
+      result = session.run(query)
+      for record in result:
+        return record['name']
+    return None
+
+  def link(self, name):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (d:Domain {uuid: '%s'}), (bc:BiomedicalConcept) WHERE bc.name='%s'
+        MERGE (d)-[r:USING_BC_REL]->(bc)
+        RETURN DISTINCT(bc.name) as name
+      """ % (self.uuid, name)
+      print(f"QUERY: {query}")
+      result = session.run(query)
+      for record in result:
+        return record['name']
+    return None
+
   def data(self):
     db = Neo4jConnection()
     with db.session() as session:
