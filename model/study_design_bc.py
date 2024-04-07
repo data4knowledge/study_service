@@ -4,6 +4,7 @@ from d4kms_service import Neo4jConnection
 from model.base_node import Node
 from model.code import Code
 from model.alias_code import AliasCode
+from model.biomedical_concept import BiomedicalConcept
 from model.biomedical_concept_property import BiomedicalConceptProperty
 from model.biomedical_concept import BiomedicalConceptSimple
 from model.response_code import ResponseCode
@@ -57,6 +58,39 @@ class StudyDesignBC():
       else:
         application_logger.error(f"Failed to link BC property '{p.name}', no nodes detected")
     return results
+
+  @classmethod
+  def unlinked(cls, uuid, page, size, filter):
+    skip_offset_clause = ""
+    if page != 0:
+      offset = (page - 1) * size
+      skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})
+        WITH sd
+        MATCH (sd)-[]->(bc:BiomedicalConcept), (sd)-[]->(d:Domain) WHERE not (bc)<-[]-(d)
+        RETURN COUNT(bc) AS count
+      """ % (uuid)
+      print(f"QUERY: {query}")
+      result = session.run(query)
+      count = 0
+      for record in result:
+        count = record['count']
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})
+        WITH sd
+        MATCH (sd)-[]->(bc:BiomedicalConcept), (sd)-[]->(d:Domain) WHERE not (bc)<-[]-(d)
+        RETURN bc ORDER BY bc.name %s
+      """ % (uuid, skip_offset_clause)
+      print(f"QUERY: {query}")
+      result = session.run(query)
+      results = []
+      for record in result:
+        results.append(BiomedicalConceptSimple.wrap(record['bc']).__dict__)
+    result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
+    return result
   
   @staticmethod
   def _match(name, map):

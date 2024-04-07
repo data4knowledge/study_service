@@ -2,6 +2,7 @@ import pandas as pd
 from typing import List
 from model.base_node import BaseNode
 from model.variable import Variable
+from model.biomedical_concept import BiomedicalConceptSimple
 from d4kms_service import Neo4jConnection
 
 class Domain(BaseNode):
@@ -12,6 +13,34 @@ class Domain(BaseNode):
   ordinal: int
   items: List[Variable] = []
   bc_references: List[str] = []
+
+  def bcs(self, page, size, filter):
+    skip_offset_clause = ""
+    if page != 0:
+      offset = (page - 1) * size
+      skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (d:Domain {uuid: '%s'})-[]->(bc:BiomedicalConcept)
+        RETURN COUNT(bc) AS count
+      """ % (self.uuid)
+      print(f"QUERY: {query}")
+      result = session.run(query)
+      count = 0
+      for record in result:
+        count = record['count']
+      query = """
+        MATCH (d:Domain {uuid: '%s'})-[]->(bc:BiomedicalConcept)
+        RETURN bc ORDER BY bc.name %s
+      """ % (self.uuid, skip_offset_clause)
+      print(f"QUERY: {query}")
+      result = session.run(query)
+      results = []
+      for record in result:
+        results.append(BiomedicalConceptSimple.wrap(record['bc']).__dict__)
+    result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
+    return result
 
   def data(self):
     db = Neo4jConnection()

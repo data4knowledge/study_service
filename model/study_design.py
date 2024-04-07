@@ -4,10 +4,11 @@ from .base_node import *
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_subject_data import StudyDesignSubjectData
 from model.study_design_sdtm import StudyDesignSDTM
+from model.study_design_bc import StudyDesignBC
 from model.code import Code
 from model.study_cell import StudyCell
-from model.study_epoch import StudyEpoch
-from model.study_arm import StudyArm
+#from model.study_epoch import StudyEpoch
+#from model.study_arm import StudyArm
 from model.indication import Indication
 from model.investigational_intervention import InvestigationalIntervention
 from model.objective import Objective
@@ -16,7 +17,7 @@ from model.activity import Activity
 from model.encounter import Encounter
 from model.schedule_timeline import ScheduleTimeline
 from .population_definition import StudyDesignPopulation
-from d4kms_service import Neo4jConnection
+#from d4kms_service import Neo4jConnection
 
 class StudyDesign(NodeNameLabelDesc):
   trialIntentTypes: List[Code] = []
@@ -71,6 +72,9 @@ class StudyDesign(NodeNameLabelDesc):
 
   def sdtm_domains(self, page, size, filter):
     return StudyDesignSDTM.domains(self.uuid, page, size, filter)
+
+  def biomedical_concepts_unlinked(self, page, size, filter):
+    return StudyDesignBC.unlinked(self.uuid, page, size, filter)
 
 #   @staticmethod
 #   def _create_workflow(tx, uuid, name, description):

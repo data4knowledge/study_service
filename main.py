@@ -433,6 +433,16 @@ async def get_study_data_file_status(uuid: str, file_uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study design data file cannot be found")
 
+@app.get("/v1/studyDesigns/{uuid}/biomedicalConcepts/unlinked", 
+  summary="Returns set of BCs not linked to domains",
+  description="Returns the set of BCs within a study design that are not linked with SDTM domains.")
+async def get_unlinked_bcs(uuid: str, page: int=0, size: int=0, filter: str=""):
+  item = StudyDesign.find(uuid)
+  if item:
+    return item.biomedical_concepts_unlinked(page, size, filter)
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
 # Timelines
 # =========
 
@@ -629,3 +639,26 @@ async def find_domain(uuid: str):
     return item.data()
   else:
     raise HTTPException(status_code=404, detail="The requested domain cannot be found")
+
+@app.get("/v1/domains/{uuid}/biomedicalConcepts", 
+  summary="Returns BCs for a domain",
+  description="Returns the Biomedical Concepts linked to a specific SDTM domain.")
+async def domain_bcs(uuid: str, page: int = 0, size: int = 0, filter: str=""):
+  item = Domain.find(uuid)
+  if item:
+    return item.bcs(page, size, filter)
+  else:
+    raise HTTPException(status_code=404, detail="The requested domain cannot be found")
+
+# Biomedical Concepts
+# ===================
+
+# @app.get("/v1/studyDesigns/{uuid}/biomedicalConcepts/unlinked", 
+#   summary="Returns an SDTM domain",
+#   description="Returns the SDTM.")
+# async def find_domain(uuid: str):
+#   item = StudyDesign.find(uuid)
+#   if item:
+#     return item.biomedical_concepts_unlinked()
+#   else:
+#     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
