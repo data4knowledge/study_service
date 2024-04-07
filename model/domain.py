@@ -22,8 +22,8 @@ class Domain(BaseNode):
     db = Neo4jConnection()
     with db.session() as session:
       query = """
-        MATCH (d:Domain {uuid: '%s'})-[]->(bc:BiomedicalConcept)
-        RETURN COUNT(bc) AS count
+        MATCH (d:Domain {uuid: '%s'})-[:USING_BC_REL]->(bc:BiomedicalConcept)
+        RETURN COUNT(DISTINCT(bc.name)) AS count
       """ % (self.uuid)
       print(f"QUERY: {query}")
       result = session.run(query)
@@ -31,14 +31,14 @@ class Domain(BaseNode):
       for record in result:
         count = record['count']
       query = """
-        MATCH (d:Domain {uuid: '%s'})-[]->(bc:BiomedicalConcept)
-        RETURN bc ORDER BY bc.name %s
+        MATCH (d:Domain {uuid: '%s'})-[:USING_BC_REL]->(bc:BiomedicalConcept)
+        RETURN DISTINCT(bc.name) as name ORDER BY name %s
       """ % (self.uuid, skip_offset_clause)
       print(f"QUERY: {query}")
       result = session.run(query)
       results = []
       for record in result:
-        results.append(BiomedicalConceptSimple.wrap(record['bc']).__dict__)
+        results.append(record['name'])
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
 

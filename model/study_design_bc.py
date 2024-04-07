@@ -68,10 +68,8 @@ class StudyDesignBC():
     db = Neo4jConnection()
     with db.session() as session:
       query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})
-        WITH sd
-        MATCH (sd)-[]->(bc:BiomedicalConcept), (sd)-[]->(d:Domain) WHERE not (bc)<-[]-(d)
-        RETURN COUNT(bc) AS count
+        MATCH (sd:StudyDesign {uuid: '%s'})-[]->(bc:BiomedicalConcept) WHERE NOT (bc)<-[:USING_BC_REL]-()
+        RETURN COUNT(DISTINCT(bc.name)) AS count
       """ % (uuid)
       print(f"QUERY: {query}")
       result = session.run(query)
@@ -79,16 +77,14 @@ class StudyDesignBC():
       for record in result:
         count = record['count']
       query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})
-        WITH sd
-        MATCH (sd)-[]->(bc:BiomedicalConcept), (sd)-[]->(d:Domain) WHERE not (bc)<-[]-(d)
-        RETURN bc ORDER BY bc.name %s
+        MATCH (sd:StudyDesign {uuid: '%s'})-[]->(bc:BiomedicalConcept) WHERE NOT (bc)<-[:USING_BC_REL]-()
+        RETURN DISTINCT(bc.name) as name ORDER BY name %s
       """ % (uuid, skip_offset_clause)
       print(f"QUERY: {query}")
       result = session.run(query)
       results = []
       for record in result:
-        results.append(BiomedicalConceptSimple.wrap(record['bc']).__dict__)
+        results.append(record['name'])
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
   
