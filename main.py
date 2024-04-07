@@ -24,7 +24,7 @@ from model.template.template_manager import template_manager
 from d4kms_generic import ServiceEnvironment
 from d4kms_generic import application_logger
 
-VERSION = "0.10"
+VERSION = "0.11"
 SYSTEM_NAME = "d4k Study Microservice"
 
 app = FastAPI(
