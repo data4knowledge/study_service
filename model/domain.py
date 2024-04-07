@@ -244,16 +244,16 @@ class Domain(BaseNode):
       return True
     return False
 
-  def topic(self):
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """MATCH (sd:StudyDomainInstance)-[:HAS_VARIABLE]->(sv:StudyVariable) WHERE sd.uuid = "%s" and sv.role="Topic"
-        RETURN sv.name as name 
-      """ % (self.uuid)
-      result = session.run(query)
-      for record in result:
-        return record["name"]
-    return None
+  # def topic(self):
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     query = """MATCH (sd:StudyDomainInstance)-[:HAS_VARIABLE]->(sv:StudyVariable) WHERE sd.uuid = "%s" and sv.role="Topic"
+  #       RETURN sv.name as name 
+  #     """ % (self.uuid)
+  #     result = session.run(query)
+  #     for record in result:
+  #       return record["name"]
+  #   return None
 
   def print_dataframe(self, title, df):
     pd.set_option('display.width', None)
