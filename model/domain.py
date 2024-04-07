@@ -25,7 +25,7 @@ class Domain(BaseNode):
         MATCH (d:Domain {uuid: '%s'})-[:USING_BC_REL]->(bc:BiomedicalConcept)
         RETURN COUNT(DISTINCT(bc.name)) AS count
       """ % (self.uuid)
-      print(f"QUERY: {query}")
+      #print(f"QUERY: {query}")
       result = session.run(query)
       count = 0
       for record in result:
@@ -34,7 +34,7 @@ class Domain(BaseNode):
         MATCH (d:Domain {uuid: '%s'})-[:USING_BC_REL]->(bc:BiomedicalConcept)
         RETURN DISTINCT(bc.name) as name ORDER BY name %s
       """ % (self.uuid, skip_offset_clause)
-      print(f"QUERY: {query}")
+      #print(f"QUERY: {query}")
       result = session.run(query)
       results = []
       for record in result:
@@ -50,7 +50,7 @@ class Domain(BaseNode):
         DELETE r
         RETURN DISTINCT(bc.name) as name
       """ % (self.uuid, name)
-      print(f"QUERY: {query}")
+      #print(f"QUERY: {query}")
       result = session.run(query)
       for record in result:
         return record['name']
@@ -64,7 +64,7 @@ class Domain(BaseNode):
         MERGE (d)-[r:USING_BC_REL]->(bc)
         RETURN DISTINCT(bc.name) as name
       """ % (self.uuid, name)
-      print(f"QUERY: {query}")
+      #print(f"QUERY: {query}")
       result = session.run(query)
       for record in result:
         return record['name']

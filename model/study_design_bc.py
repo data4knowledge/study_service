@@ -71,7 +71,7 @@ class StudyDesignBC():
         MATCH (sd:StudyDesign {uuid: '%s'})-[]->(bc:BiomedicalConcept) WHERE NOT (bc)<-[:USING_BC_REL]-()
         RETURN COUNT(DISTINCT(bc.name)) AS count
       """ % (uuid)
-      print(f"QUERY: {query}")
+      #print(f"QUERY: {query}")
       result = session.run(query)
       count = 0
       for record in result:
@@ -80,7 +80,7 @@ class StudyDesignBC():
         MATCH (sd:StudyDesign {uuid: '%s'})-[]->(bc:BiomedicalConcept) WHERE NOT (bc)<-[:USING_BC_REL]-()
         RETURN DISTINCT(bc.name) as name ORDER BY name %s
       """ % (uuid, skip_offset_clause)
-      print(f"QUERY: {query}")
+      #print(f"QUERY: {query}")
       result = session.run(query)
       results = []
       for record in result:
