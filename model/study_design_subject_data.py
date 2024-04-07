@@ -23,7 +23,7 @@ class StudyDesignSubjectData():
         count = record['count']
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept),(s)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
       OPTIONAL MATCH (bc_prop)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(prop:Code)
-      RETURN subj.identifier as subject, 
+      RETURN distinct subj.identifier as subject, 
       dp.value as value, 
       site.name as site, 
       dp.uri as data_uri, 
