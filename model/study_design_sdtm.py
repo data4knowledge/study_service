@@ -96,7 +96,7 @@ class StudyDesignSDTM():
       result = session.run(query)
       results = []
       for record in result:
-        results.append(StudyDesignDomain.wrap(record['d']).__dict__)
+        results.append(Domain.wrap(record['d']).__dict__)
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
 
