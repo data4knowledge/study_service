@@ -635,6 +635,17 @@ async def find_activity_study_data(uuid: str):
   description="Returns the SDTM.")
 async def find_domain(uuid: str):
   item = Domain.find(uuid)
+  #print(f"ITEM: {item}")
+  if item:
+    return item
+  else:
+    raise HTTPException(status_code=404, detail="The requested domain cannot be found")
+
+@app.get("/v1/domains/{uuid}/data", 
+  summary="Returns an SDTM domain",
+  description="Returns the SDTM.")
+async def find_domain(uuid: str):
+  item = Domain.find(uuid)
   if item:
     return item.data()
   else:
