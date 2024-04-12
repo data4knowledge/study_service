@@ -46,22 +46,23 @@ class ScheduleTimeline(NodeNameLabelDesc):
         WITH sai ORDER BY LENGTH(path) ASC
         OPTIONAL MATCH (e:StudyEpoch)<-[]-(sai)
         OPTIONAL MATCH (sai)-[]->(v:Encounter)
-        OPTIONAL MATCH (v)-[]->(t:Timing)
-        RETURN DISTINCT e.name as epoch_name, e.label as epoch_label, v.name as visit_name, v.label as visit_label, t.window as window, sai.uuid as uuid 
+        OPTIONAL MATCH (sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(t:Timing)
+        RETURN DISTINCT e.name as epoch_name, e.label as epoch_label, v.name as visit_name, v.label as visit_label, t.windowLabel as window, t.label as tvalue, sai.uuid as uuid 
       """ % (self.uuid)
       #print(f"ACTIVITY INSTANCES QUERY: {query}")
       result = session.run(query)
       ai = []
       for index, record in enumerate(result):
+        window = record['window'] if record['window'] else ''
         entry = {
-          'instance': {'uuid': record['uuid'], 'name': f'SAI{index+1}', 'label': f'Instance {index+1}'},
+          'instance': {'uuid': record['uuid'], 'name': f'SAI{index+1}', 'label': f'Instance {index+1}', 'label1': record['tvalue']},
           'epoch': {'name': record['epoch_name'], 'label': record['epoch_label']},
-          'visit': {'name': record['visit_name'], 'label': record['visit_label'], 'window': record['window']}
+          'visit': {'name': record['visit_name'], 'label': record['visit_label'], 'window': window}
         }
         ai.append(entry)
-      #print(f"ACTIVITY INSTANCES: {ai}")
-      #print("")
-      #print("")
+      print(f"ACTIVITY INSTANCES: {ai}")
+      print("")
+      print("")
       visit_row = {}
       for item in ai:
         visit_row[item['instance']['uuid']] = ''
@@ -96,6 +97,7 @@ class ScheduleTimeline(NodeNameLabelDesc):
       results = []
       results.append([""] + [item['epoch']['label'] for item in ai])
       results.append([""] + labels)
+      results.append([""] + [item['instance']['label1'] for item in ai])
       results.append([""] + [item['visit']['window'] for item in ai])
       for activity in activity_order:
         if activity['name'] in activities:
