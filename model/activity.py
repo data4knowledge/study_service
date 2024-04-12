@@ -51,7 +51,7 @@ class Activity(NodeNameLabelDesc):
     db = Neo4jConnection()
     with db.session() as session:
       result = session.execute_read(self._children, str(self.uuid))
-      print(f"AC: {result}")
+      #print(f"AC: {result}")
       return result
 
 #   @staticmethod

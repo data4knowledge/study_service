@@ -230,7 +230,7 @@ async def get_element(uuid: str, name: str):
     #doc.set_study_version()
     definition = doc.element(name)
     result = doc.element_read(name)
-    print(f"RESULT: {name}={result}")
+    #print(f"RESULT: {name}={result}")
     if not 'error' in result:
       return {'uuid': uuid, 'definition': definition, 'data': result['result']}
     else:
@@ -248,7 +248,7 @@ async def write_element(uuid: str, name: str, item: TextBody):
   if not 'error' in doc:
     definition = doc.element(name)
     result = doc.element_write(name, item.text)
-    print(f"ELEMENT: {name}={result}")
+    #print(f"ELEMENT: {name}={result}")
     if not 'error' in result:
       return {'uuid': uuid, 'definition': definition, 'data': result['result']}
     else:
@@ -622,7 +622,7 @@ async def find_activity_study_data(uuid: str):
   activity = Activity.find(uuid)
   if activity:
     result = activity.children()
-    print(f"RESULT: {result}")
+    #print(f"RESULT: {result}")
     return result
   else:
     raise HTTPException(status_code=404, detail="The requested activity cannot be found")

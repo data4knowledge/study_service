@@ -39,7 +39,7 @@ class TemplateDefinition():
     return self.section_definition(self._section_map[section_number])
 
   def add_section_definition(self, uuid, data):
-    print(f"ADD: {uuid}={data}")
+    #print(f"ADD: {uuid}={data}")
     self._sections[uuid] = data
     self._section_map[data['section_number']] = uuid
 

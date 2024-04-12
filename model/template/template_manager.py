@@ -40,7 +40,7 @@ class TemplateManager():
     template = TemplateDefinition(self._definitions[uuid], self.DIR, study_version)
     self._template_cache[uuid] = template
     for section, nc in ncs.items():
-      print(f"ITEM: {nc.sectionNumber}")
+      #print(f"ITEM: {nc.sectionNumber}")
       section_number = SectionNumber(nc.sectionNumber)
       data = {
         'file': 'text_section.html',

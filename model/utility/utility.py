@@ -23,7 +23,7 @@ def section_ordering(s):
       if keyword in text.lower():
         text = text.lower().replace(keyword, section)
     text = re.sub('[^\d\.]', '', text)
-    print(f"ORDER: {s[1]['section_number']}={text}")
+    #print(f"ORDER: {s[1]['section_number']}={text}")
     return [int(_) for _ in text.split(".")]
   except Exception as e:
     application_logger.exception("Exception during section ordering", e)
