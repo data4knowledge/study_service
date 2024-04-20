@@ -7,6 +7,7 @@ from service.aura_service import AuraService
 from service.ra_service import RAService
 from uuid import uuid4
 from usdm_excel import USDMExcel
+from usdm_db import USDMDb
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_sdtm import StudyDesignSDTM
 from model.study_design_bc import StudyDesignBC
@@ -63,10 +64,11 @@ class StudyFile(BaseNode):
     try:
 
       self.set_status("running", "Processing excel file", 0)
-      excel = USDMExcel(self.full_path)
-      study = excel.the_study()
+      usdm = USDMDb()
+      errors = usdm.from_excel(self.full_path)
+      study = usdm.wrapper().study
       study_design = study.versions[0].studyDesigns[0]
-      nodes_and_edges = excel.to_neo4j_dict()
+      nodes_and_edges = usdm.to_neo4j_dict()
       filename = os.path.join("uploads", self.uuid, f"{self.uuid}.yaml")
       with open(f"{filename}", 'w') as f:
         f.write(yaml.dump(nodes_and_edges))
