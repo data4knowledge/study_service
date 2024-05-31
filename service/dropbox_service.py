@@ -66,6 +66,7 @@ class DropboxService(UploadService):
     application_logger.info(f"Finished batch of {str(len(entries))} entries.")
 
     for index, entry in enumerate(complete.entries):
+        print(f"ENTRY: {type(entry)}")
         if entry.is_success():
           application_logger.info(f"File successfully uploaded to '{entry.get_success().path_lower}'.")
         elif entry.is_failure():
@@ -73,14 +74,14 @@ class DropboxService(UploadService):
 
     return
 
-  def link(self, path, filename):
-    try:
-      link = self.client.files_get_temporary_link(f"{path}/{filename}")
-      application_logger.info(f"Link for '{path}' and '{filename}' is '{link}'")
-    except dropbox.exceptions.HttpError as err:
-      application_logger.error(f"Failed to find link for '{path}' and '{filename}'")
-      return None
-    return link
+  # def link(self, path, filename):
+  #   try:
+  #     link = self.client.files_get_temporary_link(f"{path}/{filename}")
+  #     application_logger.info(f"Link for '{path}' and '{filename}' is '{link}'")
+  #   except dropbox.exceptions.HttpError as err:
+  #     application_logger.error(f"Failed to find link for '{path}' and '{filename}'")
+  #     return None
+  #   return link
 
   def upload_file_list(self, path):
     try:
