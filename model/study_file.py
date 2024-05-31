@@ -6,7 +6,7 @@ from service.github_service import GithubService
 from service.aura_service import AuraService
 from service.ra_service import RAService
 from uuid import uuid4
-from usdm_excel import USDMExcel
+#from usdm_excel import USDMExcel
 from usdm_db import USDMDb
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_sdtm import StudyDesignSDTM
@@ -15,6 +15,7 @@ from model.study_design_bc import StudyDesignBC
 import os
 import yaml
 import traceback
+import datetime
 
 class StudyFile(BaseNode):
   uuid: str = ""
@@ -22,8 +23,16 @@ class StudyFile(BaseNode):
   full_path: str = ""
   dir_path: str = ""
   status: str = ""
+  stage: str = ""
+  percentage: int = 0
   error: str = ""
+  service: str = ""
+  date_time: str = ""
 
+  @classmethod
+  def list(cls, page, size, filter):
+    return cls.base_list("MATCH (n:StudyFile)", "ORDER BY n.name ASC", page, size, filter)
+  
   def create(self, filename, contents):
     if not self._check_extension(filename):
       self.error = "Invalid extension, must be '.xlsx'"
@@ -32,9 +41,13 @@ class StudyFile(BaseNode):
     self.uuid = str(uuid4())
     self.dir_path = os.path.join("uploads", self.uuid)
     self.full_path = os.path.join("uploads", self.uuid, f"{self.uuid}.xlsx")
+    self.status = "commencing"
+    self.stage = "Uploading file"
+    self.percentage = 0
+    self.service = "Github"
+    self.date_time = datetime.datetime.now().replace(microsecond=0).isoformat()
     db = Neo4jConnection()
     with db.session() as session:
-      self.set_status("commencing", "Uploading file", 0)
       try:
         os.mkdir(self.dir_path)
       except Exception as e:
@@ -51,7 +64,7 @@ class StudyFile(BaseNode):
           return False
         else:
           try:
-            session.execute_write(self._create, self.filename, self.full_path, self.uuid)
+            session.execute_write(self._create, self)
           except Exception as e:
             self.error = f"Failed to save file details"
             self._log(e, f"{traceback.format_exc()}")
@@ -137,34 +150,28 @@ class StudyFile(BaseNode):
     application_logger.error(self.error)
     application_logger.error(f"Exception {e}\n{trace}")
 
+  def _check_extension(self, filename):
+    return True if filename.endswith('.xlsx') else False
+
   @staticmethod
-  def _create(tx, filename, full_path, uuid):
+  def _create(tx, self):
     query = """
-      CREATE (df:StudyFile {filename: $filename, full_path: $full_path, uuid: $uuid, status: 'Initialised'})
+      CREATE (df:StudyFile {filename: $filename, full_path: $full_path, uuid: $uuid, status: $status, stage: $stage, percentage: $percentage, service: $service, date_time: $date_time})
       RETURN df.uuid as uuid
     """
     results = tx.run(query, 
-      filename=filename,
-      full_path=full_path,
-      uuid=uuid
+      filename=self.filename,
+      full_path=self.full_path,
+      uuid=self.uuid,
+      stage=self.stage,
+      status=self.status,
+      percentage=self.percentage,
+      service=self.service,
+      date_time=self.date_time
     )
     for row in results:
       return row["uuid"]
     return None
-
-  def _check_extension(self, filename):
-    return True if filename.endswith('.xlsx') else False
-
-  # @staticmethod
-  # def _find_by_path(tx, full_path):
-  #   query = """
-  #     MATCH (df:StudyFile {full_path: $full_path})
-  #     RETURN df.uuid as uuid
-  #   """
-  #   results = tx.run(query, full_path=full_path)
-  #   for row in results:
-  #     return row['uuid']
-  #   return None
 
   @staticmethod
   def _set_status(tx, uuid, status, stage, percentage):
