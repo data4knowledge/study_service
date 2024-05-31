@@ -63,6 +63,13 @@ async def test(request: Request, name: str):
 # Study Files
 # ===========
 
+@app.get("/v1/studyFiles", 
+  summary="Get study files",
+  description="Get the list of study files",
+  response_model=dict)
+async def list_study_files(page: int = 0, size: int = 0, filter: str=""):
+  return StudyFile.list(page, size, filter)
+
 @app.post('/v1/studyFiles', 
   summary="Load a study",
   description="Upload and process a study Excel file loading the data into the database", 
