@@ -1,5 +1,7 @@
+import os
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, status, Request, BackgroundTasks
+from fastapi.responses import FileResponse
 from model.crm import CRM
 from model.system import SystemOut
 from model.study_file import StudyFile
@@ -86,6 +88,13 @@ async def create_study_file(request: Request, background_tasks: BackgroundTasks)
     return sf.uuid
   else:
     raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
+
+@app.get("/v1/studyFiles/{uuid}/{name}", 
+  summary="Download a study file",
+  description="Download a given study file")
+async def get_study_file(uuid: str, name: str):
+  full_path = os.path.join('uploads', uuid, name)
+  return FileResponse(path=full_path, filename=name, media_type='text/plain')
 
 @app.get("/v1/studyFiles/{uuid}/status", 
   summary="Get study file status",
