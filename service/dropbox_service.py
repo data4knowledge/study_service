@@ -9,12 +9,18 @@ class DropboxService(UploadService):
 
   MB = 1024 * 1024
   CHUNK_SIZE = 25165824
-  TARGET = '4444'
+  TARGET = '7777'
 
   def __init__(self):
     super().__init__()
-    self.client = dropbox.Dropbox(oauth2_access_token=self.service_environment.get('DROPBOX_TOKEN'))
-    
+    #self.client = dropbox.Dropbox(oauth2_access_token=self.service_environment.get('DROPBOX_TOKEN'))
+    self.client = dropbox.Dropbox(
+      oauth2_refresh_token=self.service_environment.get('DROPBOX_REFRESH'),
+      app_key=self.service_environment.get('DROPBOX_KEY'),
+      # the app secret is required for refresh tokens not acquired using PKCE
+      app_secret=self.service_environment.get('DROPBOX_SECRET')
+    )
+
   def upload(self):
     futures = []
     entries = []
@@ -80,9 +86,9 @@ class DropboxService(UploadService):
     try:
       results = []
       for filename in self.short_filenames:
-        link = self.client.files_get_temporary_link(f"{path}/{filename}")
-        results.append(link)
-        application_logger.info(f"Link for '{path}' and '{filename}' is '{link}'")
+        result = self.client.files_get_temporary_link(f"/Uploads/{self.TARGET}/{filename}")
+        results.append({'filename': filename, 'file_path': result.link})
+        application_logger.info(f"Link for '{path}' and '{filename}' is '{result.link}'")
       return results
     except dropbox.exceptions.HttpError as err:
       application_logger.error(f"Failed to find link for '{path}' and '{filename}'")

@@ -115,7 +115,8 @@ class StudyFile(BaseNode):
         file_count = dropbox.file_list(self.dir_path, "*.csv")
         dropbox.upload()
         files = dropbox.upload_file_list(self.uuid)
-        
+
+      application_logger.info(f"Files: {files}") 
       self.set_status("running", "Loading database", 65)
       aura = AuraService()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
