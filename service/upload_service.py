@@ -18,7 +18,7 @@ class UploadService():
       self.files = glob.glob(os.path.join(dir, file_type))
       self.dir = dir
       self.file_remaining_count = len(self.files)
-      self.result = [os.path.basename(file) for file in self.files]
+      self.short_filenames = [os.path.basename(file) for file in self.files]
       return self.file_remaining_count
     except Exception as e:
       application_logger.exception(f"Exception raised while building file list for upload", e)
