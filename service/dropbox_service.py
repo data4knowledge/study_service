@@ -76,6 +76,18 @@ class DropboxService(UploadService):
       return None
     return link
 
+  def upload_file_list(self, path):
+    try:
+      results = []
+      for filename in self.short_filenames:
+        link = self.client.files_get_temporary_link(f"{path}/{filename}")
+        results.append(link)
+        application_logger.info(f"Link for '{path}' and '{filename}' is '{link}'")
+      return results
+    except dropbox.exceptions.HttpError as err:
+      application_logger.error(f"Failed to find link for '{path}' and '{filename}'")
+      return []
+
   def _prepare(self, session_id, source_file_path):
     futures = []
     dest_file_name = os.path.basename(source_file_path)

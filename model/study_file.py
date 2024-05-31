@@ -108,15 +108,16 @@ class StudyFile(BaseNode):
           percent = 15 + int(50.0 * (float(count) / float(file_count)))
           self.set_status("running", "Uploading to github", percent)
         git.load()
+        files = git.upload_file_list(self.uuid)
       else:
         self.set_status("running", "Uploading to dropbox", 15)
         dropbox = DropboxService()
         file_count = dropbox.file_list(self.dir_path, "*.csv")
         dropbox.upload()
+        files = dropbox.upload_file_list(self.uuid)
         
       self.set_status("running", "Loading database", 65)
       aura = AuraService()
-      files = git.upload_file_list()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
 

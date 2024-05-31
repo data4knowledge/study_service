@@ -10,6 +10,7 @@ class GithubService(UploadService):
     self.token = self.service_environment.get("GITHUB_TOKEN")
     self.repo_name = self.service_environment.get("GITHUB_REPO")
     self.branch_name = self.service_environment.get("GITHUB_BRANCH")
+    self.project_root = self.service_environment.get("GITHUB_BASE")
     self.g = github.Github(self.token)
     self.repo = self.g.get_repo(self.repo_name)
     self.file_count = 0
@@ -50,8 +51,8 @@ class GithubService(UploadService):
       application_logger.exception(f"Exception raised while uploading to Github", e)
       raise self.UploadFail    
 
-  def upload_file_list(self):
-    return self.short_filenames
+  def upload_file_list(self, dir):
+    return [{'filename': x, 'file_path': os.path.join(self.project_root, dir, x)} for x in self.short_filenames]
   
   def progress(self):
     return self.file_count
