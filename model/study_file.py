@@ -1,8 +1,10 @@
 from .base_node import BaseNode
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
+from d4kms_generic import ServiceEnvironment
 from .study_file_nodes_and_edges import StudyFileNodesAndEdges
 from service.github_service import GithubService
+from service.dropbox_service import DropboxService
 from service.aura_service import AuraService
 from service.ra_service import RAService
 from uuid import uuid4
@@ -28,6 +30,12 @@ class StudyFile(BaseNode):
   error: str = ""
   service: str = ""
   date_time: str = ""
+  upload_service: str = None
+
+  def __init__(self, *a, **kw):
+    super().__init__(*a, **kw)
+    se = ServiceEnvironment()
+    self.upload_service = se.get('UPLOAD_SERVICE')
 
   @classmethod
   def list(cls, page, size, filter):
@@ -90,16 +98,22 @@ class StudyFile(BaseNode):
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
       ne.dump()
 
-      self.set_status("running", "Uploading to github", 15)
-      git = GithubService()
-      file_count = git.file_list(self.dir_path, "*.csv")
-      for index in range(file_count):
-        more = git.next()
-        count = git.progress()
-        percent = 15 + int(50.0 * (float(count) / float(file_count)))
-        self.set_status("running", "Uploading to github", percent)
-      git.load()
-
+      if self.upload_service.upper().startswith('GIT'):
+        self.set_status("running", "Uploading to github", 15)
+        git = GithubService()
+        file_count = git.file_list(self.dir_path, "*.csv")
+        for index in range(file_count):
+          more = git.next()
+          count = git.progress()
+          percent = 15 + int(50.0 * (float(count) / float(file_count)))
+          self.set_status("running", "Uploading to github", percent)
+        git.load()
+      else:
+        self.set_status("running", "Uploading to dropbox", 15)
+        dropbox = DropboxService()
+        file_count = dropbox.file_list(self.dir_path, "*.csv")
+        dropbox.upload()
+        
       self.set_status("running", "Loading database", 65)
       aura = AuraService()
       files = git.upload_file_list()
