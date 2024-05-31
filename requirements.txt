@@ -12,3 +12,5 @@ pygithub
 stringcase
 pyyaml
 d4kms
+dropbox
+markdown

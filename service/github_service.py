@@ -1,25 +1,17 @@
-import github
 import os
-import glob
-import traceback
-import logging
-from uuid import uuid4
-from d4kms_generic import ServiceEnvironment
+import github
+from service.upload_service import UploadService
 from d4kms_generic import application_logger
 
-class GithubService():
+class GithubService(UploadService):
   
-  class UploadFail(Exception):
-    pass
-
   def __init__(self):
-    self.token = ServiceEnvironment().get("GITHUB_TOKEN")
-    self.repo_name = ServiceEnvironment().get("GITHUB_REPO")
-    self.branch_name = ServiceEnvironment().get("GITHUB_BRANCH")
+    super().__init__()
+    self.token = self.service_environment.get("GITHUB_TOKEN")
+    self.repo_name = self.service_environment.get("GITHUB_REPO")
+    self.branch_name = self.service_environment.get("GITHUB_BRANCH")
     self.g = github.Github(self.token)
     self.repo = self.g.get_repo(self.repo_name)
-    self.files = []
-    self.result = []
     self.file_count = 0
     self.file_index = 0
     self.file_remaining_count = 0
@@ -30,8 +22,8 @@ class GithubService():
       file = self.files[self.file_index]
       with open(file, 'r') as f:
         data = f.read()
-      filename = os.path.basename(file)
-      self.result.append(filename)
+      #filename = os.path.basename(file)
+      #self.result.append(filename)
       pathname = os.path.relpath(file, 'uploads')
       application_logger.debug(f"Filename: {pathname}, {file}")
       blob = self.repo.create_git_blob(data, "utf-8")
@@ -42,7 +34,7 @@ class GithubService():
       self.file_remaining_count -= 1
       return self.file_remaining_count > 0    
     except Exception as e:
-      logging.error(f"Exception {e} raised while uploading to Github, next\n{traceback.format_exc()}")
+      application_logger.exception(f"Exception raised while processing next file for Github", e)
       raise self.UploadFail    
 
   def load(self):
@@ -55,21 +47,11 @@ class GithubService():
       branch_refs = self.repo.get_git_ref(f"heads/{self.branch_name}")
       branch_refs.edit(sha=commit.sha)
     except Exception as e:
-      logging.error(f"Exception {e} raised while uploading to Github, load\n{traceback.format_exc()}")
-      raise self.UploadFail    
-
-  def file_list(self, dir, file_type):
-    try:
-      self.files = glob.glob(os.path.join(dir, file_type))
-      self.dir = dir
-      self.file_remaining_count = len(self.files)
-      return self.file_remaining_count
-    except Exception as e:
-      logging.error(f"Exception {e} raised while uploading to Github, file_list\n{traceback.format_exc()}")
+      application_logger.exception(f"Exception raised while uploading to Github", e)
       raise self.UploadFail    
 
   def upload_file_list(self):
-    return self.result
+    return self.short_filenames
   
   def progress(self):
     return self.file_count
