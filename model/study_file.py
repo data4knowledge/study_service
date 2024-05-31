@@ -5,10 +5,10 @@ from d4kms_generic import ServiceEnvironment
 from .study_file_nodes_and_edges import StudyFileNodesAndEdges
 from service.github_service import GithubService
 from service.dropbox_service import DropboxService
+from service.local_service import LocalService
 from service.aura_service import AuraService
 from service.ra_service import RAService
 from uuid import uuid4
-#from usdm_excel import USDMExcel
 from usdm_db import USDMDb
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_sdtm import StudyDesignSDTM
@@ -109,6 +109,17 @@ class StudyFile(BaseNode):
           self.set_status("running", "Uploading to github", percent)
         git.load()
         files = git.upload_file_list(self.uuid)
+      elif self.upload_service.upper().startswith('LOCAL'):
+        self.set_status("running", "Uploading to github", 15)
+        local = LocalService()
+        file_count = local.file_list(self.dir_path, "*.csv")
+        for index in range(file_count):
+          more = local.next()
+          count = local.progress()
+          percent = 15 + int(50.0 * (float(count) / float(file_count)))
+          self.set_status("running", "Uploading to local", percent)
+        local.load()
+        files = local.upload_file_list(self.uuid)
       else:
         self.set_status("running", "Uploading to dropbox", 15)
         dropbox = DropboxService()
