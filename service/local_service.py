@@ -32,7 +32,7 @@ class LocalService(UploadService):
       raise self.UploadFail    
 
   def upload_file_list(self, dir):
-    return [{'filename': x, 'file_path': os.path.join(self.project_root, dir, x)} for x in self.short_filenames]
+    return [{'filename': x, 'file_path': os.path.join(self.project_root, dir, 'load', x)} for x in self.short_filenames]
   
   def progress(self):
     return self.file_count

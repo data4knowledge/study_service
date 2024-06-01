@@ -89,13 +89,6 @@ async def create_study_file(request: Request, background_tasks: BackgroundTasks)
   else:
     raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
 
-@app.get("/v1/studyFiles/{uuid}/{name}", 
-  summary="Download a study file",
-  description="Download a given study file")
-async def get_study_file(uuid: str, name: str):
-  full_path = os.path.join('uploads', uuid, name)
-  return FileResponse(path=full_path, filename=name, media_type='text/plain')
-
 @app.get("/v1/studyFiles/{uuid}/status", 
   summary="Get study file status",
   description="Get the status of the processing for a given study file",
@@ -106,6 +99,13 @@ async def get_study_file_status(uuid: str):
     return sf.get_status()
   else:
     raise HTTPException(status_code=404, detail="The requested study file cannot be found")
+
+@app.get("/v1/studyFiles/{uuid}/load/{name}", 
+  summary="Download a study load file",
+  description="Download the specified study load file")
+async def get_study_file(uuid: str, name: str):
+  full_path = os.path.join('uploads', uuid, name)
+  return FileResponse(path=full_path, filename=name, media_type='text/plain')
 
 # Templates
 # =========
