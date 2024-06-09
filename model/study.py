@@ -4,6 +4,8 @@ from typing import List, Literal, Union
 from .base_node import NodeNameLabelDesc
 from .study_version import StudyVersion
 from .study_protocol_document import StudyProtocolDocument
+from .study_title import StudyTitle
+from .code import Code
 from d4kms_service import Neo4jConnection
 from uuid import uuid4
 
@@ -30,6 +32,36 @@ class Study(NodeNameLabelDesc):
       logging.error(f"Exception raised while creating study")
       logging.error(f"Exception {e}\n{traceback.format_exc()}")
       return {'error': f"Exception. Failed to create study"}
+
+  def summary(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (s:Study {uuid: '%s'})-[:VERSIONS_REL]->(sv)
+        WITH s, sv
+        MATCH (sv)-[:TITLES_REL]->(st)-[:TYPE_REL]->(stc)
+        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si)
+        MATCH (sv)-[:STUDY_PHASE_REL]->(ac:AliasCode)-[:STANDARD_CODE_REL]->(pc)
+        RETURN sv, st, stc, si, pc ORDER BY sv.version
+      """ % (self.uuid)
+      print(f"QUERY: {query}")
+      results = {}
+      records = session.run(query)
+      for record in records:
+        sv = Study.as_dict(record['sv'])
+        if sv['uuid'] not in results:
+          result = sv
+          result['titles'] = {}
+          result['phase'] = ''
+          results[sv['uuid']] = result
+        else:
+          result = results[sv['uuid']]
+        stc = Code.as_dict(record['stc'])
+        st = StudyTitle.as_dict(record['st'])
+        pc = Code.as_dict(record['pc'])
+        result['titles'][stc['decode']] = st['text']
+        result['phase'] = pc['decode']
+    return results.values()
 
   @staticmethod
   def _create_study(tx, name, description, label, template_uuid):

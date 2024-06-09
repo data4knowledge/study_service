@@ -12,6 +12,8 @@ from .study_amendment import StudyAmendment
 from .study_identifier import StudyIdentifier
 from .study_protocol_document_version import StudyProtocolDocumentVersion
 from .study_title import StudyTitle
+from .organization import Organization
+from .study_design import StudyDesign
 
 class StudyVersion(NodeId):
   versionIdentifier: str
@@ -34,6 +36,47 @@ class StudyVersion(NodeId):
   @classmethod
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:Study {uuid: '%s'})-[]->(n:StudyVersion)" % (uuid), "ORDER BY n.studyTitle ASC", page, size, filter)
+
+  def summary(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sv:StudyVersion {uuid: '%s'})
+        WITH sv
+        MATCH (sv)-[:TITLES_REL]->(st)-[:TYPE_REL]->(stc)
+        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si)-[:STUDY_IDENTIFIER_SCOPE_REL]->(o:Organization)-[:ORGANIZATION_TYPE_REL]->(oc:Code)
+        MATCH (sv)-[:STUDY_PHASE_REL]->(ac:AliasCode)-[:STANDARD_CODE_REL]->(pc:Code)
+        MATCH (sv)-[]->(sd:StudyDesign)
+        RETURN sv, st, stc, si, pc, o, oc, sd ORDER BY sv.version
+      """ % (self.uuid)
+      print(f"QUERY: {query}")
+      results = {}
+      records = session.run(query)
+      for record in records:
+        sv = StudyVersion.as_dict(record['sv'])
+        if sv['uuid'] not in results:
+          result = sv
+          result['titles'] = {}
+          result['identifiers'] = {}
+          result['study_designs'] = {}
+          result['phase'] = ''
+          results[sv['uuid']] = result
+        else:
+          result = results[sv['uuid']]
+        stc = Code.as_dict(record['stc'])
+        st = StudyTitle.as_dict(record['st'])
+        si = StudyIdentifier.as_dict(record['si'])
+        o = Organization.as_dict(record['o'])
+        oc = Code.as_dict(record['oc'])
+        sd = StudyDesign.as_dict(record['sd'])
+        result['identifiers'][oc['decode']] = {'identifier': si['studyIdentifier'], 'organization': o['name']}
+        #print(f"SI: {si}, {o}, {oc}")
+        pc = Code.as_dict(record['pc'])
+        result['titles'][stc['decode']] = st['text']
+        result['phase'] = pc['decode']
+        result['study_designs'][sd['uuid']] = sd
+    print(f"RESULTS: {list(results.values())}")
+    return list(results.values())[0]
 
   # @classmethod
   # def find_from_study_protocol_document_version(cls, uuid):

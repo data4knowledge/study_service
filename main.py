@@ -128,6 +128,18 @@ async def get_temlates():
 async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   return Study.list(page, size, filter)
 
+@app.get("/v1/studies/{uuid}/summary", 
+  summary="Get study summary",
+  description="Provide the summary details for a single study",
+  status_code=200,
+  response_model=list)
+async def study_summary(uuid: str):
+  study = Study.find(uuid)
+  if study:
+    return study.summary()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+
 @app.post("/v1/studies", 
   summary="Create a new study",
   description="Creates a study. If succesful the uuid of the created resource is returned.",
@@ -153,6 +165,28 @@ async def create_study(name: str, background_tasks: BackgroundTasks, description
 async def list_study_versions(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
   return StudyVersion.list(uuid, page, size, filter)
+
+@app.get("/v1/studyVersions/{uuid}", 
+  summary="Get a study versions",
+  description="Provides a study versions",
+  response_model=StudyVersion)
+async def study_version(request: Request, uuid: str):
+  version = StudyVersion.find(uuid)
+  if version:
+    return version
+  else:
+    raise HTTPException(status_code=404, detail="The requested study version cannot be found")
+
+@app.get("/v1/studyVersions/{uuid}/summary", 
+  summary="Get a study version summary",
+  description="Provides a study version summary",
+  response_model=dict)
+async def study_version_summary(request: Request, uuid: str):
+  version = StudyVersion.find(uuid)
+  if version:
+    return version.summary()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study version cannot be found")
 
 # Protocol Document Versions
 # ==========================

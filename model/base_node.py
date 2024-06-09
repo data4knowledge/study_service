@@ -133,14 +133,14 @@ class NodeName(NodeId):
   
 class NodeNameLabel(NodeId):
   name: str
-  label: str
+  label: str = ""
 
   @classmethod
   def parent_properties(cls):
     return ["n.name", "n.label"]
 
 class NodeDesc(NodeId):
-  description: str
+  description: str = ""
   
   @classmethod
   def parent_properties(cls):
@@ -148,8 +148,8 @@ class NodeDesc(NodeId):
 
 class NodeNameLabelDesc(NodeId):
   name: str
-  description: str
-  label: str
+  description: str = ""
+  label: str = ""
 
   @classmethod
   def parent_properties(cls):
