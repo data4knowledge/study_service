@@ -339,10 +339,21 @@ async def list_study_designs(request: Request, page: int = 0, size: int = 0, fil
   summary="Get the study design",
   description="Provides the details for a given study design.",
   response_model=StudyDesign)
-async def get_study_design_soa(uuid: str):
+async def get_study_design(uuid: str):
   study_design = StudyDesign.find(uuid)
   if study_design:
     return study_design
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
+@app.get("/v1/studyDesigns/{uuid}/summary", 
+  summary="Get the study design summary",
+  description="Provides the summary for a given study design.",
+  response_model=dict)
+async def get_study_design_summary(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design.summary()
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
