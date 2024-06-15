@@ -1,6 +1,8 @@
 full_studies:
 - excel: "test_data/CDISC_Pilot_Study.xlsx"
   images: []
+- excel: "test_data/EliLilly_NCT03421379_Diabetes.xlsx"
+  images: []
 dummy_studies: 
 - name: "DUMMY 1"
   label: "Dummy Study One"

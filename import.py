@@ -25,15 +25,15 @@ if __name__ == "__main__":
   db = Neo4jConnection()
   db.clear()
 
-  # for xl in config['full_studies']:
-  #   waiting = True
-  #   results = service.send_study_file(xl['excel'])
-  #   while waiting:
-  #     status = service.study_file_status(results)
-  #     print(f"STATUS: {status}")
-  #     time.sleep(1)
-  #     if status['percentage'] >= 100:
-  #       waiting = False
+  for xl in config['full_studies']:
+    waiting = True
+    results = service.send_study_file(xl['excel'])
+    while waiting:
+      status = service.study_file_status(results)
+      print(f"STATUS: {status}")
+      time.sleep(1)
+      if status['percentage'] >= 100:
+        waiting = False
 
   dummy_study = DummyStudy()    
   for study in config['dummy_studies']:
