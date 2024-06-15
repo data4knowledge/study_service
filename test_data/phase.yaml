@@ -1,0 +1,36 @@
+items:
+- conceptId: C48660
+  preferredTerm: Not Applicable
+- conceptId: C54721
+  preferredTerm: Phase 0 Trial
+- conceptId: C15600
+  preferredTerm: Phase I Trial
+- conceptId: C15693
+  preferredTerm: Phase I/II Trial
+- conceptId: C198366
+  preferredTerm: Phase I/II/III Trial
+- conceptId: C198367
+  preferredTerm: Phase I/III Trial
+- conceptId: C199990
+  preferredTerm: Phase Ia Trial
+- conceptId: C199989
+  preferredTerm: Phase Ib Trial
+- conceptId: C15601
+  preferredTerm: Phase II Trial
+- conceptId: C15694
+  preferredTerm: Phase II/III Trial
+- conceptId: C49686
+  preferredTerm: Phase IIa Trial
+- conceptId: C49688
+  preferredTerm: Phase IIb Trial
+- conceptId: C15602
+  preferredTerm: Phase III Trial
+- conceptId: C49687
+  preferredTerm: Phase IIIa Trial
+- conceptId: C49689
+  preferredTerm: Phase IIIb Trial
+- conceptId: C15603
+  preferredTerm: Phase IV Trial
+- conceptId: C47865
+  preferredTerm: Phase V Trial
+  
