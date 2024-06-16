@@ -128,6 +128,14 @@ async def get_temlates():
 async def list_studies(page: int = 0, size: int = 0, filter: str=""):
   return Study.list(page, size, filter)
 
+@app.get("/v1/studies/phase", 
+  summary="Count of all study phases",
+  description="Provide a count of all study phases.",
+  status_code=200,
+  response_model=list)
+async def study_phase():
+  return Study.phase()
+
 @app.get("/v1/studies/{uuid}/summary", 
   summary="Get study summary",
   description="Provide the summary details for a single study",

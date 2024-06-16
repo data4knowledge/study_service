@@ -20,6 +20,21 @@ class Study(NodeNameLabelDesc):
     return cls.base_list("MATCH (n:Study)", "ORDER BY n.name ASC", page, size, filter)
 
   @classmethod
+  def phase(cls):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (s:Study)-[:VERSIONS_REL]->(sv)-[:STUDY_PHASE_REL]->(ac:AliasCode)-[:STANDARD_CODE_REL]->(pc)
+        RETURN pc.decode as phase, count(*) as phase_count ORDER BY phase;
+      """
+      print(f"QUERY: {query}")
+      results = []
+      records = session.run(query)
+      for record in records:
+        results.append({'phase': record['phase'], 'count': record['phase_count']})
+    return results
+
+  @classmethod
   def create(cls, name, description, label, template_uuid):
     try:
       db = Neo4jConnection()
