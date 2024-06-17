@@ -3,8 +3,8 @@ import time
 
 from model.utility.utility import read_yaml_file
 from d4kms_service import Neo4jConnection
-from test_data.study_service import StudyService
-from test_data.dummy_study import DummyStudy
+from test_data.model.study_service import StudyService
+from test_data.model.dummy_study import DummyStudy
 
 if __name__ == "__main__":
 

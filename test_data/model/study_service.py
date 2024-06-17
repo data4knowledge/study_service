@@ -1,4 +1,4 @@
-from test_data.service import Service
+from test_data.model.service import Service
 
 class StudyService(Service):
 

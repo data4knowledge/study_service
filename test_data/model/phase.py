@@ -1,4 +1,4 @@
-from test_data.ct_base import CTBase
+from test_data.model.ct_base import CTBase
 
 class Phase(CTBase):
 

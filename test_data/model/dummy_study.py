@@ -1,7 +1,7 @@
 import traceback
 from uuid import uuid4
 from d4kms_service import Neo4jConnection
-from test_data.phase import Phase
+from test_data.model.phase import Phase
 from model.template.template_manager import TemplateManager
 
 class DummyStudy():
@@ -16,7 +16,7 @@ class DummyStudy():
     study['phase'] = self.phase.get(study['phase']) if 'phase' in study else self.phase.default()
     for item in ['brief_title', 'offical_title']:
       study[item] = study[item] if item in study else '<To Be Provided>'
-    study['version'] = study['version'] if 'version' in study else 1
+    study['version'] = study['version'] if 'version' in study else "1"
     try:
       db = Neo4jConnection()
       with db.session() as session:
@@ -32,7 +32,7 @@ class DummyStudy():
   @staticmethod
   def _create(tx, study):
     study_uuid = None
-    if study['version'] == 1:      
+    if study['version'] == "1":      
       query = """
         CREATE (s:Study {id: $s_id, name: $s_name, description: $s_description, label: $s_label, uuid: $s_uuid1, instanceType: 'Study'}) RETURN s.uuid as uuid
       """
