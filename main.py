@@ -22,6 +22,7 @@ from model.domain import Domain
 # from model.study_data import StudyData, StudyDataIn
 # from model.encounter import Encounter, EncounterIn, EncounterLink
 # from typing import List
+from model.population_definition import StudyDesignPopulation, StudyCohort
 from model.template.template_manager import template_manager
 from d4kms_generic import ServiceEnvironment
 from d4kms_generic import application_logger
@@ -511,6 +512,30 @@ async def get_unlinked_bcs(uuid: str, page: int=0, size: int=0, filter: str=""):
     return item.biomedical_concepts_unlinked(page, size, filter)
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
+# Populations & Cohorts
+# =====================
+@app.get("/v1/studyDesignPopulations/{uuid}/summary", 
+  summary="Get the population summary",
+  description="Gets a summary of the population",
+  response_model=dict)
+async def get_population_summary(request: Request, uuid: str):
+  item = StudyDesignPopulation.find(uuid)
+  if item:
+    return item.summary()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design population cannot be found")
+
+@app.get("/v1/studyCohorts/{uuid}/summary", 
+  summary="Get the cohort summary",
+  description="Gets a summary of the cohort",
+  response_model=dict)
+async def get_cohort_summary(request: Request, uuid: str):
+  item = StudyCohort.find(uuid)
+  if item:
+    return item.summary()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design population cannot be found")
 
 # Timelines
 # =========
