@@ -377,6 +377,31 @@ async def get_study_design_summary(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
+@app.get("/v1/studyDesigns/{uuid}/population", 
+  summary="Get the study design population information",
+  description="Provides the details population information for a given study design.",
+  response_model=dict)
+async def get_study_design_population(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    try:
+      summary = study_design.summary()
+      #print(f"Summary: {summary}")
+      population = StudyDesignPopulation.find(summary['population']['uuid'])
+      #print(f"Population: {population}")
+      result = population.summary()
+      #print(f"RESULT: {result}")
+      for index, cohort in enumerate(result['cohorts']):
+        x = StudyCohort.find(cohort['uuid'])
+        result[index] = x.summary()
+      return result
+    except Exception as e:
+      message = "Something went wrong building the study population information"
+      application_logger.exception(message, e)
+      raise HTTPException(status_code=500, detail=message)
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
 # @app.delete("/v1/studies/{uuid}", 
 #   summary="Delete a study",
 #   description="Deletes the specified study.",
@@ -526,9 +551,9 @@ async def get_unlinked_bcs(uuid: str, page: int=0, size: int=0, filter: str=""):
 
 # Populations & Cohorts
 # =====================
-@app.get("/v1/studyDesignPopulations/{uuid}/summary", 
-  summary="Get the population summary",
-  description="Gets a summary of the population",
+@app.get("/v1/studyDesignPopulations/{uuid}", 
+  summary="Get the population details",
+  description="Gets the details of the population",
   response_model=dict)
 async def get_population_summary(request: Request, uuid: str):
   item = StudyDesignPopulation.find(uuid)
@@ -537,9 +562,9 @@ async def get_population_summary(request: Request, uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study design population cannot be found")
 
-@app.get("/v1/studyCohorts/{uuid}/summary", 
-  summary="Get the cohort summary",
-  description="Gets a summary of the cohort",
+@app.get("/v1/studyCohorts/{uuid}/", 
+  summary="Get the cohort details",
+  description="Gets a details for a cohort",
   response_model=dict)
 async def get_cohort_summary(request: Request, uuid: str):
   item = StudyCohort.find(uuid)

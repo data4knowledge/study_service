@@ -75,17 +75,20 @@ class StudyDesignPopulation(PopulationDefinition):
         OPTIONAL MATCH (pd)-[:PLANNED_COMPLETION_NUMBER_REL]->(pcn)
         OPTIONAL MATCH (pd)-[:PLANNED_SEX_REL]->(ps)
         OPTIONAL MATCH (pd)-[:PLANNED_AGE_REL]->(pa)
-        RETURN pd, prn, pcn, ps, pa
+        OPTIONAL MATCH (pd)-[:COHORTS_REL]->(coh:Cohort)
+        RETURN pd, prn, pcn, ps, pa, coh
       """ % (self.uuid)
-      #print(f"QUERY: {query}")
+      print(f"QUERY: {query}")
       result = None
       sex_map = {}
+      cohort_map = {}
       records = session.run(query)
       for record in records:
         pd = StudyDesignPopulation.as_dict(record['pd'])
         if not result:
           result = pd
           result['planned_sex'] = []
+          result['cohorts'] = []
         if record['prn']:
           result['planned_enrollment'] = Range.as_dict(record['prn'])
         if record['pcn']:
@@ -95,8 +98,13 @@ class StudyDesignPopulation(PopulationDefinition):
           if ps['uuid'] not in sex_map:
             result['planned_sex'].append(ps)
             sex_map[ps['uuid']] = True
+        if record['coh']:
+          coh = StudyCohort.as_dict(record['coh'])
+          if coh['uuid'] not in cohort_map:
+            result['cohorts'].append(coh)
+            cohort_map[coh['uuid']] = True
         if record['pa']:
           result['planned_age'] = Range.as_dict(record['pa'])
-    #print(f"RESULT: {result}")
+    print(f"RESULT: {result}")
     return result
 
