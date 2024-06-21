@@ -75,7 +75,7 @@ class StudyDesignPopulation(PopulationDefinition):
         OPTIONAL MATCH (pd)-[:PLANNED_COMPLETION_NUMBER_REL]->(pcn)
         OPTIONAL MATCH (pd)-[:PLANNED_SEX_REL]->(ps)
         OPTIONAL MATCH (pd)-[:PLANNED_AGE_REL]->(pa)
-        OPTIONAL MATCH (pd)-[:COHORTS_REL]->(coh:Cohort)
+        OPTIONAL MATCH (pd)-[:COHORTS_REL]->(coh:StudyCohort)
         RETURN pd, prn, pcn, ps, pa, coh
       """ % (self.uuid)
       print(f"QUERY: {query}")

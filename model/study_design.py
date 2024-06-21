@@ -73,10 +73,10 @@ class StudyDesign(NodeNameLabelDesc):
         MATCH (sd)-[:TRIAL_TYPES_REL]->(ttc:Code)
         MATCH (sd)-[:INTERVENTION_MODEL_REL]->(imc:Code)
         MATCH (sd)-[:TRIAL_INTENT_TYPES_REL]->(tic:Code)
-        MATCH (sd)-[:THERAPEUTIC_AREAS_REL]->(tac:Code)
-        MATCH (sd)-[:CHARACTERISTICS_REL]->(cc:Code)
+        OPTIONAL MATCH (sd)-[:THERAPEUTIC_AREAS_REL]->(tac:Code)
+        OPTIONAL MATCH (sd)-[:CHARACTERISTICS_REL]->(cc:Code)
         MATCH (sd)-[:POPULATION_REL]->(sdp:StudyDesignPopulation)
-        OPTIONAL MATCH (sdp)-[:COHORTS_REL]->(coh:Cohort)
+        OPTIONAL MATCH (sdp)-[:COHORTS_REL]->(coh:StudyCohort)
         RETURN sd, ttc, imc, tic, tac, cc, sdp, coh
       """ % (self.uuid)
       print(f"QUERY: {query}")
@@ -95,7 +95,7 @@ class StudyDesign(NodeNameLabelDesc):
         sdp = StudyDesignPopulation.as_dict(record['sdp'])
         if not result['population']:
           result['population'] = sdp
-          result['population']['cohorts'] = {}
+          result['population']['cohorts'] = []
         if record['coh']:
           coh = StudyCohort.as_dict(record['coh'])
           if coh['uuid'] not in cohort_map:
@@ -104,8 +104,10 @@ class StudyDesign(NodeNameLabelDesc):
         self._extract_code(record, 'ttc', result, 'trial_types')
         self._extract_code(record, 'imc', result, 'intervention_models')
         self._extract_code(record, 'tic', result, 'trial_intent')
-        self._extract_code(record, 'tac', result, 'therapeutic_areas')
-        self._extract_code(record, 'cc', result, 'characteristics')
+        if record['tac']:
+          self._extract_code(record, 'tac', result, 'therapeutic_areas')
+        if record['cc']:
+          self._extract_code(record, 'cc', result, 'characteristics')
     return result
 
   def design(self):
