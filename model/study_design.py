@@ -7,8 +7,8 @@ from model.study_design_sdtm import StudyDesignSDTM
 from model.study_design_bc import StudyDesignBC
 from model.code import Code
 from model.study_cell import StudyCell
-#from model.study_epoch import StudyEpoch
-#from model.study_arm import StudyArm
+from model.study_epoch import StudyEpoch
+from model.study_arm import StudyArm
 from model.indication import Indication
 from model.investigational_intervention import InvestigationalIntervention
 from model.objective import Objective
@@ -107,6 +107,38 @@ class StudyDesign(NodeNameLabelDesc):
         self._extract_code(record, 'tac', result, 'therapeutic_areas')
         self._extract_code(record, 'cc', result, 'characteristics')
     return result
+
+  def design(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:EPOCHS_REL]->(se1:StudyEpoch)
+          WHERE NOT (se1)-[:PREVIOUS_REL]->()
+        WITH se1,sd 
+        MATCH path=(se1)-[:NEXT_REL *0..]->(se)
+        WITH sd, se ORDER BY LENGTH(path) ASC
+        MATCH (sd)-[:ARMS_REL]->(sa:StudyArm)
+        RETURN sd, se, sa
+      """ % (self.uuid)
+      print(f"QUERY: {query}")
+      results = {'study_design': None, 'study_epochs': [], 'study_arms': []}
+      epochs = {}
+      arms = {}
+      records = session.run(query)
+      for record in records:
+        sd = StudyDesign.as_dict(record['sd'])
+        if not results['study_design']:
+          results['study_design'] = sd
+        epoch = StudyEpoch.as_dict(record['se'])
+        arm = StudyArm.as_dict(record['sa'])
+        if epoch['uuid'] not in epochs:
+          results['study_epochs'].append(epoch)
+          epochs[epoch['uuid']] = True
+        if arm['uuid'] not in arms:
+          results['study_arms'].append(arm)
+          arms[arm['uuid']] = True
+    print(f"RESULTS: {results}")
+    return results
 
   def _extract_code(self, record, record_key, result, result_key):
     code = Code.as_dict(record[record_key])

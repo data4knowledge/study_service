@@ -102,6 +102,7 @@ class StudyProtocolDocumentVersion(NodeId):
   def section_read(self, uuid):
     #template = template_manager.template(self.templateUuid, self._study_version)
     nc = NarrativeContent.find(uuid)
+    print(f"NC: {nc}")
     #section_def = template.section_definition_by_section_number(nc.sectionNumber)
     return nc.to_html(self._study_version) if nc else ''
 

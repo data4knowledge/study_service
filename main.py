@@ -256,9 +256,9 @@ async def get_section_definition(uuid: str, section_uuid: str):
   response_model=dict)
 async def get_section(uuid: str, section_uuid: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  if not 'error' in doc:
+  if doc:
     result = doc.section_read(section_uuid)
-    #print(f"SECTION: {result}")
+    print(f"SECTION: {result}")
     return {'text': result}
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document section cannot be found")
@@ -271,7 +271,7 @@ class TextBody(BaseModel):
   description="Set the protococl document section for a study.",
   status_code=201,
   response_model=dict)
-async def get_section(uuid: str, section_uuid: str, item: TextBody):
+async def post_section(uuid: str, section_uuid: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
   if not 'error' in doc:
     result = doc.section_write(section_uuid, item.text)
@@ -315,23 +315,23 @@ async def write_element(uuid: str, name: str, item: TextBody):
   else:
     raise HTTPException(status_code=404, detail=doc['error'])
 
-# @app.get("/v1/protocolDocumentVersions/{uuid}/document", 
-#   summary="Get a view of the protocol document version",
-#   description="Get the document view of the whole document or a section",
-#   response_model=str)
-# async def get_document_or_section(uuid: str, section: str = None):
-#   doc = StudyProtocolDocumentVersion.find(uuid)
-#   if doc:
-#     try:
-#       #doc.set_study_version()
-#       if section: 
-#         return doc.section_as_html(section)
-#       else:
-#         return doc.document_as_html()
-#     except Exception as e:
-#       raise HTTPException(status_code=500, detail=str(e))
-#   else:
-#     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
+@app.get("/v1/protocolDocumentVersions/{uuid}/document", 
+  summary="Get a view of the protocol document version",
+  description="Get the document view of the whole document or a section",
+  response_model=str)
+async def get_document_or_section(uuid: str, section: str = None):
+  doc = StudyProtocolDocumentVersion.find(uuid)
+  if doc:
+    try:
+      #doc.set_study_version()
+      if section: 
+        return doc.section_as_html(section)
+      else:
+        return doc.document_as_html()
+    except Exception as e:
+      raise HTTPException(status_code=500, detail=str(e))
+  else:
+    raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
 
 # Study Designs
 # =============
@@ -363,6 +363,17 @@ async def get_study_design_summary(uuid: str):
   study_design = StudyDesign.find(uuid)
   if study_design:
     return study_design.summary()
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
+@app.get("/v1/studyDesigns/{uuid}/design", 
+  summary="Get the study design design (arms and epochs)",
+  description="Provides the high level design for a given study design.",
+  response_model=dict)
+async def get_study_design_summary(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design.design()
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
