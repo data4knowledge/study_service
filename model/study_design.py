@@ -80,36 +80,33 @@ class StudyDesign(NodeNameLabelDesc):
         RETURN sd, ttc, imc, tic, tac, cc, sdp, coh
       """ % (self.uuid)
       print(f"QUERY: {query}")
-      results = {}
+      result = None
+      cohort_map = {}
       records = session.run(query)
       for record in records:
-        sd = StudyDesign.as_dict(record['sd'])
-        if sd['uuid'] not in results:
-          result = sd
+        if not result:
+          result = StudyDesign.as_dict(record['sd'])
           result['trial_types'] = {}
           result['trial_intent'] = {}
           result['intervention_models'] = {}
           result['therapeutic_areas'] = {}
           result['characteristics'] = {}
-          results[sd['uuid']] = result
           result['population'] = None
-        else:
-          result = results[sd['uuid']]
         sdp = StudyDesignPopulation.as_dict(record['sdp'])
         if not result['population']:
           result['population'] = sdp
           result['population']['cohorts'] = {}
-        if 'coh' in record:
+        if record['coh']:
           coh = StudyCohort.as_dict(record['coh'])
-          result['population']['cohorts'][coh['uuid']] = coh
+          if coh['uuid'] not in cohort_map:
+            result['population']['cohorts'].append(coh)
+            cohort_map[coh['uuid']] = True
         self._extract_code(record, 'ttc', result, 'trial_types')
         self._extract_code(record, 'imc', result, 'intervention_models')
         self._extract_code(record, 'tic', result, 'trial_intent')
         self._extract_code(record, 'tac', result, 'therapeutic_areas')
         self._extract_code(record, 'cc', result, 'characteristics')
-
-    print(f"RESULTS: {list(results.values())}")
-    return list(results.values())[0]
+    return result
 
   def _extract_code(self, record, record_key, result, result_key):
     code = Code.as_dict(record[record_key])

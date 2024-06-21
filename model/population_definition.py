@@ -30,7 +30,7 @@ class StudyCohort(PopulationDefinition):
         OPTIONAL MATCH (pd)-[:PLANNED_AGE_REL]->(pa)
         OPTIONAL MATCH (pd)-[:CHARACTERISTICS_REL]->(c)
         RETURN pd, prn, pcn, ps, pa, c
-      """ % (self.__class__.__name__, self.uuid)
+      """ % (self.uuid)
       print(f"QUERY: {query}")
       result = None
       sex_map = {}
