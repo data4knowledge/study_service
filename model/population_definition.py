@@ -72,6 +72,9 @@ class StudyCohort(PopulationDefinition):
             result['criteria'][key].append(cr)
             criteria_map[cr['uuid']] = True
     print(f"RESULT: {result}")
+    for k, v in result['criteria'].items():
+      result['criteria'][k] = sorted(v, key=lambda x: x['identifier'])
+    print(f"RESULT: {result}")
     return result
 
 class StudyDesignPopulation(PopulationDefinition):
@@ -131,6 +134,9 @@ class StudyDesignPopulation(PopulationDefinition):
               result['criteria'][key] = []
             result['criteria'][key].append(cr)
             criteria_map[cr['uuid']] = True
+    print(f"RESULT: {result}")
+    for k, v in result['criteria'].items():
+      result['criteria'][k] = sorted(v, key=lambda x: x['identifier'])
     print(f"RESULT: {result}")
     return result
 
