@@ -393,7 +393,7 @@ async def get_study_design_population(uuid: str):
       #print(f"RESULT: {result}")
       for index, cohort in enumerate(result['cohorts']):
         x = StudyCohort.find(cohort['uuid'])
-        result[index] = x.summary()
+        result['cohorts'][index] = x.summary()
       return result
     except Exception as e:
       message = "Something went wrong building the study population information"
