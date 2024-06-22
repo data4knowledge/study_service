@@ -29,12 +29,14 @@ class StudyCohort(PopulationDefinition):
         OPTIONAL MATCH (pd)-[:PLANNED_SEX_REL]->(ps)
         OPTIONAL MATCH (pd)-[:PLANNED_AGE_REL]->(pa)
         OPTIONAL MATCH (pd)-[:CHARACTERISTICS_REL]->(c)
-        RETURN pd, prn, pcn, ps, pa, c
+        OPTIONAL MATCH (pd)-[:CRITERIA_REL]->(cr)-[:CATEGORY_REL]->(crc:Code)
+        RETURN pd, prn, pcn, ps, pa, c, cr, crc
       """ % (self.uuid)
       print(f"QUERY: {query}")
       result = None
       sex_map = {}
       characteristic_map = {}
+      criteria_map = {}
       records = session.run(query)
       for record in records:
         pd = StudyDesignPopulation.as_dict(record['pd'])
@@ -42,6 +44,7 @@ class StudyCohort(PopulationDefinition):
           result = pd
           result['planned_sex'] = []
           result['characteristics'] = []
+          result['criteria'] = {}
         if record['prn']:
           result['planned_enrollment'] = Range.as_dict(record['prn'])
         if record['pcn']:
@@ -57,7 +60,17 @@ class StudyCohort(PopulationDefinition):
           c = Characteristic.as_dict(record['c'])
           if c['uuid'] not in characteristic_map:
             result['characteristic'].append(c)
-            characteristic_map[ps['uuid']] = True
+            characteristic_map[c['uuid']] = True
+        if record['cr']:
+          cr = EligibilityCriterion.as_dict(record['cr'])
+          if cr['uuid'] not in criteria_map:
+            code = Code.as_dict(record['crc'])
+            cr['category'] = code
+            key = code['decode'].replace(' ', '_').lower()
+            if key not in result['criteria']:
+              result['criteria'][key] = []
+            result['criteria'][key].append(cr)
+            criteria_map[cr['uuid']] = True
     print(f"RESULT: {result}")
     return result
 
@@ -76,12 +89,14 @@ class StudyDesignPopulation(PopulationDefinition):
         OPTIONAL MATCH (pd)-[:PLANNED_SEX_REL]->(ps)
         OPTIONAL MATCH (pd)-[:PLANNED_AGE_REL]->(pa)
         OPTIONAL MATCH (pd)-[:COHORTS_REL]->(coh:Cohort)
-        RETURN pd, prn, pcn, ps, pa, coh
+        OPTIONAL MATCH (pd)-[:CRITERIA_REL]->(cr)-[:CATEGORY_REL]->(crc:Code)
+        RETURN pd, prn, pcn, ps, pa, coh, cr, crc
       """ % (self.uuid)
       print(f"QUERY: {query}")
       result = None
       sex_map = {}
       cohort_map = {}
+      criteria_map = {}
       records = session.run(query)
       for record in records:
         pd = StudyDesignPopulation.as_dict(record['pd'])
@@ -89,6 +104,7 @@ class StudyDesignPopulation(PopulationDefinition):
           result = pd
           result['planned_sex'] = []
           result['cohorts'] = []
+          result['criteria'] = {}
         if record['prn']:
           result['planned_enrollment'] = Range.as_dict(record['prn'])
         if record['pcn']:
@@ -105,6 +121,16 @@ class StudyDesignPopulation(PopulationDefinition):
             cohort_map[coh['uuid']] = True
         if record['pa']:
           result['planned_age'] = Range.as_dict(record['pa'])
+        if record['cr']:
+          cr = EligibilityCriterion.as_dict(record['cr'])
+          if cr['uuid'] not in criteria_map:
+            code = Code.as_dict(record['crc'])
+            cr['category'] = code
+            key = code['decode'].replace(' ', '_').lower()
+            if key not in result['criteria']:
+              result['criteria'][key] = []
+            result['criteria'][key].append(cr)
+            criteria_map[cr['uuid']] = True
     print(f"RESULT: {result}")
     return result
 
