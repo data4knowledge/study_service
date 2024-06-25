@@ -34,11 +34,11 @@ class AuraService():
       load_files = []
       print("dir to load:",dir)
       for filename in file_list:
-        print("localload:", filename)
+        # print("localload:", filename)
         # application_logger.debug(f"load file: {self.project_root}, {filename}")
-        application_logger.debug(f"load file: {dir}, {filename}")
+        # application_logger.debug(f"load file: {dir}, {filename}")
         parts = filename.split("-")
-        print("parts[0]",parts[0])
+        # print("parts[0]",parts[0])
         # file_path = os.path.join(self.project_root, dir, filename)
         file_path = os.path.join(dir, filename)
         if parts[0] == "node":
@@ -57,7 +57,7 @@ class AuraService():
       print("len(nodes)",len(nodes))
       print("len(relationships)",len(relationships))
       query = """CALL apoc.import.csv( [%s], [%s], {stringIds: true})""" % (", ".join(nodes), ", ".join(relationships))
-      application_logger.debug(f"QUERY: {query}")
+      # application_logger.debug(f"QUERY: {query}")
       result = session.run(query)
       for record in result:
         return_value = {'nodes': record['nodes'], 'relationships': record['relationships'], 'time': record['time']}

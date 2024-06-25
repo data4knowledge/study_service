@@ -22,7 +22,7 @@ class StudyDesignSDTM():
     study_design = cls._get_study_design(name)
     #print(f"SD: {study_design.uuid}")
     results = cls._get_bcs(study_design)
-    #print(f"BCs: {results}")
+    print(f"BCs: {results}")
     for name in results:
       bc = next((item for item in sdtm_bcs['items'] if item["name"] == name), None)
       if bc:
@@ -36,8 +36,12 @@ class StudyDesignSDTM():
             domains[domain] = []
           domains[domain].append(name)
     domains_metadata = sdtm_service.domains(1,100)
-    #print(f"DOMAINS: {domains_metadata}")
+    print(f"DOMAINS: {domains_metadata.keys()}")
+    # print(f"DOMAINS: {[domain['name'] for domain in domains_metadata['items']]}")
+    # print(f"DOMAINS: {domains_metadata}")
     for domain, bcs in domains.items():
+      print("deb processing",domain)
+      print("   ----- bcs",bcs)
       domain_metadata = next((item for item in domains_metadata['items'] if item["name"] == domain), None)
       if domain_metadata:
         application_logger.info(f"Processing domain '{domain}'")
@@ -134,6 +138,7 @@ class StudyDesignSDTM():
       query = """
         MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept) RETURN DISTINCT bc.name as name
       """ % (study_design.uuid)
+      print("debug bc query:",query)
       result = session.run(query)
       for record in result:
         results.append(record['name'])

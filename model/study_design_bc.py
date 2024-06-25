@@ -35,8 +35,8 @@ class StudyDesignBC():
         if var not in crm_map:
           crm_map[var] = []  
         crm_map[var].append(node)
-    #print(f"MAP {crm_map}")
-    #print(f"PROPERTIES: {[i.name for i in properties]}")
+    # print(f"MAP {crm_map}")
+    # print(f"PROPERTIES: {[i.name for i in properties]}")
     for p in properties:
       #print(f"P: {p.name}")
       nodes = cls._match(p.name, crm_map)
@@ -91,7 +91,9 @@ class StudyDesignBC():
   @staticmethod
   def _match(name, map):
     name_upper = name.upper()
+    print("debug --- name_upper",name_upper)
     generic_name = f"--{name[2:]}".upper()
+    print("debug --- generic_name",generic_name)
     # if name_upper == "SEX":
     #   print(f"Match {name} {generic_name}")
     #   print(f"keys {map.keys()}")

@@ -104,12 +104,12 @@ class StudyFile(BaseNode):
 
       # self.set_status("running", "Uploading to github", 15)
       self.set_status("running", "Uploading to LOCAL", 15)
-      print("d7--")
-      git = GithubService()
-      print("d8--")
+      print("d7-- ignoring git")
+      # git = GithubService()
+      print("d8--git ignored")
       # file_count = git.file_list(self.dir_path, "*.csv")
-      files = git.file_list(self.dir_path, "*.csv")
-
+      # files = git.file_list(self.dir_path, "*.csv")
+      files = glob.glob(os.path.join(self.dir_path, "*.csv"))
       print("d9-- file_count:",len(files))
       # for file in files:
       #   print("-- now",file)
@@ -126,6 +126,8 @@ class StudyFile(BaseNode):
       aura = AuraService()
       import_directory = aura._get_import_directory()
       import_directory = import_directory+"/load_data"
+      if not os.path.isdir(import_directory):
+        os.makedirs(import_directory)
       print("d11-- import_directory:",import_directory)
       # aura.project_root = 
       _clear_import_directory(import_directory)

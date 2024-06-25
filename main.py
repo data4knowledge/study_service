@@ -27,6 +27,11 @@ from d4kms_generic import application_logger
 VERSION = "0.11"
 SYSTEM_NAME = "d4k Study Microservice"
 
+from dotenv import dotenv_values
+config = dotenv_values(f".{ServiceEnvironment().environment()}_env")
+for x,y in config.items():
+  print(x,y)
+
 app = FastAPI(
   title = SYSTEM_NAME,
   description = "A microservice to handle Study Builds in a Neo4j database.",
