@@ -21,6 +21,54 @@ class AuraService():
     self.driver = GraphDatabase.driver(self.url, auth=(self.usr, self.pwd))
     self.project_root = sv.get("GITHUB_BASE")
 
+  def _get_import_directory(self):
+    session = self.driver.session(database=self.database)
+    query = "call dbms.listConfig()"
+    results = session.run(query)
+    config = [x.data() for x in results]
+    import_directory = next((item for item in config if item["name"] == 'server.directories.import'), None)
+    return import_directory['value']
+
+  def load_local(self, dir, file_list):
+    try:
+      load_files = []
+      print("dir to load:",dir)
+      for filename in file_list:
+        print("localload:", filename)
+        # application_logger.debug(f"load file: {self.project_root}, {filename}")
+        application_logger.debug(f"load file: {dir}, {filename}")
+        parts = filename.split("-")
+        print("parts[0]",parts[0])
+        # file_path = os.path.join(self.project_root, dir, filename)
+        file_path = os.path.join(dir, filename)
+        if parts[0] == "node":
+          load_files.append({ "label": pascalcase(parts[1]), "filename": file_path })
+        else:
+          load_files.append({ "type": parts[1].upper(), "filename": file_path })
+      result = None
+      session = self.driver.session(database=self.database)
+      nodes = []
+      relationships = []
+      for file_item in load_files:
+        if "label" in file_item:
+          nodes.append("{ fileName: '%s', labels: ['%s'] }" % (file_item["filename"], file_item["label"]) )
+        else:
+          relationships.append("{ fileName: '%s', type: '%s' }" % (file_item["filename"], file_item["type"]) )
+      print("len(nodes)",len(nodes))
+      print("len(relationships)",len(relationships))
+      query = """CALL apoc.import.csv( [%s], [%s], {stringIds: true})""" % (", ".join(nodes), ", ".join(relationships))
+      application_logger.debug(f"QUERY: {query}")
+      result = session.run(query)
+      for record in result:
+        return_value = {'nodes': record['nodes'], 'relationships': record['relationships'], 'time': record['time']}
+      self.driver.close()
+      application_logger.info(f"Loaded Aura, details: {return_value}")
+      return return_value
+    except Exception as e:
+      application_logger.error(f"Exception raised while uploading to Aura database")
+      application_logger.error(f"Exception {e}\n{traceback.format_exc()}")
+      raise self.UploadFail
+
   def load(self, dir, file_list):
     try:
       load_files = []
