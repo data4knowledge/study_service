@@ -52,11 +52,9 @@ class StudyFile(BaseNode):
     self.full_path = os.path.join("uploads", self.uuid, f"{self.uuid}.xlsx")
     db = Neo4jConnection()
     with db.session() as session:
-      print("d1--")
       self.set_status("commencing", "Uploading file", 0)
       try:
         os.mkdir(self.dir_path)
-        print("d2--")
       except Exception as e:
         self.error = f"Failed to create directory"
         self._log(e, f"{traceback.format_exc()}")
@@ -83,36 +81,26 @@ class StudyFile(BaseNode):
   def execute(self):
     try:
 
-      print("d1--")
       self.set_status("running", "Processing excel file", 0)
       excel = USDMExcel(self.full_path)
-      print("d2--")
       study = excel.the_study()
       study_design = study.versions[0].studyDesigns[0]
       nodes_and_edges = excel.to_neo4j_dict()
-      print("d3--")
       filename = os.path.join("uploads", self.uuid, f"{self.uuid}.yaml")
       with open(f"{filename}", 'w') as f:
         f.write(yaml.dump(nodes_and_edges))
-      print("d4--")
 
       self.set_status("running", "Converting data to database format", 10)
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
-      print("d5--")
       ne.dump()
-      print("d6--")
 
       # self.set_status("running", "Uploading to github", 15)
       self.set_status("running", "Uploading to LOCAL", 15)
-      print("d7-- ignoring git")
       # git = GithubService()
-      print("d8--git ignored")
       # file_count = git.file_list(self.dir_path, "*.csv")
       # files = git.file_list(self.dir_path, "*.csv")
       files = glob.glob(os.path.join(self.dir_path, "*.csv"))
       print("d9-- file_count:",len(files))
-      # for file in files:
-      #   print("-- now",file)
 
       # for index in range(file_count):
       #   more = git.next()

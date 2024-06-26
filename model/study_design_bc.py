@@ -91,9 +91,7 @@ class StudyDesignBC():
   @staticmethod
   def _match(name, map):
     name_upper = name.upper()
-    print("debug --- name_upper",name_upper)
     generic_name = f"--{name[2:]}".upper()
-    print("debug --- generic_name",generic_name)
     # if name_upper == "SEX":
     #   print(f"Match {name} {generic_name}")
     #   print(f"keys {map.keys()}")

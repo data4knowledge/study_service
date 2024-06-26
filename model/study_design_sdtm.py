@@ -12,17 +12,20 @@ class StudyDesignSDTM():
 
   @classmethod
   def create(cls, name):
-    domains = {'DM': ['Age', 'Sex', 'Race', 'Ethnic']} # Need to fix that DM BCs have no SDTM representation yet.
+    domains = {'DM': ['Age', 'Sex', 'Race', 'Ethnic','Informed Consent']} # Need to fix that DM BCs have no SDTM representation yet.
     bc_service = BCService()
     sdtm_service = SDTMService()
     sdtm_bcs = bc_service.biomedical_concepts('sdtm', 1, 1000)
-    #print(f"BCS: {sdtm_bcs}")
+    # print(f"BCS: {sdtm_bcs}")
+    # print("debug--- BCs")
+    # for x in sdtm_bcs['items']:
+    #   print("bc",x['name'],x['label'])
     crm_nodes = cls._get_crm()
     #print(f"CRM: {crm_nodes}")
     study_design = cls._get_study_design(name)
     #print(f"SD: {study_design.uuid}")
     results = cls._get_bcs(study_design)
-    print(f"BCs: {results}")
+    print(f"sd BCs: {results}")
     for name in results:
       bc = next((item for item in sdtm_bcs['items'] if item["name"] == name), None)
       if bc:
@@ -36,13 +39,13 @@ class StudyDesignSDTM():
             domains[domain] = []
           domains[domain].append(name)
     domains_metadata = sdtm_service.domains(1,100)
-    print(f"DOMAINS: {domains_metadata.keys()}")
-    # print(f"DOMAINS: {[domain['name'] for domain in domains_metadata['items']]}")
-    # print(f"DOMAINS: {domains_metadata}")
+    # print(f"DOMAINS: {domains_metadata.keys()}")
+    print(f"DOMAINS: {[domain['name'] for domain in domains_metadata['items']]}")
     for domain, bcs in domains.items():
       print("deb processing",domain)
       print("   ----- bcs",bcs)
       domain_metadata = next((item for item in domains_metadata['items'] if item["name"] == domain), None)
+      print("   ----- domain_metadata",domain_metadata)
       if domain_metadata:
         application_logger.info(f"Processing domain '{domain}'")
         domain_metadata = sdtm_service.domain(domain_metadata['uuid'])
