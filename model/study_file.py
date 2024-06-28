@@ -133,6 +133,12 @@ class StudyFile(BaseNode):
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
 
+      # Fix DM.RFICDTC to Informed Consent Obtained
+
+
+      # Fix surrogates. Replace CDISC BC's with d4k
+      self.set_status("running", "Fix Biomedical Concepts Surrogates", 70)
+
       self.set_status("running", "Fix Biomedical Concepts", 70)
       result = StudyDesignBC.fix(study_design.name)
 

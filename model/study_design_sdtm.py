@@ -12,7 +12,7 @@ class StudyDesignSDTM():
 
   @classmethod
   def create(cls, name):
-    domains = {'DM': ['Age', 'Sex', 'Race', 'Ethnic']} # Need to fix that DM BCs have no SDTM representation yet.
+    domains = {'DM': ['Age', 'Sex', 'Race', 'Ethnic','Informed Consent Obtained','Date of Birth']} # Need to fix that DM BCs have no SDTM representation yet.
     bc_service = BCService()
     sdtm_service = SDTMService()
     sdtm_bcs = bc_service.biomedical_concepts('sdtm', 1, 1000)
