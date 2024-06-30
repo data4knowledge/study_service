@@ -55,44 +55,9 @@ class AuraService():
       application_logger.exception(f"Exception raised while uploading to Aura database", e)
       raise self.UploadFail
 
-  def load_datafile(self, dir, file_list):
-    try:
-      load_files = []
-      for filename_entry in file_list:
-        filename = filename_entry['filename']
-        file_path = filename_entry['file_path']
-        application_logger.debug(f"load file: {filename} from {file_path}")
-        # parts = filename.split("-")
-        # #file_path = os.path.join(self.project_root, dir, filename)
-        # if parts[0] == "node":
-        #   load_files.append({ "label": pascalcase(parts[1]), "filename": file_path })
-        # else:
-        #   load_files.append({ "type": parts[1].upper(), "filename": file_path })
-      result = None
-      session = self.driver.session(database=self.database)
-      nodes = []
-      relationships = []
-      for file_item in load_files:
-        if "label" in file_item:
-          nodes.append("{ fileName: '%s', labels: ['%s'] }" % (file_item["filename"], file_item["label"]) )
-        else:
-          relationships.append("{ fileName: '%s', type: '%s' }" % (file_item["filename"], file_item["type"]) )
-      query = """CALL apoc.import.csv( [%s], [%s], {stringIds: true})""" % (", ".join(nodes), ", ".join(relationships))
-      #application_logger.debug(f"QUERY: {query}")
-      result = session.run(query)
-      for record in result:
-        return_value = {'nodes': record['nodes'], 'relationships': record['relationships'], 'time': record['time']}
-      self.driver.close()
-      application_logger.info(f"Loaded Aura, details: {return_value}")
-      return return_value
-    except Exception as e:
-      application_logger.exception(f"Exception raised while uploading to Aura database", e)
-      raise self.UploadFail
-
-  def load_identifiers(self, dir, filename):
+  def load_identifiers(self, file_path):
     try:
       session = self.driver.session(database=self.database)
-      file_path = os.path.join(self.project_root, dir, filename)
       query = f"""
           LOAD CSV WITH HEADERS FROM '{file_path}' AS site_row
           MATCH (design:StudyDesign {{name:'Study Design 1'}})
@@ -114,10 +79,9 @@ class AuraService():
       application_logger.exception(f"Exception raised while uploading to Aura database", e)
       raise self.UploadFail
 
-  def load_datapoints(self, dir, filename):
+  def load_datapoints(self, file_path):
     try:
       session = self.driver.session(database=self.database)
-      file_path = os.path.join(self.project_root, dir, filename)
       query = f"""
           LOAD CSV WITH HEADERS FROM '{file_path}' AS data_row
           MATCH (dc:DataContract {{uri:data_row['DC_URI']}})
