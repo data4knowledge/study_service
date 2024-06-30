@@ -6,6 +6,7 @@ from d4kms_generic import ServiceEnvironment
 from uuid import uuid4
 from service.github_service import GithubService
 from service.aura_service import AuraService
+from service.local_service import LocalService
 
 class DataFile(BaseNode):
   uuid: str = ""
@@ -15,6 +16,12 @@ class DataFile(BaseNode):
   status: str = ""
   error: str = ""
   data_type: str = ""
+  upload_service: str = None
+
+  def __init__(self, *a, **kw):
+    super().__init__(*a, **kw)
+    se = ServiceEnvironment()
+    self.upload_service = se.get('UPLOAD_SERVICE')
 
   def create(self, filename, contents, data_type):
     if not self._check_extension(filename):
@@ -67,41 +74,59 @@ class DataFile(BaseNode):
       #   self.set_status("running", "Processing CSV file", count)
       #   time.sleep(1)
       # -----------
-      self.set_status("running", "Uploading to github", 15)
-      git = GithubService()
-      file_count = git.file_list(self.dir_path, self.filename)
-      for index in range(file_count):
-        more = git.next()
-        count = git.progress()
-        percent = 15 + int(65.0 * (float(count) / float(file_count)))
-        self.set_status("running", "Uploading to github", percent)
-      git.load()
+      if self.upload_service.upper().startswith('GIT'):
+        self.set_status("running", "Uploading to github", 15)
+        git = GithubService()
+        file_count = git.file_list(self.dir_path, self.filename)
+        for index in range(file_count):
+          more = git.next()
+          count = git.progress()
+          percent = 15 + int(65.0 * (float(count) / float(file_count)))
+          self.set_status("running", "Uploading to github", percent)
+        git.load()
+      elif self.upload_service.upper().startswith('LOCAL'):
+        self.set_status("running", "Uploading to github", 15)
+        local = LocalService()
+        file_count = local.file_list(self.dir_path, "*.csv")
+        for index in range(file_count):
+          more = local.next()
+          count = local.progress()
+          percent = 15 + int(65.0 * (float(count) / float(file_count)))
+          self.set_status("running", "Uploading to local neo4j", percent)
+        local.load()
+        files = local.upload_file_list(self.uuid)
+        print("files:",files)
 
       self.set_status("running", "Loading database", 80)
       aura = AuraService()
-      files = git.upload_file_list()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
-      sv = ServiceEnvironment()
-      project_root = sv.get("GITHUB_BASE")
-      for git_filename in files:
-        file_path = os.path.join(project_root, self.dir_path, git_filename)
-        if self.data_type == 'identifier':
-          try:
-            # aura.load_identifiers(self.dir_path,git_filename)
-            aura.load_identifiers(self.uuid,git_filename)
-          except Exception as e:
-            self.error = f"Couldn't load file"
-            application_logger.exception(self.error, e)
-            return False
-        elif self.data_type == 'subject': 
-          try:
-            aura.load_datapoints(self.uuid,git_filename)
-          except Exception as e:
-            self.error = f"Couldn't load file"
-            application_logger.exception(self.error, e)
-            return False
-        else:
-          application_logger.info(f"DataFile.execute: Unknown data_type: {self.data_type}")
+      # aura.load(self.uuid, files)
+      aura.load_datafile(self.uuid, files)
+
+
+      # files = git.upload_file_list()
+      # application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
+      # sv = ServiceEnvironment()
+      # project_root = sv.get("GITHUB_BASE")
+      # for git_filename in files:
+      #   file_path = os.path.join(project_root, self.dir_path, git_filename)
+      #   if self.data_type == 'identifier':
+      #     try:
+      #       # aura.load_identifiers(self.dir_path,git_filename)
+      #       aura.load_identifiers(self.uuid,git_filename)
+      #     except Exception as e:
+      #       self.error = f"Couldn't load file"
+      #       application_logger.exception(self.error, e)
+      #       return False
+      #   elif self.data_type == 'subject': 
+      #     try:
+      #       aura.load_datapoints(self.uuid,git_filename)
+      #     except Exception as e:
+      #       self.error = f"Couldn't load file"
+      #       application_logger.exception(self.error, e)
+      #       return False
+      #   else:
+      #     application_logger.info(f"DataFile.execute: Unknown data_type: {self.data_type}")
 
       self.set_status("complete", "Finished", 100)
       return True
@@ -128,23 +153,23 @@ class DataFile(BaseNode):
         return {'status': record['status'], 'percentage': record['percent'], 'stage': record['stage'] }
     return ""
 
-  @staticmethod
-  def _get_import_directory(tx):
-    query = "call dbms.listConfig()"
-    results = tx.run(query)
-    config = [x.data() for x in results]
-    import_directory = next((item for item in config if item["name"] == 'server.directories.import'), None)
-    return import_directory['value']
+  # @staticmethod
+  # def _get_import_directory(tx):
+  #   query = "call dbms.listConfig()"
+  #   results = tx.run(query)
+  #   config = [x.data() for x in results]
+  #   import_directory = next((item for item in config if item["name"] == 'server.directories.import'), None)
+  #   return import_directory['value']
     
-  @staticmethod
-  def _copy_file_to_db_import(source, target_folder):
-    assert os.path.exists(target_folder), f"Neo4j db import directory not found: {target_folder}"
-    with open(source,'r') as f:
-        txt = f.read()
-    target_file = os.path.join(target_folder,os.path.basename(source))
-    with open(target_file,'w') as f:
-        f.write(txt)
-    print("Written",target_file)
+  # @staticmethod
+  # def _copy_file_to_db_import(source, target_folder):
+  #   assert os.path.exists(target_folder), f"Neo4j db import directory not found: {target_folder}"
+  #   with open(source,'r') as f:
+  #       txt = f.read()
+  #   target_file = os.path.join(target_folder,os.path.basename(source))
+  #   with open(target_file,'w') as f:
+  #       f.write(txt)
+  #   print("Written",target_file)
 
   @staticmethod
   def _load_identifiers(tx, filename):
