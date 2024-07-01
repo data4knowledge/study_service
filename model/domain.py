@@ -76,6 +76,9 @@ class Domain(BaseNode):
       results = []
       if self.name == "DM":
         query = self.dm_query()
+      elif self.name == "DS":
+        query = self.ds_query()
+        return {'0':{'To be':'A DS domain'}}
       else:
         query = self.findings_query()
       # print(query)
@@ -111,6 +114,9 @@ class Domain(BaseNode):
       #print ("RESULTS:", results)
       if self.name == "DM":
         df = self.construct_dm_dataframe(results)
+      elif self.name == "DS":
+        print("Creating DS dataframe")
+        df = self.construct_ds_dataframe(results)
       else:
         df = self.construct_findings_dataframe(results)
       result = df.to_dict('index')
@@ -118,7 +124,7 @@ class Domain(BaseNode):
       return result
 
   def dm_query(self):
-    # Query as vertical findings
+    # Query as vertical findings. Now with RFICDTC
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
@@ -145,7 +151,33 @@ class Domain(BaseNode):
       , site.name as SITEID
       , e.label as VISIT
       , epoch.label as EPOCH
-    """ % (self.uuid)
+      union
+      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
+      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept {name: "Informed Consent Obtained"})-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'DSSTDTC'})
+      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)
+      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+      MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
+      MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      return
+      si.studyIdentifier as STUDYID
+      , domain.name as DOMAIN
+      , subj.identifier as USUBJID
+      , right(subj.identifier,6) as SUBJECT
+      , 'RFICDTC' as variable
+      , dp.value as value
+      , site.name as SITEID
+      , e.label as VISIT
+      , epoch.label as EPOCH
+    """ % (self.uuid,self.uuid)
+    print(query)
+    return query
+
+  def ds_query(self):
+    # ONLY PLACE HOLDER RIGHT NOW
+    query = "TO BE COMPLETED"
     print(query)
     return query
 
@@ -293,7 +325,7 @@ class Domain(BaseNode):
       "--TSTCND", "--BDAGNT", "--TSTOPO", "--STRESC", "--STRESN", "--STRESU"
     ]
     full_hide_list = [
-      "TAETORD", "RFSTDTC", "RFENDTC", "RFXSTDTC", "RFXENDTC", "RFCSTDTC", "RFCENDTC", "RFICDTC", "RFPENDTC"
+      "TAETORD", "RFSTDTC", "RFENDTC", "RFXSTDTC", "RFXENDTC", "RFCSTDTC", "RFCENDTC", "RFPENDTC"
     ]
     if name in full_hide_list:
       return True
