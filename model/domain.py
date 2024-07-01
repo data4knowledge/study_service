@@ -146,6 +146,7 @@ class Domain(BaseNode):
       , e.label as VISIT
       , epoch.label as EPOCH
     """ % (self.uuid)
+    print(query)
     return query
 
   def findings_query(self):
