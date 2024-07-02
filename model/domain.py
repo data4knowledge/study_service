@@ -4,6 +4,7 @@ from model.base_node import BaseNode
 from model.variable import Variable
 from model.biomedical_concept import BiomedicalConceptSimple
 from d4kms_service import Neo4jConnection
+from dateutil import parser 
 
 class Domain(BaseNode):
   uri: str
@@ -208,10 +209,24 @@ class Domain(BaseNode):
     """ % (self.uuid)
     return query
 
+  def convert_str_datetime(self, date_time_str):
+    # parser.parse is said to be able to handle incomplete dates, but might need to accomodate
+    return parser.parse(date_time_str)
+
+  def sdtm_derive_age(self,rficdtc,brthdtc):
+    inclusion_date = self.convert_str_datetime(rficdtc)
+    birth_date = self.convert_str_datetime(brthdtc)
+    # Note. Formula is using the fact that Python can subtract boolean from integer. (True = 1 and False = 0)
+    age = inclusion_date.year - birth_date.year - ((inclusion_date.month, inclusion_date.day) < (birth_date.month, birth_date.day))
+    return age
+
   def construct_dm_dataframe(self, results):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
+    # Check if age can be derived
+    if all(key in column_names for key in ('RFICDTC','BRTHDTC')):
+      derive_age = True
     # print("COLS:", column_names)
     final_results = {}
     for result in results:
@@ -233,7 +248,6 @@ class Domain(BaseNode):
           final_results[key][column_names.index("COUNTRY")] = result["COUNTRY"]
       variable_index = [column_names.index(result["variable"])][0]
       variable_name = result["variable"]
-      #print("Index:", variable_index)
       if not final_results[key][variable_index] == "":
         if result["value"] != final_results[key][variable_index]:
           if not variable_name in multiples[key]:
@@ -247,6 +261,16 @@ class Domain(BaseNode):
       else:
         final_results[key][variable_index] = result["value"]
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+
+    if derive_age:
+      index_rficdtc = [column_names.index('RFICDTC')][0]
+      index_brthdtc = [column_names.index('BRTHDTC')][0]
+      index_age = [column_names.index('AGE')][0]
+      print('index_rficdtc',index_rficdtc)
+      for key,vars in final_results.items():
+        vars[index_age] = self.sdtm_derive_age(vars[index_rficdtc],vars[index_brthdtc])
+        # vars[index_age] = derive_age(vars[index_rficdtc],vars[index_brthdtc])
+
 
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)
@@ -264,8 +288,10 @@ class Domain(BaseNode):
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
 
     df = pd.DataFrame(columns=column_names)
+    # print(df.head())
     for subject, result in final_results.items():
       df.loc[len(df.index)] = result
+    # print(df.head())
     return df
 
   def construct_findings_dataframe(self, results):
