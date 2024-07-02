@@ -27,7 +27,7 @@ class AuraService():
       for filename_entry in file_list:
         filename = filename_entry['filename']
         file_path = filename_entry['file_path']
-        application_logger.debug(f"load file: {filename} from {file_path}")
+        # application_logger.debug(f"load file: {filename} from {file_path}")
         parts = filename.split("-")
         #file_path = os.path.join(self.project_root, dir, filename)
         if parts[0] == "node":

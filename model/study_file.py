@@ -110,14 +110,14 @@ class StudyFile(BaseNode):
         git.load()
         files = git.upload_file_list(self.uuid)
       elif self.upload_service.upper().startswith('LOCAL'):
-        self.set_status("running", "Uploading to github", 15)
+        self.set_status("running", "Uploading to local", 15)
         local = LocalService()
         file_count = local.file_list(self.dir_path, "*.csv")
         for index in range(file_count):
           more = local.next()
           count = local.progress()
           percent = 15 + int(50.0 * (float(count) / float(file_count)))
-          self.set_status("running", "Uploading to local", percent)
+          # self.set_status("running", "Uploading to local", percent)
         local.load()
         files = local.upload_file_list(self.uuid)
       else:
@@ -127,7 +127,7 @@ class StudyFile(BaseNode):
         dropbox.upload()
         files = dropbox.upload_file_list(self.uuid)
 
-      application_logger.info(f"Files: {files}") 
+      # application_logger.info(f"Files: {files}") 
       self.set_status("running", "Loading database", 65)
       aura = AuraService()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
@@ -163,7 +163,7 @@ class StudyFile(BaseNode):
 
   def set_status(self, status, stage, percentage):
     self.status = status
-    application_logger.info(f"Study load, status: {status}")
+    application_logger.info(f"Study load, status: {status} {stage}")
     #print(f"Study load, status: {status}")
     db = Neo4jConnection()
     with db.session() as session:
