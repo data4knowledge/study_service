@@ -138,6 +138,7 @@ class StudyFile(BaseNode):
 
       # Fix surrogates. Replace CDISC BC's with d4k
       self.set_status("running", "Fix Biomedical Concepts Surrogates", 70)
+      result = StudyDesignBC.make_dob_surrogate_as_bc(study_design.name)
 
       self.set_status("running", "Fix Biomedical Concepts", 70)
       result = StudyDesignBC.fix(study_design.name)
@@ -149,6 +150,10 @@ class StudyFile(BaseNode):
 
       self.set_status("running", "Adding SDTM domains", 80)
       result = StudyDesignSDTM.create(study_design.name)
+
+      # Link BRTHDTC to CRM
+      self.set_status("running", "Fix Biomedical Concepts Surrogates", 89)
+      result = StudyDesignBC.link_birthdtc_to_crm(study_design.name)
 
       self.set_status("running", "Linking Biomedical Concepts", 90)
       result = StudyDesignBC.create(study_design.name)

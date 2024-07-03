@@ -88,6 +88,22 @@ class StudyDesignBC():
     result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
     return result
   
+  @classmethod
+  def make_dob_surrogate_as_bc(cls, name):
+    bc_uuid = cls._copy_surrogate()
+    print("bc_uuid",bc_uuid)
+    bcp_uuids = cls._copy_properties(bc_uuid, 'Date of Birth', 'Race')
+    print("bcp_uuids",bcp_uuids)
+    cls._copy_bc_relationships_from_bc(bc_uuid, 'Race')
+    application_logger.info("Converted Date of Birth Surrgate to BC")   
+
+  @classmethod
+  def link_birthdtc_to_crm(cls, name):
+    cls._link_birthdtc_to_crm()
+    application_logger.info("Linked BRTHDTC to CRM")   
+
+
+
   @staticmethod
   def _match(name, map):
     name_upper = name.upper()
@@ -131,7 +147,7 @@ class StudyDesignBC():
         crm_node = CRMNode.wrap(record['n'])
         results[crm_node.uri] = crm_node
       return results
-    
+
   @staticmethod
   def _get_properties(study_design):
     db = Neo4jConnection()
@@ -201,3 +217,189 @@ class StudyDesignBC():
       )
       for row in result:
         return uuids
+
+  @staticmethod
+  def _copy_surrogate():
+    db = Neo4jConnection()
+    bc_uuid = str(uuid4())
+
+    with db.session() as session:
+      results = []
+      query = """
+        MATCH (bcs:BiomedicalConceptSurrogate)
+        where bcs.name = "Date of Birth"
+        WITH bcs
+        MERGE (bc:BiomedicalConcept {uuid:'%s'})
+        SET bc.name         = bcs.name
+        SET bc.description  = bcs.description
+        SET bc.label        = bcs.label
+        SET bc.name         = bcs.name
+        SET bc.instanceType = "BiomedicalConcept"
+        SET bc.reference    = "None set"
+        SET bc.id           = "BiomedicalConcept_9999"
+        SET bc.fake_node    = "yes"
+        return bc.uuid as uuid
+      """ % (bc_uuid)
+      records = session.run(query)
+      for record in records:
+        results.append(record.data())
+      if results:
+        return results[0]['uuid']
+      return "Error: Did not create BC"
+
+  @staticmethod
+  # def copy_bc_properties_from_bc(db, new_bc_name,copy_bc_name, bc_uuid):
+  def _copy_properties(bc_uuid, new_bc_name, copy_bc_name):
+    db = Neo4jConnection()
+    bcp_uuids = []
+    with db.session() as session:
+      # Get properties for bc to copy
+      query = """
+          MATCH (bc:BiomedicalConcept {name:"%s"})-[:PROPERTIES_REL]->(bcp)
+          RETURN bcp.uuid as uuid, bcp.name as name, bcp.label as label
+      """ % (copy_bc_name)
+      print("query\n",query)
+      # Create the same properties for new bc and add relationships to data contract and scheduled activity instance
+      results = session.run(query)
+      for bcp in [result.data() for result in results]:
+          uuid = str(uuid4())
+
+          # Create property node
+          bcp_name = bcp['name'] if bcp['name'] != copy_bc_name else new_bc_name
+          bcp_label = bcp['label'] if bcp['label'] != copy_bc_name else new_bc_name
+          # HARD CODING: Probably don't needed as it is not possible to use WHERE clause in cypher query
+          # if bcp_label == 'Date of Birth':
+          #     bcp_label = 'Date/Time of Birth'
+          print('bcp_label',bcp_label,new_bc_name)
+          print('bcp_name',bcp_name)
+          query = """
+              MATCH (source_bcp:BiomedicalConceptProperty {uuid:'%s'})
+              with source_bcp
+              MERGE (bcp:BiomedicalConceptProperty {uuid:'%s'})
+              SET bcp.datatype     =	source_bcp.datatype
+              SET bcp.id           =	'tbd'
+              SET bcp.instanceType =	source_bcp.instanceType
+              SET bcp.isEnabled    =	source_bcp.isEnabled
+              SET bcp.isRequired   =	source_bcp.isRequired
+              SET bcp.label        =	'%s'
+              SET bcp.name         =	'%s'
+              SET bcp.fake_node    = 'yes'
+              RETURN bcp.uuid as uuid
+          """ % (bcp['uuid'], uuid, bcp_label, bcp_name)
+          print(query)
+          results = session.run(query)
+          bcp_uuids.append([result.data() for result in results][0]['uuid'])
+          print("bcp_uuids",bcp_uuids)
+          # Link to new bc
+          query = """
+              MATCH (bc:BiomedicalConcept {uuid:'%s'})
+              MATCH (bcp:BiomedicalConceptProperty {uuid:'%s'})
+              MERGE (bc)-[r:PROPERTIES_REL]->(bcp)
+              set r.fake_relationship = 'yes'
+              RETURN 'done'
+          """ % (bc_uuid, uuid)
+          print(query)
+          results = session.run(query)
+          for result in results:
+            print("result",result.data())
+          print("Created link between BC and BCP")
+
+          # # Copy property nodes relationships: DataContract
+          # dc_uri="https://study.d4k.dk/study-cdisc-pilot-lzzt/"+bc_uuid+"/"+uuid
+          # query = """
+          #     MATCH (source_bcp:BiomedicalConceptProperty {uuid:'%s'})<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]-(sai:ScheduledActivityInstance)
+          #     MATCH (bcp:BiomedicalConceptProperty {uuid:'%s'})
+          #     with sai, bcp
+          #     CREATE (dc:DataContract {uri:'%s', fake_node: 'yes'})
+          #     CREATE (bcp)<-[r1:PROPERTIES_REL]-(dc)-[r2:INSTANCES_REL]->(sai)
+          #     set r1.fake_relationship = 'yes'
+          #     set r2.fake_relationship = 'yes'
+          #     RETURN 'done'
+          # """ % (bcp['uuid'], uuid, dc_uri)
+          # print(query)
+          # results = session.run(query)
+          # for result in results:
+          #   print("result",result.data())
+          # print("Created Data Contract")
+
+          # # Copy property nodes relationships: IS_A_REL        
+          # query = """
+          #     MATCH (source_bcp:BiomedicalConceptProperty {uuid:"%s"})-[:IS_A_REL]->(crm:CRMNode)
+          #     MATCH (bcp:BiomedicalConceptProperty {uuid:"%s"})
+          #     with crm, bcp
+          #     MERGE (bcp)-[r:IS_A_REL]->(crm)
+          #     set r.fake_relationship = "yes"
+          #     return *
+          # """ % (bcp['uuid'], uuid)
+          # # print(query)
+          # results = session.run(query)
+          # for result in results:
+          #   print("result",result.data())
+          # print("Created property node IS_A_REL")
+    return bcp_uuids
+      
+  @staticmethod
+  def _copy_bc_relationships_from_bc(bc_uuid, copy_bc_name):
+    db = Neo4jConnection()
+    with db.session() as session:
+      # Copy relationship to study
+      query = """
+          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:BIOMEDICAL_CONCEPTS_REL]-(target:StudyDesign)
+          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+          MERGE (new_bc)<-[:BIOMEDICAL_CONCEPTS_REL]-(target)
+      """ % (copy_bc_name, bc_uuid)
+      # print(query)
+      results = session.run(query)
+      for result in results:
+        print("result",result.data())
+      print("Created link to Study Design")
+
+      # Copy relationship to domain
+      query = """
+          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:USING_BC_REL]-(target:Domain)
+          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+          MERGE (new_bc)<-[:USING_BC_REL]-(target)
+      """ % (copy_bc_name, bc_uuid)
+      # print(query)
+      results = session.run(query)
+      for result in results:
+        print("result",result.data())
+      print("Created link to Domain")
+
+      # Copy relationship to activity
+      query = """
+          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:BIOMEDICAL_CONCEPT_REL]-(target:Activity)
+          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+          MERGE (new_bc)<-[:BIOMEDICAL_CONCEPT_REL]-(target)
+      """ % (copy_bc_name, bc_uuid)
+      # print(query)
+      results = session.run(query)
+      for result in results:
+        print("result",result.data())
+      print("Created link to Activity")
+
+      # Ignoring CODE_REL -> AliasCode
+
+  @staticmethod
+  def _link_birthdtc_to_crm():
+    db = Neo4jConnection()
+    with db.session() as session:
+      # If topic result (e.g. Date of Birth)
+      # if bcp['name'] != copy_bc_name:
+      # bcp_name = "Date of Birth"
+      # MATCH (source_bcp:BiomedicalConceptProperty {{name:"{bcp_name}"}})-[:IS_A_REL]->(crm:CRMNode)
+      query = """
+          MATCH (bcp:BiomedicalConceptProperty {name:"Date of Birth"})
+          MATCH (crm:CRMNode {sdtm:"SEX,RACE,ETHNIC,--ORRES"})
+          MATCH (v:Variable {name:"BRTHDTC"})
+          with bcp,crm, v
+          MERGE (bcp)-[:IS_A_REL]->(crm)
+          MERGE (v)-[r:IS_A_REL]->(crm)
+          set r.fake_relationship = "yes"
+          return *
+      """
+      print(query)
+      results = db.query(query)
+      for result in results:
+        print("result",result.data())
+      print("Created link to CRM")
