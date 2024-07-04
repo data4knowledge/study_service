@@ -4,6 +4,7 @@ from model.base_node import BaseNode
 from model.variable import Variable
 from model.biomedical_concept import BiomedicalConceptSimple
 from d4kms_service import Neo4jConnection
+from d4kms_generic import application_logger
 from dateutil import parser 
 
 class Domain(BaseNode):
@@ -214,10 +215,14 @@ class Domain(BaseNode):
     return parser.parse(date_time_str)
 
   def sdtm_derive_age(self,rficdtc,brthdtc):
-    inclusion_date = self.convert_str_datetime(rficdtc)
-    birth_date = self.convert_str_datetime(brthdtc)
-    # Note. Formula is using the fact that Python can subtract boolean from integer. (True = 1 and False = 0)
-    age = inclusion_date.year - birth_date.year - ((inclusion_date.month, inclusion_date.day) < (birth_date.month, birth_date.day))
+    if rficdtc and brthdtc:
+      inclusion_date = self.convert_str_datetime(rficdtc)
+      birth_date = self.convert_str_datetime(brthdtc)
+      # Note. Formula is using the fact that Python can subtract boolean from integer. (True = 1 and False = 0)
+      age = inclusion_date.year - birth_date.year - ((inclusion_date.month, inclusion_date.day) < (birth_date.month, birth_date.day))
+    else:
+      application_logger.info(f"Could not derive age. rficdtc:{rficdtc} brthdtc:{brthdtc}")
+      age = "N/A"
     return age
 
   def construct_dm_dataframe(self, results):
