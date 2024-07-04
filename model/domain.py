@@ -271,7 +271,6 @@ class Domain(BaseNode):
       index_rficdtc = [column_names.index('RFICDTC')][0]
       index_brthdtc = [column_names.index('BRTHDTC')][0]
       index_age = [column_names.index('AGE')][0]
-      print('index_rficdtc',index_rficdtc)
       for key,vars in final_results.items():
         vars[index_age] = self.sdtm_derive_age(vars[index_rficdtc],vars[index_brthdtc])
         # vars[index_age] = derive_age(vars[index_rficdtc],vars[index_brthdtc])
