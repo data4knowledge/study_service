@@ -268,8 +268,8 @@ class StudyDesignBC():
           bcp_name = bcp['name'] if bcp['name'] != copy_bc_name else new_bc_name
           bcp_label = bcp['label'] if bcp['label'] != copy_bc_name else new_bc_name
           # HARD CODING: Probably don't needed as it is not possible to use WHERE clause in cypher query
-          # if bcp_label == 'Date of Birth':
-          #     bcp_label = 'Date/Time of Birth'
+          if bcp_label == 'Date of Birth':
+              bcp_label = 'Date/Time of Birth'
           print('bcp_label',bcp_label,new_bc_name)
           print('bcp_name',bcp_name)
           query = """
