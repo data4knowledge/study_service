@@ -400,8 +400,24 @@ class StudyDesignBC():
           set r.fake_relationship = "yes"
           return *
       """
-      application_logger.info(f"BRTHDTC CRM query {query}")
+      # application_logger.info(f"BRTHDTC CRM query {query}")
       results = db.query(query)
       for result in results:
         print("result",result.data())
       application_logger.info("Created link to CRM from BRTHDTC")
+
+      for var in ['DSDECOD','DSSTDTC']:
+        query = """
+          MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
+          MATCH (crm:CRMNode {sdtm:"TERM"})
+          MATCH (v:Variable {name:'%s'})
+          with bcp,crm, v
+          MERGE (bcp)-[:IS_A_REL]->(crm)
+          MERGE (v)-[r:IS_A_REL]->(crm)
+          set r.fake_relationship = "yes"
+          return "done" as done
+        """ % (var,'TERM',var)
+        results = db.query(query)
+        for result in results:
+          print("result",result.data())
+        application_logger.info(f"Created link to CRM from {var}")
