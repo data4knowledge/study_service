@@ -409,7 +409,7 @@ class StudyDesignBC():
       for var in ['DSDECOD','DSSTDTC']:
         query = """
           MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
-          MATCH (crm:CRMNode {sdtm:"TERM"})
+          MATCH (crm:CRMNode {sdtm:'%s'})
           MATCH (v:Variable {name:'%s'})
           with bcp,crm, v
           MERGE (bcp)-[:IS_A_REL]->(crm)
@@ -417,7 +417,35 @@ class StudyDesignBC():
           set r.fake_relationship = "yes"
           return "done" as done
         """ % (var,'TERM',var)
+        print("crm query",query)
         results = db.query(query)
-        for result in results:
-          print("result",result.data())
+        print("crm query results",results)
+        # for result in results:
+        #   pass
+        #   # print("result",result.data())
         application_logger.info(f"Created link to CRM from {var}")
+
+      query = """
+          // Create term and link to DSDECOD
+          MERGE (t:SkosConcept {uri:'https://ct.d4k.dk/cdisc/dataset/sc/2014-03-28/sdtm/C114118/C16735'})
+          SET t.pref_label = 'Informed Consent'
+          SET t.identifier = 'C16735'
+          SET t.alt_label = '[]'
+          SET t.notation = 'INFORMED CONSENT OBTAINED'
+          SET t.name = 'Informed Consent'
+          SET t.definition = 'Consent by a patient for participation in a clinical study after achieving an understanding of the relevant medical facts and the risks involved.'
+          SET t.id = 106651
+          SET t.extensible = 'False'
+          SET t.fake_node = 'yes'
+          SET t.uuid = 'FakeUUIDInformedConcentObtained'
+          with t
+          MATCH (bcp:BiomedicalConceptProperty)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)
+          WHERE bcp.name = 'DSDECOD'
+          MERGE (c)-[:HAS_TERM]->(t)
+          return bcp,c,t
+      """
+      # application_logger.info(f"BRTHDTC CRM query {query}")
+      results = db.query(query)
+      for result in results:
+        print("result",result.data())
+      application_logger.info("Created term and link to DSDECOD")

@@ -80,7 +80,9 @@ class Domain(BaseNode):
         query = self.dm_query()
       elif self.name == "DS":
         query = self.ds_query()
-        # return {'0':{'To be':'A DS domain'}}
+        metadata = self.get_ds_metadata()
+        for x in metadata:
+          print("metadata",metadata)
       else:
         query = self.findings_query()
       print(query)
@@ -106,9 +108,10 @@ class Domain(BaseNode):
           if 'INVID' in row.keys():
             record['INVID'] = row["INVID"]
         elif self.name == "DS":
-          # record['SUBJID'] = row["SUBJECT"]
-          # record['SITEID'] = row["SITEID"]
-          pass
+          # Add metadata
+          items = [item for item in metadata if row['bc_uuid'] == item['bc_uuid']]
+          for item in items:
+            record[item['variable']] = item['value']
         else:
           record['test_code'] = row['test_code']
           if 'VISIT' in row.keys():
@@ -211,6 +214,7 @@ class Domain(BaseNode):
             , site.name as SITEID
             , e.label as VISIT
             , epoch.label as EPOCH
+            , bc.uuid as bc_uuid
     """ % (self.uuid)
     # print(query)
     return query
@@ -299,13 +303,13 @@ class Domain(BaseNode):
         final_results[key][variable_index] = result["value"]
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
-    if derive_age:
-      index_rficdtc = [column_names.index('RFICDTC')][0]
-      index_brthdtc = [column_names.index('BRTHDTC')][0]
-      index_age = [column_names.index('AGE')][0]
-      for key,vars in final_results.items():
-        vars[index_age] = self.sdtm_derive_age(vars[index_rficdtc],vars[index_brthdtc])
-        # vars[index_age] = derive_age(vars[index_rficdtc],vars[index_brthdtc])
+      if derive_age:
+        index_rficdtc = [column_names.index('RFICDTC')][0]
+        index_brthdtc = [column_names.index('BRTHDTC')][0]
+        index_age = [column_names.index('AGE')][0]
+        for key,vars in final_results.items():
+          vars[index_age] = self.sdtm_derive_age(vars[index_rficdtc],vars[index_brthdtc])
+          # vars[index_age] = derive_age(vars[index_rficdtc],vars[index_brthdtc])
 
 
     for supp_name, count in supp_quals.items():
@@ -330,6 +334,30 @@ class Domain(BaseNode):
     # print(df.head())
     return df
 
+  def get_ds_metadata(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {name:'DS'})
+        MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+        MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept)
+        WITH si, domain, bc
+        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+        MATCH (bcp)-[:CODE_REL]->(ac:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)-[:HAS_TERM]->(term:SkosConcept)
+        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
+        WHERE  var.name = bcp.name
+        return
+              si.studyIdentifier as STUDYID
+              , domain.name as DOMAIN
+              , var.name as variable
+              , term.notation as value
+              , bc.uuid as bc_uuid
+      """
+      results = session.run(query)
+      return [result.data() for result in results]
+
   def construct_ds_dataframe(self, results):
     multiples = {}
     supp_quals = {}
@@ -338,7 +366,6 @@ class Domain(BaseNode):
     # ['STUDYID', 'DOMAIN', 'USUBJID', 'DSSEQ', 'DSTERM', 'DSDECOD', 'DSCAT', 'DSSCAT', 'EPOCH', 'DSDTC', 'DSSTDTC', 'DSDY', 'DSSTDY']
     final_results = {}
     for result in results:
-      print("loopar")
       # NEED TO FIX. Need DSSEQ
       if 'DSSEQ' in result.keys():
         key = "%s.%s" % (result['USUBJID'],result['DSSEQ'])
@@ -383,6 +410,10 @@ class Domain(BaseNode):
       else:
         final_results[key][variable_index] = result["value"]
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+
+    # add 
+    # for x,y in final_results.items():
+    #   print("x",x,y)
 
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)
