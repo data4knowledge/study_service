@@ -18,6 +18,8 @@ class StudyDesignBC():
     study_design = cls._get_study_design(name)
     bcs = cls._get_bcs(study_design)
     for bc in bcs:
+      print("--debug bc:",bc)
+    for bc in bcs:
       results[bc.name] = cls._add_propety(bc)
       application_logger.info(f"Inserted --DTC for '{bc.name}'")   
     return results
@@ -398,8 +400,8 @@ class StudyDesignBC():
           set r.fake_relationship = "yes"
           return *
       """
-      print(query)
+      application_logger.info(f"BRTHDTC CRM query {query}")
       results = db.query(query)
       for result in results:
         print("result",result.data())
-      print("Created link to CRM")
+      application_logger.info("Created link to CRM from BRTHDTC")
