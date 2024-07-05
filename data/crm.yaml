@@ -53,3 +53,8 @@
     - node: "DATE TIME"
       data_type: "date_time"
       property: "value"
+  - name: "TERM"
+    canonical: 
+    - node: "TERM"
+      data_type: "codeable_concept"
+      property: "code"
