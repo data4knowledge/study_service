@@ -18,10 +18,9 @@ class StudyDesignBC():
     study_design = cls._get_study_design(name)
     bcs = cls._get_bcs(study_design)
     for bc in bcs:
-      print("--debug bc:",bc)
-    for bc in bcs:
+      # print("--debug bc:",bc.name)
       results[bc.name] = cls._add_propety(bc)
-      application_logger.info(f"Inserted --DTC for '{bc.name}'")   
+      # application_logger.info(f"Inserted --DTC for '{bc.name}'")   
     return results
   
   @classmethod
@@ -40,7 +39,7 @@ class StudyDesignBC():
     #print(f"MAP {crm_map}")
     #print(f"PROPERTIES: {[i.name for i in properties]}")
     for p in properties:
-      #print(f"P: {p.name}")
+      # print(f"P: {p.name}")
       nodes = cls._match(p.name, crm_map)
       #print(f"N: {nodes}")
       if nodes:
@@ -93,15 +92,15 @@ class StudyDesignBC():
   @classmethod
   def make_dob_surrogate_as_bc(cls, name):
     bc_uuid = cls._copy_surrogate()
-    print("bc_uuid",bc_uuid)
+    # print("bc_uuid",bc_uuid)
     bcp_uuids = cls._copy_properties(bc_uuid, 'Date of Birth', 'Race')
-    print("bcp_uuids",bcp_uuids)
+    # print("bcp_uuids",bcp_uuids)
     cls._copy_bc_relationships_from_bc(bc_uuid, 'Race')
     application_logger.info("Converted Date of Birth Surrgate to BC")   
 
   @classmethod
-  def link_birthdtc_to_crm(cls, name):
-    cls._link_birthdtc_to_crm()
+  def fix_links_to_crm(cls, name):
+    cls._fix_links_to_crm()
     application_logger.info("Linked BRTHDTC to CRM")   
 
 
@@ -250,7 +249,6 @@ class StudyDesignBC():
       return "Error: Did not create BC"
 
   @staticmethod
-  # def copy_bc_properties_from_bc(db, new_bc_name,copy_bc_name, bc_uuid):
   def _copy_properties(bc_uuid, new_bc_name, copy_bc_name):
     db = Neo4jConnection()
     bcp_uuids = []
@@ -260,7 +258,7 @@ class StudyDesignBC():
           MATCH (bc:BiomedicalConcept {name:"%s"})-[:PROPERTIES_REL]->(bcp)
           RETURN bcp.uuid as uuid, bcp.name as name, bcp.label as label
       """ % (copy_bc_name)
-      print("query\n",query)
+      # print("query\n",query)
       # Create the same properties for new bc and add relationships to data contract and scheduled activity instance
       results = session.run(query)
       for bcp in [result.data() for result in results]:
@@ -269,9 +267,10 @@ class StudyDesignBC():
           # Create property node
           bcp_name = bcp['name'] if bcp['name'] != copy_bc_name else new_bc_name
           bcp_label = bcp['label'] if bcp['label'] != copy_bc_name else new_bc_name
-          # HARD CODING: Probably don't needed as it is not possible to use WHERE clause in cypher query
+          # HARD CODING: Mismatch in services databases
           if bcp_label == 'Date of Birth':
               bcp_label = 'Date/Time of Birth'
+              bcp_name = 'BRTHDTC'
           print('bcp_label',bcp_label,new_bc_name)
           print('bcp_name',bcp_name)
           query = """
@@ -288,10 +287,9 @@ class StudyDesignBC():
               SET bcp.fake_node    = 'yes'
               RETURN bcp.uuid as uuid
           """ % (bcp['uuid'], uuid, bcp_label, bcp_name)
-          print(query)
+          # print("query",query)
           results = session.run(query)
           bcp_uuids.append([result.data() for result in results][0]['uuid'])
-          print("bcp_uuids",bcp_uuids)
           # Link to new bc
           query = """
               MATCH (bc:BiomedicalConcept {uuid:'%s'})
@@ -300,7 +298,7 @@ class StudyDesignBC():
               set r.fake_relationship = 'yes'
               RETURN 'done'
           """ % (bc_uuid, uuid)
-          print(query)
+          # print("query",query)
           results = session.run(query)
           for result in results:
             print("result",result.data())
@@ -383,13 +381,14 @@ class StudyDesignBC():
       # Ignoring CODE_REL -> AliasCode
 
   @staticmethod
-  def _link_birthdtc_to_crm():
+  def _fix_links_to_crm():
     db = Neo4jConnection()
     with db.session() as session:
       # If topic result (e.g. Date of Birth)
       # if bcp['name'] != copy_bc_name:
       # bcp_name = "Date of Birth"
       # MATCH (source_bcp:BiomedicalConceptProperty {{name:"{bcp_name}"}})-[:IS_A_REL]->(crm:CRMNode)
+
       query = """
           MATCH (bcp:BiomedicalConceptProperty {name:"Date of Birth"})
           MATCH (crm:CRMNode {sdtm:"SEX,RACE,ETHNIC,--ORRES"})
@@ -400,7 +399,16 @@ class StudyDesignBC():
           set r.fake_relationship = "yes"
           return *
       """
-      # application_logger.info(f"BRTHDTC CRM query {query}")
+      query = """
+          MATCH (crm:CRMNode)
+          MATCH (v:Variable {name:"BRTHDTC"})
+          WHERE crm.uri = 'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+          with crm, v
+          MERGE (v)-[r:IS_A_REL]->(crm)
+          set r.fake_relationship = "yes"
+          return *
+      """
+      print("BRTHDTC crm query",query)
       results = db.query(query)
       for result in results:
         print("result",result.data())
@@ -417,6 +425,14 @@ class StudyDesignBC():
           set r.fake_relationship = "yes"
           return "done" as done
         """ % (var,'TERM',var)
+        query = """
+          MATCH (crm:CRMNode {uri:'%s'})
+          MATCH (v:Variable {name:'%s'})
+          with crm, v
+          MERGE (v)-[r:IS_A_REL]->(crm)
+          set r.fake_relationship = "yes"
+          return "done" as done
+        """ % ('https://crm.d4k.dk/dataset/adverse_event/term/codeable_concept/coding/code',var)
         print("crm query",query)
         results = db.query(query)
         print("crm query results",results)
