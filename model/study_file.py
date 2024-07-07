@@ -152,8 +152,8 @@ class StudyFile(BaseNode):
       result = StudyDesignSDTM.create(study_design.name)
 
       # Link BRTHDTC to CRM
-      self.set_status("running", "Fix Biomedical Concepts Surrogates", 89)
-      result = StudyDesignBC.link_birthdtc_to_crm(study_design.name)
+      self.set_status("running", "Link BRTHDTC to CRM", 89)
+      result = StudyDesignBC.fix_links_to_crm(study_design.name)
 
       self.set_status("running", "Linking Biomedical Concepts", 90)
       result = StudyDesignBC.create(study_design.name)
