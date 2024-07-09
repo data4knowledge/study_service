@@ -338,7 +338,7 @@ class Domain(BaseNode):
     db = Neo4jConnection()
     with db.session() as session:
       query = """
-        MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {name:'DS'})
+        MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
         MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
         MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
         MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept)
@@ -354,7 +354,7 @@ class Domain(BaseNode):
               , var.name as variable
               , term.notation as value
               , bc.uuid as bc_uuid
-      """
+      """ % (self.uuid)
       results = session.run(query)
       return [result.data() for result in results]
 
@@ -365,6 +365,7 @@ class Domain(BaseNode):
     # print("COLS:", column_names)
     # ['STUDYID', 'DOMAIN', 'USUBJID', 'DSSEQ', 'DSTERM', 'DSDECOD', 'DSCAT', 'DSSCAT', 'EPOCH', 'DSDTC', 'DSSTDTC', 'DSDY', 'DSSTDY']
     final_results = {}
+    current_usubjid = ""
     for result in results:
       # NEED TO FIX. Need DSSEQ
       if 'DSSEQ' in result.keys():
