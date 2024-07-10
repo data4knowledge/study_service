@@ -274,9 +274,7 @@ class Domain(BaseNode):
         result[seq_index] = seq
         current_usubjid = result[usubjid_index]
 
-  def add_seq_list_of_dict(self, seq_var, results):
-    print("adding seq list of dicts")
-    print("results[0].keys()",results[0].keys())
+  def add_seq_list_of_dict(self, results, seq_var):
     current_usubjid = ""
     seq = 0
     for result in results:
@@ -293,7 +291,7 @@ class Domain(BaseNode):
     if isinstance(results, dict):
       self.add_seq_dict(results, seq_index, usubjid_index)
     elif isinstance(results, list) and isinstance(results[0], dict):
-      self.add_seq_list_of_dict(seq_var, results)
+      self.add_seq_list_of_dict(results, seq_var)
     else:
         application_logger.info(f"Don't know how to add --SEQ to {results.__class__}")
 
