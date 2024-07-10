@@ -303,15 +303,6 @@ class Domain(BaseNode):
         final_results[key][variable_index] = result["value"]
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
-      if derive_age:
-        index_rficdtc = [column_names.index('RFICDTC')][0]
-        index_brthdtc = [column_names.index('BRTHDTC')][0]
-        index_age = [column_names.index('AGE')][0]
-        for key,vars in final_results.items():
-          vars[index_age] = self.sdtm_derive_age(vars[index_rficdtc],vars[index_brthdtc])
-          # vars[index_age] = derive_age(vars[index_rficdtc],vars[index_brthdtc])
-
-
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)
       for i in range(1, count + 1):
@@ -326,6 +317,14 @@ class Domain(BaseNode):
             if i <= len(items[supp_name]):
               final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
+
+    if derive_age:
+      index_rficdtc = [column_names.index('RFICDTC')][0]
+      index_brthdtc = [column_names.index('BRTHDTC')][0]
+      index_age = [column_names.index('AGE')][0]
+      for key,vars in final_results.items():
+        vars[index_age] = self.sdtm_derive_age(vars[index_rficdtc],vars[index_brthdtc])
+        # vars[index_age] = derive_age(vars[index_rficdtc],vars[index_brthdtc])
 
     df = pd.DataFrame(columns=column_names)
     # print(df.head())
