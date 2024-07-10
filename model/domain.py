@@ -88,7 +88,7 @@ class Domain(BaseNode):
       print(query)
       rows = session.run(query)
       for row in rows:
-        print("row",row)
+        # print("row",row)
         record = { 
           'variable': row["variable"], 
           'value': row["value"], 
@@ -247,7 +247,7 @@ class Domain(BaseNode):
     return query
 
   def convert_str_datetime(self, date_time_str):
-    # parser.parse is said to be able to handle incomplete dates, but might need to accomodate
+    # parser.parse is said to be able to handle incomplete dates, but might need fixing
     return parser.parse(date_time_str)
 
   def sdtm_derive_age(self,rficdtc,brthdtc):
@@ -260,6 +260,43 @@ class Domain(BaseNode):
       application_logger.info(f"Could not derive age. rficdtc:{rficdtc} brthdtc:{brthdtc}")
       age = "N/A"
     return age
+
+  def add_seq_dict(self, results, seq_index, usubjid_index):
+    print("adding seq dict")
+    current_usubjid = ""
+    seq = 0
+    for key, result in results.items():
+      if current_usubjid == result[usubjid_index]:
+        seq += 1
+        result[seq_index] = seq
+      else:
+        seq = 1
+        result[seq_index] = seq
+        current_usubjid = result[usubjid_index]
+
+  def add_seq_list_of_dict(self, seq_var, results):
+    print("adding seq list of dicts")
+    print("results[0].keys()",results[0].keys())
+    current_usubjid = ""
+    seq = 0
+    for result in results:
+      if current_usubjid == result['USUBJID']:
+        seq += 1
+        result[seq_var] = seq
+      else:
+        seq = 1
+        result[seq_var] = seq
+        current_usubjid = result['USUBJID']
+
+  def add_seq(self, results, seq_index = None, usubjid_index = None):
+    seq_var = self.name + "SEQ"
+    if isinstance(results, dict):
+      self.add_seq_dict(results, seq_index, usubjid_index)
+    elif isinstance(results, list) and isinstance(results[0], dict):
+      self.add_seq_list_of_dict(seq_var, results)
+    else:
+        application_logger.info(f"Don't know how to add --SEQ to {results.__class__}")
+
 
   def construct_dm_dataframe(self, results):
     multiples = {}
@@ -364,9 +401,8 @@ class Domain(BaseNode):
     # print("COLS:", column_names)
     # ['STUDYID', 'DOMAIN', 'USUBJID', 'DSSEQ', 'DSTERM', 'DSDECOD', 'DSCAT', 'DSSCAT', 'EPOCH', 'DSDTC', 'DSSTDTC', 'DSDY', 'DSSTDY']
     final_results = {}
-    current_usubjid = ""
+    self.add_seq(results)
     for result in results:
-      # NEED TO FIX. Need DSSEQ
       if 'DSSEQ' in result.keys():
         key = "%s.%s" % (result['USUBJID'],result['DSSEQ'])
       else:
@@ -411,10 +447,6 @@ class Domain(BaseNode):
         final_results[key][variable_index] = result["value"]
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
-    # add 
-    # for x,y in final_results.items():
-    #   print("x",x,y)
-
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)
       for i in range(1, count + 1):
@@ -440,6 +472,7 @@ class Domain(BaseNode):
   def construct_findings_dataframe(self, results):
     # topic = self.topic()
     topic = self.name+"TESTCD"
+    seq_var = self.name+"SEQ"
     column_names = self.variable_list()
     final_results = {}
     for result in results:
@@ -464,6 +497,7 @@ class Domain(BaseNode):
         record = final_results[key]
       variable_index = [column_names.index(result["variable"])][0]
       record[variable_index] = result["value"]
+    self.add_seq(final_results, column_names.index(seq_var), column_names.index("USUBJID"))
     df = pd.DataFrame(columns=column_names)
     for key, result in final_results.items():
       df.loc[len(df.index)] = result
