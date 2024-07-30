@@ -252,7 +252,9 @@ class Domain(BaseNode):
 
   def sdtm_derive_age(self,rficdtc,brthdtc):
     if rficdtc and brthdtc:
+      print("rficdtc:",rficdtc)
       inclusion_date = self.convert_str_datetime(rficdtc)
+      print("brthdtc:",brthdtc)
       birth_date = self.convert_str_datetime(brthdtc)
       # Note. Formula is using the fact that Python can subtract boolean from integer. (True = 1 and False = 0)
       age = inclusion_date.year - birth_date.year - ((inclusion_date.month, inclusion_date.day) < (birth_date.month, birth_date.day))
@@ -307,6 +309,7 @@ class Domain(BaseNode):
     final_results = {}
     for result in results:
       key = result["SUBJID"]
+      print("0 SUBJID",key)
       if not result["SUBJID"] in final_results:
         multiples[key] = {}
         final_results[key] = [""] * len(column_names)
@@ -322,11 +325,16 @@ class Domain(BaseNode):
           final_results[key][column_names.index("INVNAM")] = result["INVNAM"]
         if "COUNTRY" in result.keys():
           final_results[key][column_names.index("COUNTRY")] = result["COUNTRY"]
-      variable_index = [column_names.index(result["variable"])][0]
+        print("  1.1 adding first for SUBJID",final_results[key])
       variable_name = result["variable"]
+      variable_index = [column_names.index(variable_name)][0]
+      print("  variable",variable_name,variable_index)
       if not final_results[key][variable_index] == "":
+        print("  2.1 has previous value",final_results[key][variable_index])
         if result["value"] != final_results[key][variable_index]:
+          print("  2.2",result["value"])
           if not variable_name in multiples[key]:
+            print("  2.3: variable_name:",variable_name)
             multiples[key][variable_name] = [final_results[key][variable_index]]
             final_results[key][variable_index] = "MULTIPLE"
             if not variable_name in supp_quals:
@@ -334,8 +342,11 @@ class Domain(BaseNode):
           multiples[key][variable_name].append(result["value"])
           if len(multiples[key][variable_name]) > supp_quals[variable_name]:
             supp_quals[variable_name] = len(multiples[key][variable_name])
+        print("  2.9 adding next for SUBJID",final_results[key])
       else:
+        print("  3.1 no previous value",variable_name,"=",result['value'])
         final_results[key][variable_index] = result["value"]
+        print("  3.9 adding next for SUBJID",final_results[key])
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
     for supp_name, count in supp_quals.items():
