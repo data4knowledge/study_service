@@ -100,7 +100,7 @@ class StudyDesignBC():
 
   @classmethod
   def fix_links_to_crm(cls, name):
-    cls._fix_links_to_crm()
+    cls._add_missing_links_to_crm()
     application_logger.info("Linked BRTHDTC to CRM")   
 
 
@@ -271,8 +271,6 @@ class StudyDesignBC():
           if bcp_label == 'Date of Birth':
               bcp_label = 'Date/Time of Birth'
               bcp_name = 'BRTHDTC'
-          print('bcp_label',bcp_label,new_bc_name)
-          print('bcp_name',bcp_name)
           query = """
               MATCH (source_bcp:BiomedicalConceptProperty {uuid:'%s'})
               with source_bcp
@@ -300,9 +298,7 @@ class StudyDesignBC():
           """ % (bc_uuid, uuid)
           # print("query",query)
           results = session.run(query)
-          for result in results:
-            print("result",result.data())
-          print("Created link between BC and BCP")
+          print("Created link between BC and BCP",[result.data() for result in results])
 
           # # Copy property nodes relationships: DataContract
           # dc_uri="https://study.d4k.dk/study-cdisc-pilot-lzzt/"+bc_uuid+"/"+uuid
@@ -381,50 +377,21 @@ class StudyDesignBC():
       # Ignoring CODE_REL -> AliasCode
 
   @staticmethod
-  def _fix_links_to_crm():
+  def _add_missing_links_to_crm():
     db = Neo4jConnection()
     with db.session() as session:
       # If topic result (e.g. Date of Birth)
       # if bcp['name'] != copy_bc_name:
       # bcp_name = "Date of Birth"
-      # MATCH (source_bcp:BiomedicalConceptProperty {{name:"{bcp_name}"}})-[:IS_A_REL]->(crm:CRMNode)
 
-      query = """
-          MATCH (bcp:BiomedicalConceptProperty {name:"Date of Birth"})
-          MATCH (crm:CRMNode {sdtm:"SEX,RACE,ETHNIC,--ORRES"})
-          MATCH (v:Variable {name:"BRTHDTC"})
-          with bcp,crm, v
-          MERGE (bcp)-[:IS_A_REL]->(crm)
-          MERGE (v)-[r:IS_A_REL]->(crm)
-          set r.fake_relationship = "yes"
-          return *
-      """
-      query = """
-          MATCH (crm:CRMNode)
-          MATCH (v:Variable {name:"BRTHDTC"})
-          WHERE crm.uri = 'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
-          with crm, v
-          MERGE (v)-[r:IS_A_REL]->(crm)
-          set r.fake_relationship = "yes"
-          return *
-      """
-      print("BRTHDTC crm query",query)
-      results = db.query(query)
-      for result in results:
-        print("result",result.data())
-      application_logger.info("Created link to CRM from BRTHDTC")
+      var_crm = {
+        'BRTHDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+       ,'DSDECOD':'https://crm.d4k.dk/dataset/observation/observation_result/result/coding/code'
+       ,'DSSTDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+       ,'DSTERM':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+      }
 
-      for var in ['DSDECOD','DSSTDTC']:
-        query = """
-          MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
-          MATCH (crm:CRMNode {sdtm:'%s'})
-          MATCH (v:Variable {name:'%s'})
-          with bcp,crm, v
-          MERGE (bcp)-[:IS_A_REL]->(crm)
-          MERGE (v)-[r:IS_A_REL]->(crm)
-          set r.fake_relationship = "yes"
-          return "done" as done
-        """ % (var,'TERM',var)
+      for var,uri in var_crm.items():
         query = """
           MATCH (crm:CRMNode {uri:'%s'})
           MATCH (v:Variable {name:'%s'})
@@ -432,14 +399,14 @@ class StudyDesignBC():
           MERGE (v)-[r:IS_A_REL]->(crm)
           set r.fake_relationship = "yes"
           return "done" as done
-        """ % ('https://crm.d4k.dk/dataset/adverse_event/term/codeable_concept/coding/code',var)
-        print("crm query",query)
+        """ % (uri,var)
+        # print("DS crm query",query)
         results = db.query(query)
         print("crm query results",results)
-        # for result in results:
-        #   pass
-        #   # print("result",result.data())
-        application_logger.info(f"Created link to CRM from {var}")
+        if results:
+          application_logger.info(f"Created link to CRM from {var}")
+        else:
+          application_logger.info(f"Info: Failed to create link to CRM for {var}")
 
       query = """
           // Create term and link to DSDECOD
@@ -462,6 +429,4 @@ class StudyDesignBC():
       """
       # application_logger.info(f"BRTHDTC CRM query {query}")
       results = db.query(query)
-      for result in results:
-        print("result",result.data())
-      application_logger.info("Created term and link to DSDECOD")
+      application_logger.info("Created term and link to DSDECOD", [result.data() for result in results])
