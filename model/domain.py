@@ -119,6 +119,8 @@ class Domain(BaseNode):
           record['test_code'] = row['test_code']
           if 'VISIT' in row.keys():
             record['VISIT'] = row["VISIT"]
+          if 'VISITNUM' in row.keys():
+            record['VISITNUM'] = row["VISITNUM"]
           if 'TPT' in row.keys():
             record['TPT'] = row["TPT"]
           if 'EPOCH' in row.keys():
@@ -185,6 +187,7 @@ class Domain(BaseNode):
       , 'RFICDTC' as variable
       , dp.value as value
       , site.name as SITEID
+      , e.name as VISITNUM
       , e.label as VISIT
       , epoch.label as EPOCH
     """ % (self.uuid,self.uuid)
@@ -243,6 +246,7 @@ class Domain(BaseNode):
         ,bc.name as TEST
         ,var.name as variable
         ,d.value as value
+        ,e_order as VISITNUM
         ,visit as VISIT
         ,duration(TP['Main Timeline']) as ord
         ,TP[timelines] as TPT
@@ -503,6 +507,8 @@ class Domain(BaseNode):
         record[column_names.index("USUBJID")] = result["USUBJID"]
         record[column_names.index(topic)] = result["test_code"]
         record[column_names.index("VISIT")] = result["VISIT"]
+        if 'VISITNUM' in result.keys():
+          record[column_names.index("VISITNUM")] = result["VISITNUM"]
         if 'TPT' in result.keys():
           record[column_names.index(self.name+"TPT")] = result["TPT"]
         if 'EPOCH' in result.keys():
