@@ -53,16 +53,16 @@
     - node: "DATE TIME"
       data_type: "date_time"
       property: "value"
-  - name: "DSDECOD"
+  - name: "--DECOD"
     canonical: 
-    - node: "TERM"
-      data_type: "codeable_concept"
+    - node: "RESULT"
+      data_type: "coding"
       property: "code"
   - name: "DSSTDTC"
     canonical: 
-    - node: "TERM"
-      data_type: "codeable_concept"
-      property: "code"
+    - node: "RESULT"
+      data_type: "quantity"
+      property: "value"
   - name: "BRTHDTC"
     canonical: 
     - node: "RESULT"
