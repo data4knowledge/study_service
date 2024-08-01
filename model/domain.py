@@ -88,7 +88,7 @@ class Domain(BaseNode):
       print(query)
       rows = session.run(query)
       for row in rows:
-        # print("row",row)
+        print("row",row)
         record = { 
           'variable': row["variable"], 
           'value': row["value"], 
@@ -110,8 +110,12 @@ class Domain(BaseNode):
         elif self.name == "DS":
           # Add metadata
           items = [item for item in metadata if row['bc_uuid'] == item['bc_uuid']]
+          print("items",items)
           for item in items:
             record[item['variable']] = item['value']
+          for variable in ['EPOCH','DSDTC']:
+            if variable in row.keys():
+              record[variable] = row[variable]
         else:
           record['test_code'] = row['test_code']
           if 'VISIT' in row.keys():
@@ -120,12 +124,15 @@ class Domain(BaseNode):
             record['TPT'] = row["TPT"]
           if 'EPOCH' in row.keys():
             record['EPOCH'] = row["EPOCH"]
+        print("record",record)
         results.append(record)
       #print ("RESULTS:", results)
       if self.name == "DM":
         df = self.construct_dm_dataframe(results)
       elif self.name == "DS":
         print("Creating DS dataframe")
+        for x in results:
+          print(x)
         df = self.construct_ds_dataframe(results)
       else:
         df = self.construct_findings_dataframe(results)
@@ -309,8 +316,7 @@ class Domain(BaseNode):
     final_results = {}
     for result in results:
       key = result["SUBJID"]
-      print("0 SUBJID",key)
-      if not result["SUBJID"] in final_results:
+      if not result["SUBJID"] in final_results:  # Subject does not exist yet in result. Create default variables
         multiples[key] = {}
         final_results[key] = [""] * len(column_names)
         final_results[key][column_names.index("STUDYID")] = result["STUDYID"]
@@ -325,15 +331,14 @@ class Domain(BaseNode):
           final_results[key][column_names.index("INVNAM")] = result["INVNAM"]
         if "COUNTRY" in result.keys():
           final_results[key][column_names.index("COUNTRY")] = result["COUNTRY"]
-        print("  1.1 adding first for SUBJID",final_results[key])
       variable_name = result["variable"]
       variable_index = [column_names.index(variable_name)][0]
-      print("  variable",variable_name,variable_index)
-      if not final_results[key][variable_index] == "":
+      if not final_results[key][variable_index] == "": # Subject already have a value for variable
+        print("  variable",variable_name,variable_index)
         print("  2.1 has previous value",final_results[key][variable_index])
         if result["value"] != final_results[key][variable_index]:
           print("  2.2",result["value"])
-          if not variable_name in multiples[key]:
+          if not variable_name in multiples[key]: # create "multiple"
             print("  2.3: variable_name:",variable_name)
             multiples[key][variable_name] = [final_results[key][variable_index]]
             final_results[key][variable_index] = "MULTIPLE"
@@ -342,12 +347,11 @@ class Domain(BaseNode):
           multiples[key][variable_name].append(result["value"])
           if len(multiples[key][variable_name]) > supp_quals[variable_name]:
             supp_quals[variable_name] = len(multiples[key][variable_name])
-        print("  2.9 adding next for SUBJID",final_results[key])
-      else:
+      else: # Subject does not have a value for variable
         print("  3.1 no previous value",variable_name,"=",result['value'])
         final_results[key][variable_index] = result["value"]
         print("  3.9 adding next for SUBJID",final_results[key])
-      #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+      print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)
@@ -400,6 +404,7 @@ class Domain(BaseNode):
               , term.notation as value
               , bc.uuid as bc_uuid
       """ % (self.uuid)
+      print("ds metadata query",query)
       results = session.run(query)
       return [result.data() for result in results]
 
@@ -407,11 +412,12 @@ class Domain(BaseNode):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
-    # print("COLS:", column_names)
+    print("COLS:", column_names)
     # ['STUDYID', 'DOMAIN', 'USUBJID', 'DSSEQ', 'DSTERM', 'DSDECOD', 'DSCAT', 'DSSCAT', 'EPOCH', 'DSDTC', 'DSSTDTC', 'DSDY', 'DSSTDY']
     final_results = {}
     self.add_seq(results)
     for result in results:
+      print("DS",result)
       if 'DSSEQ' in result.keys():
         key = "%s.%s" % (result['USUBJID'],result['DSSEQ'])
       else:
@@ -433,6 +439,7 @@ class Domain(BaseNode):
           final_results[key][column_names.index("DSCAT")] = result["DSCAT"]
         # final_results[key][column_names.index("DSSCAT")] = result["DSSCAT"]
         if "EPOCH" in result.keys():
+          print("EPOCH!!!",result["EPOCH"])
           final_results[key][column_names.index("EPOCH")] = result["EPOCH"]
         if "DSDTC" in result.keys():
           final_results[key][column_names.index("DSDTC")] = result["DSDTC"]
