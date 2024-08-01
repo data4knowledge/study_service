@@ -88,7 +88,7 @@ class Domain(BaseNode):
       print(query)
       rows = session.run(query)
       for row in rows:
-        print("row",row)
+        # print("row",row)
         record = { 
           'variable': row["variable"], 
           'value': row["value"], 
@@ -110,7 +110,6 @@ class Domain(BaseNode):
         elif self.name == "DS":
           # Add metadata
           items = [item for item in metadata if row['bc_uuid'] == item['bc_uuid']]
-          print("items",items)
           for item in items:
             record[item['variable']] = item['value']
           for variable in ['EPOCH','DSDTC']:
