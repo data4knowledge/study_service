@@ -429,4 +429,4 @@ class StudyDesignBC():
       """
       # application_logger.info(f"BRTHDTC CRM query {query}")
       results = db.query(query)
-      application_logger.info("Created term and link to DSDECOD", [result.data() for result in results])
+      application_logger.info(f"Created term and link to DSDECOD {[result.data() for result in results]}")
