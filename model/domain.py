@@ -88,7 +88,6 @@ class Domain(BaseNode):
       print(query)
       rows = session.run(query)
       for row in rows:
-        print("row",row)
         record = { 
           'variable': row["variable"], 
           'value': row["value"], 
@@ -234,7 +233,7 @@ class Domain(BaseNode):
     return query
 
   def findings_query(self):
-    # Query with timing.description as VISITDY
+    # Query with timing.value as VISITDY
     query = """
       match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
       OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
@@ -242,8 +241,8 @@ class Domain(BaseNode):
       MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
       MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
       MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
-      WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP, e.description as visitdy
-      WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit, visitdy
+      WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP, collect(tim.value) as visdy
+      WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit, apoc.text.join(visdy,',') as visitdy
       RETURN 
       si.studyIdentifier as STUDYID
       ,domain.name as DOMAIN
@@ -261,6 +260,7 @@ class Domain(BaseNode):
       ,bc.uri as uuid
       order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
     """ % (self.uuid)
+
     query = """
       match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
       OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
@@ -308,7 +308,11 @@ class Domain(BaseNode):
       ref_start = self.convert_str_datetime(ref_start_date_str)
       dtc = self.convert_str_datetime(end_date_str)
       dy = dtc - ref_start
-      return dy.days
+      # print("ref_start",ref_start,"dtc",dtc,"dy",dy)
+      if ref_start > dtc:
+        return dy.days
+      else:
+        return dy.days + 1
     return None
 
   def add_seq_dict(self, results, seq_index, usubjid_index):
@@ -354,7 +358,13 @@ class Domain(BaseNode):
       query = """
         MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(:DataContract)-[:PROPERTIES_REL]->(:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(:BiomedicalConcept {name:"Informed Consent Obtained"})
         return s.identifier as USUBJID, dp.value as consent_date
-        limit 10
+      """
+      query = """
+        MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        WHERE e.label = "Baseline"
+        and bcp.name = "--DTC"
+        return distinct s.identifier as USUBJID, dp.value as baseline_date
       """
       # print("reference start date query",query)
       results = session.run(query)
@@ -547,7 +557,7 @@ class Domain(BaseNode):
     seq_var = self.name+"SEQ"
     column_names = self.variable_list()
     # print('column_names',column_names)
-    informed_consent_dates = self.get_reference_start_dates()
+    baseline_dates = self.get_reference_start_dates()
 
     final_results = {}
     for result in results:
@@ -576,12 +586,11 @@ class Domain(BaseNode):
         record = final_results[key]
 
       if result["variable"] == self.name+"DTC":
-        # if 'consent_date' in result.keys():
-        consent = next((item for item in informed_consent_dates if item["USUBJID"] == result['USUBJID']), None)
-        if consent:
+        baseline = next((item for item in baseline_dates if item["USUBJID"] == result['USUBJID']), None)
+        if baseline:
           if self.name+'DY' in column_names:
             index_dy = [column_names.index(self.name+'DY')][0]
-            record[index_dy] = self.sdtm_derive_dy(consent['consent_date'],result['value'])
+            record[index_dy] = self.sdtm_derive_dy(baseline['baseline_date'],result['value'])
 
       variable_index = [column_names.index(result["variable"])][0]
       record[variable_index] = result["value"]
