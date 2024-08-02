@@ -68,3 +68,8 @@
     - node: "RESULT"
       data_type: "quantity"
       property: "value"
+  - name: "--POS"
+    canonical:
+    - node: "POSITION"
+      data_type: "coding"
+      property: "code"
