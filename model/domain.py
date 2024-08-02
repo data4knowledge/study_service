@@ -125,8 +125,12 @@ class Domain(BaseNode):
             record['TPT'] = row["TPT"]
           if 'EPOCH' in row.keys():
             record['EPOCH'] = row["EPOCH"]
-        print("record",record)
+          if 'consent_date' in row.keys():
+            record['consent_date'] = row["consent_date"]
         results.append(record)
+      for x in results[0:10]:
+        print(x)
+      # print("record",record)
       #print ("RESULTS:", results)
       if self.name == "DM":
         df = self.construct_dm_dataframe(results)
@@ -167,6 +171,7 @@ class Domain(BaseNode):
       , var.name as variable
       , dp.value as value
       , site.name as SITEID
+      , e.name as VISITNUM
       , e.label as VISIT
       , epoch.label as EPOCH
       union
@@ -235,9 +240,10 @@ class Domain(BaseNode):
       OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
       MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
       MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
+      OPTIONAL MATCH (s)<-[:FOR_SUBJECT_REL]-(ifcd:DataPoint)-[:FOR_DC_REL]->(:DataContract)-[:PROPERTIES_REL]->(:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(:BiomedicalConcept {name:"Informed Consent Obtained"})
       MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
-      WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
-      WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
+      WITH code.decode as test_code, ifcd.value as consent_date, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
+      WITH test_code, consent_date, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
       RETURN 
         si.studyIdentifier as STUDYID
         ,domain.name as DOMAIN
@@ -252,6 +258,32 @@ class Domain(BaseNode):
         ,TP[timelines] as TPT
         ,epoch[0] as  EPOCH 
         ,bc.uri as uuid
+        ,consent_date as consent_date
+      order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
+    """ % (self.uuid)
+    query = """
+      match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
+      MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
+      MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
+      WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
+      WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
+      RETURN 
+      si.studyIdentifier as STUDYID
+      ,domain.name as DOMAIN
+      ,s.identifier as USUBJID
+      ,test_code as test_code
+      ,bc.name as TEST
+      ,var.name as variable
+      ,d.value as value
+      ,e_order as VISITNUM
+      ,visit as VISIT
+      ,duration(TP['Main Timeline']) as ord
+      ,TP[timelines] as TPT
+      ,epoch[0] as  EPOCH 
+      ,bc.uri as uuid
       order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
     """ % (self.uuid)
     return query
@@ -260,18 +292,29 @@ class Domain(BaseNode):
     # parser.parse is said to be able to handle incomplete dates, but might need fixing
     return parser.parse(date_time_str)
 
-  def sdtm_derive_age(self,rficdtc,brthdtc):
-    if rficdtc and brthdtc:
-      print("rficdtc:",rficdtc)
-      inclusion_date = self.convert_str_datetime(rficdtc)
+  def sdtm_derive_age(self,consent_date,brthdtc):
+    if consent_date and brthdtc:
+      print("consent_date:",consent_date)
+      inclusion_date = self.convert_str_datetime(consent_date)
       print("brthdtc:",brthdtc)
       birth_date = self.convert_str_datetime(brthdtc)
       # Note. Formula is using the fact that Python can subtract boolean from integer. (True = 1 and False = 0)
       age = inclusion_date.year - birth_date.year - ((inclusion_date.month, inclusion_date.day) < (birth_date.month, birth_date.day))
     else:
-      application_logger.info(f"Could not derive age. rficdtc:{rficdtc} brthdtc:{brthdtc}")
+      application_logger.info(f"Could not derive age. consent_date:{consent_date} brthdtc:{brthdtc}")
       age = "N/A"
     return age
+
+  def sdtm_derive_dy(self,consent_date_str,dtc_str):
+    if consent_date_str and dtc_str:
+      print("consent_date_str:",consent_date_str,"dtc_str",dtc_str)
+      consent_date = self.convert_str_datetime(consent_date_str)
+      print("consent_date:",consent_date)
+      dtc = self.convert_str_datetime(dtc_str)
+      print("dtc:",dtc)
+      dy = dtc - consent_date
+      return dy.days
+    return -99
 
   def add_seq_dict(self, results, seq_index, usubjid_index):
     print("adding seq dict")
@@ -306,6 +349,21 @@ class Domain(BaseNode):
       self.add_seq_list_of_dict(results, seq_var)
     else:
         application_logger.info(f"Don't know how to add --SEQ to {results.__class__}")
+
+
+  def get_reference_start_dates(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      # FIX: QUERY TO BE UNIQUE FOR STUDY
+      # FIX: QUERY SHOULD USE REFERENCE START DATE, NOT INFORMED CONSENT
+      query = """
+        MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(:DataContract)-[:PROPERTIES_REL]->(:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(:BiomedicalConcept {name:"Informed Consent Obtained"})
+        return s.identifier as USUBJID, dp.value as consent_date
+        limit 10
+      """
+      print("informed consent query",query)
+      results = session.run(query)
+      return [result.data() for result in results]
 
 
   def construct_dm_dataframe(self, results):
@@ -493,6 +551,11 @@ class Domain(BaseNode):
     topic = self.name+"TESTCD"
     seq_var = self.name+"SEQ"
     column_names = self.variable_list()
+    print('column_names',column_names)
+    informed_consent_dates = self.get_reference_start_dates()
+    for x in informed_consent_dates:
+      print("x",x)
+
     final_results = {}
     for result in results:
       if 'TPT' in result.keys():
@@ -516,6 +579,15 @@ class Domain(BaseNode):
         final_results[key] = record
       else:
         record = final_results[key]
+
+      if result["variable"] == self.name+"DTC":
+        # if 'consent_date' in result.keys():
+        consent = next((item for item in informed_consent_dates if item["USUBJID"] == result['USUBJID']), None)
+        if consent:
+          if self.name+'DY' in column_names:
+            index_dy = [column_names.index(self.name+'DY')][0]
+            record[index_dy] = self.sdtm_derive_dy(consent['consent_date'],result['value'])
+
       variable_index = [column_names.index(result["variable"])][0]
       record[variable_index] = result["value"]
     self.add_seq(final_results, column_names.index(seq_var), column_names.index("USUBJID"))
