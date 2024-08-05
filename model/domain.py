@@ -559,6 +559,7 @@ class Domain(BaseNode):
     topic = self.name+"TESTCD"
     topic_label = self.name+"TEST"
     seq_var = self.name+"SEQ"
+    baseline_var = self.name+"BLFL"
     column_names = self.variable_list()
     # print('column_names',column_names)
     baseline_dates = self.get_reference_start_dates()
@@ -596,6 +597,9 @@ class Domain(BaseNode):
           record[column_names.index(self.name+"TPT")] = result["TPT"]
         if 'EPOCH' in result.keys() and result["EPOCH"]:
           record[column_names.index("EPOCH")] = result["EPOCH"]
+        if result['baseline_timing'] == "Fixed Reference":
+          print("setting baseline var",column_names.index(baseline_var))
+          record[column_names.index(baseline_var)] = "Y"
         final_results[key] = record
       else:
         record = final_results[key]
