@@ -388,7 +388,8 @@ class StudyDesignBC():
         'BRTHDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'DSDECOD':'https://crm.d4k.dk/dataset/observation/observation_result/result/coding/code'
        ,'DSSTDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
-       ,'DSTERM':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+       ,'DSTERM' :'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+       ,'VSPOS'  :'https://crm.d4k.dk/dataset/observation/position/coding/code'
       }
 
       for var,uri in var_crm.items():
