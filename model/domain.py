@@ -592,7 +592,7 @@ class Domain(BaseNode):
             planned_dy = dt.days*-1 if result['baseline_timing'] == "Before" else dt.days
             record[column_names.index("VISITDY")] = planned_dy
             # record[column_names.index("VISITDY")] = dt.days
-        if 'TPT' in result.keys():
+        if 'TPT' in result.keys() and result["TPT"]:
           record[column_names.index(self.name+"TPT")] = result["TPT"]
         if 'EPOCH' in result.keys() and result["EPOCH"]:
           record[column_names.index("EPOCH")] = result["EPOCH"]
