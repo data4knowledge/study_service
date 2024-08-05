@@ -3,7 +3,6 @@ from typing import List
 from model.base_node import BaseNode
 from model.variable import Variable
 from model.biomedical_concept import BiomedicalConceptSimple
-from service.ct_service import CTService
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
 from dateutil import parser 
