@@ -128,6 +128,7 @@ class Domain(BaseNode):
               record[variable] = row[variable]
         else:
           record['test_code'] = row['test_code']
+          record['test_label'] = row['test_label']
         results.append(record)
       # for x in results[0:5]:
       #   print(x)
@@ -139,9 +140,7 @@ class Domain(BaseNode):
         #   print(x)
         df = self.construct_ds_dataframe(results)
       else:
-        metadata = self.get_findings_metadata(results)
-        metadata = {}
-        df = self.construct_findings_dataframe(results,metadata)
+        df = self.construct_findings_dataframe(results)
       result = df.to_dict('index')
       # result = df.to_dict('records')
       return result
@@ -250,7 +249,7 @@ class Domain(BaseNode):
       ,domain.name as DOMAIN
       ,s.identifier as USUBJID
       ,test_code as test_code
-      ,bc.name as TEST
+      ,bc.name as test_label
       ,var.name as variable
       ,d.value as value
       ,e_order as VISITNUM
@@ -556,48 +555,7 @@ class Domain(BaseNode):
     # print(df.head())
     return df
 
-  def get_test_code_label(self, test_code):
-    print("Finding label for ",test_code)
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        use `ct-service-dev`
-        MATCH (m:SkosConcept)-[:NARROWER]->(n:SkosConcept) WHERE 
-        n.notation='%s' 
-        AND NOT EXISTS ((:SkosConcept)-[:PREVIOUS]->(m)) 
-        RETURN n,m
-      """ % (test_code)
-      print("get test code identifier query",query)
-      response = session.run(query)
-      results = [result.data() for result in response]
-      first_sdtm_label = next((cli for cli in results if 'Test Name' in cli['parent']['pref_label']),[])
-      print("first_sdtm_label",first_sdtm_label)
-    return 0
-
-    # response = ct.find_notation(test_code)
-    # # Find first SDTM result in response
-    # first_sdtm_term = next((cli for cli in response if 'SDTM' in cli['parent']['pref_label']),[])
-    # if first_sdtm_term:
-    #   response = ct.find_by_identifier(first_sdtm_term['child']['identifier'])
-    #   first_sdtm_label = next((cli for cli in response if 'Test Name' in cli['parent']['pref_label']),[])
-    #   if first_sdtm_term:
-    #     return first_sdtm_label['child']['pref_label']
-    #   else:
-    #     return f"No label for {first_sdtm_term['parent']['identifier']}.{first_sdtm_term['child']['identifier']}"
-    # else:
-    #   return "--"
-
-  def get_findings_metadata(self,results):
-    tests = {}
-    test_codes = set([result['test_code'] for result in results])
-    print("len(test_codes)",len(test_codes))
-    for test_code in test_codes:
-      test_label = self.get_test_code_label(test_code)
-      # tests[test_code] = test_label
-    # return tests
-
-
-  def construct_findings_dataframe(self, results, tests):
+  def construct_findings_dataframe(self, results):
     # topic = self.topic()
     topic = self.name+"TESTCD"
     topic_label = self.name+"TEST"
@@ -605,7 +563,6 @@ class Domain(BaseNode):
     column_names = self.variable_list()
     # print('column_names',column_names)
     baseline_dates = self.get_reference_start_dates()
-    # tests ={'SYSBP':'Systolic Blood Pressure'}
 
     final_results = {}
     for result in results:
@@ -620,12 +577,7 @@ class Domain(BaseNode):
         # record[column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
         record[column_names.index("USUBJID")] = result["USUBJID"]
         record[column_names.index(topic)] = result["test_code"]
-        # if result["test_code"] in tests:
-        #   record[column_names.index(topic_label)] = tests[result["test_code"]]
-        # else:
-        #   test_label = self.get_test_code_label(result['test_code'])
-        #   tests[result['test_code']] = test_label
-        #   record[column_names.index(topic_label)] = test_label
+        record[column_names.index(topic_label)] = result["test_label"]
         if 'VISIT' in result.keys():
           if result["VISIT"]:
             record[column_names.index("VISIT")] = result["VISIT"]
@@ -637,9 +589,6 @@ class Domain(BaseNode):
           dt = pd.Timedelta(result["VISITDY"])
           if pd.isnull(dt):
             pass
-            # print("not dt",result["VISITDY"],result["USUBJID"])
-            # print("  ",result)
-            # record[column_names.index("VISITDY")] = float("nan")
           else:
             planned_dy = dt.days*-1 if result['baseline_timing'] == "Before" else dt.days
             record[column_names.index("VISITDY")] = planned_dy
