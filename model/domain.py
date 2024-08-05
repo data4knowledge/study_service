@@ -3,10 +3,10 @@ from typing import List
 from model.base_node import BaseNode
 from model.variable import Variable
 from model.biomedical_concept import BiomedicalConceptSimple
+from service.ct_service import CTService
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
 from dateutil import parser 
-
 class Domain(BaseNode):
   uri: str
   name: str
@@ -81,11 +81,11 @@ class Domain(BaseNode):
       elif self.name == "DS":
         query = self.ds_query()
         metadata = self.get_ds_metadata()
-        for x in metadata:
-          print("metadata",metadata)
+        # for x in metadata:
+        #   print("metadata",metadata)
       else:
         query = self.findings_query()
-      print(query)
+      # print(query)
       rows = session.run(query)
       for row in rows:
         record = { 
@@ -105,6 +105,8 @@ class Domain(BaseNode):
           record['VISITDY'] = row["VISITDY"]
         if 'TPT' in row.keys():
           record['TPT'] = row["TPT"]
+        if 'baseline_timing' in row.keys():
+          record['baseline_timing'] = row["baseline_timing"]
         if 'EPOCH' in row.keys():
           record['EPOCH'] = row["EPOCH"]
         if self.name == "DM":
@@ -127,19 +129,19 @@ class Domain(BaseNode):
         else:
           record['test_code'] = row['test_code']
         results.append(record)
-      for x in results[0:10]:
-        print(x)
-      # print("record",record)
-      #print ("RESULTS:", results)
+      # for x in results[0:5]:
+      #   print(x)
       if self.name == "DM":
         df = self.construct_dm_dataframe(results)
       elif self.name == "DS":
         print("Creating DS dataframe")
-        for x in results:
-          print(x)
+        # for x in results:
+        #   print(x)
         df = self.construct_ds_dataframe(results)
       else:
-        df = self.construct_findings_dataframe(results)
+        metadata = self.get_findings_metadata(results)
+        metadata = {}
+        df = self.construct_findings_dataframe(results,metadata)
       result = df.to_dict('index')
       # result = df.to_dict('records')
       return result
@@ -554,13 +556,56 @@ class Domain(BaseNode):
     # print(df.head())
     return df
 
-  def construct_findings_dataframe(self, results):
+  def get_test_code_label(self, test_code):
+    print("Finding label for ",test_code)
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        use `ct-service-dev`
+        MATCH (m:SkosConcept)-[:NARROWER]->(n:SkosConcept) WHERE 
+        n.notation='%s' 
+        AND NOT EXISTS ((:SkosConcept)-[:PREVIOUS]->(m)) 
+        RETURN n,m
+      """ % (test_code)
+      print("get test code identifier query",query)
+      response = session.run(query)
+      results = [result.data() for result in response]
+      first_sdtm_label = next((cli for cli in results if 'Test Name' in cli['parent']['pref_label']),[])
+      print("first_sdtm_label",first_sdtm_label)
+    return 0
+
+    # response = ct.find_notation(test_code)
+    # # Find first SDTM result in response
+    # first_sdtm_term = next((cli for cli in response if 'SDTM' in cli['parent']['pref_label']),[])
+    # if first_sdtm_term:
+    #   response = ct.find_by_identifier(first_sdtm_term['child']['identifier'])
+    #   first_sdtm_label = next((cli for cli in response if 'Test Name' in cli['parent']['pref_label']),[])
+    #   if first_sdtm_term:
+    #     return first_sdtm_label['child']['pref_label']
+    #   else:
+    #     return f"No label for {first_sdtm_term['parent']['identifier']}.{first_sdtm_term['child']['identifier']}"
+    # else:
+    #   return "--"
+
+  def get_findings_metadata(self,results):
+    tests = {}
+    test_codes = set([result['test_code'] for result in results])
+    print("len(test_codes)",len(test_codes))
+    for test_code in test_codes:
+      test_label = self.get_test_code_label(test_code)
+      # tests[test_code] = test_label
+    # return tests
+
+
+  def construct_findings_dataframe(self, results, tests):
     # topic = self.topic()
     topic = self.name+"TESTCD"
+    topic_label = self.name+"TEST"
     seq_var = self.name+"SEQ"
     column_names = self.variable_list()
     # print('column_names',column_names)
     baseline_dates = self.get_reference_start_dates()
+    # tests ={'SYSBP':'Systolic Blood Pressure'}
 
     final_results = {}
     for result in results:
@@ -575,16 +620,33 @@ class Domain(BaseNode):
         # record[column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
         record[column_names.index("USUBJID")] = result["USUBJID"]
         record[column_names.index(topic)] = result["test_code"]
-        record[column_names.index("VISIT")] = result["VISIT"]
-        if 'VISITNUM' in result.keys():
+        # if result["test_code"] in tests:
+        #   record[column_names.index(topic_label)] = tests[result["test_code"]]
+        # else:
+        #   test_label = self.get_test_code_label(result['test_code'])
+        #   tests[result['test_code']] = test_label
+        #   record[column_names.index(topic_label)] = test_label
+        if 'VISIT' in result.keys():
+          if result["VISIT"]:
+            record[column_names.index("VISIT")] = result["VISIT"]
+          else:
+            record[column_names.index("VISIT")] = "Unplanned"
+        if 'VISITNUM' in result.keys() and result["VISITNUM"]:
           record[column_names.index("VISITNUM")] = result["VISITNUM"]
         if 'VISITDY' in result.keys():
           dt = pd.Timedelta(result["VISITDY"])
-          print("dt",dt)
-          record[column_names.index("VISITDY")] = dt.days
+          if pd.isnull(dt):
+            pass
+            # print("not dt",result["VISITDY"],result["USUBJID"])
+            # print("  ",result)
+            # record[column_names.index("VISITDY")] = float("nan")
+          else:
+            planned_dy = dt.days*-1 if result['baseline_timing'] == "Before" else dt.days
+            record[column_names.index("VISITDY")] = planned_dy
+            # record[column_names.index("VISITDY")] = dt.days
         if 'TPT' in result.keys():
           record[column_names.index(self.name+"TPT")] = result["TPT"]
-        if 'EPOCH' in result.keys():
+        if 'EPOCH' in result.keys() and result["EPOCH"]:
           record[column_names.index("EPOCH")] = result["EPOCH"]
         final_results[key] = record
       else:
