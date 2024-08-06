@@ -140,7 +140,7 @@ class Domain(BaseNode):
       return result
 
   def dm_query(self):
-    # Query as vertical findings. Now with RFICDTC
+    # Query as vertical findings. Now with RFICDTC. NB! Does not sort results
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
@@ -189,6 +189,58 @@ class Domain(BaseNode):
       , e.name as VISITNUM
       , e.label as VISIT
       , epoch.label as EPOCH
+    """ % (self.uuid,self.uuid)
+    # Query as vertical findings. Now sorting results
+    query = """
+      call {
+        MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
+        MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+        WITH si, domain
+        MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+        MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
+        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
+        MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+        MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+        MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
+        MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+        MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+        WHERE  var.label = bcp.label
+        return
+        si.studyIdentifier as STUDYID
+        , domain.name as DOMAIN
+        , subj.identifier as USUBJID
+        , right(subj.identifier,6) as SUBJECT
+        , var.name as variable
+        , dp.value as value
+        , site.name as SITEID
+        , e.label as VISIT
+        , epoch.label as EPOCH
+        union
+        MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
+        MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+        MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept {name: "Informed Consent Obtained"})-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'DSSTDTC'})
+        MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)
+        MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+        MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+        MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+        return
+        si.studyIdentifier as STUDYID
+        , domain.name as DOMAIN
+        , subj.identifier as USUBJID
+        , right(subj.identifier,6) as SUBJECT
+        , 'RFICDTC' as variable
+        , dp.value as value
+        , site.name as SITEID
+        , e.label as VISIT
+        , epoch.label as EPOCH
+      }
+      return STUDYID, DOMAIN, USUBJID, SUBJECT, variable, value, SITEID, VISIT, EPOCH
+      order by USUBJID
     """ % (self.uuid,self.uuid)
     print(query)
     return query
@@ -422,19 +474,19 @@ class Domain(BaseNode):
         # print("  3.1 no previous value",variable_name,"=",result['value'])
         final_results[key][variable_index] = result["value"]
         # print("  3.9 adding next for SUBJID",final_results[key])
-      print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+      # print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
     for supp_name, count in supp_quals.items():
-      print("Count: ", count)
+      # print("Count: ", count)
       for i in range(1, count + 1):
         name = "%s%s" % (supp_name, i)
         column_names.append(name)
-        print("Index: ", column_names.index(name))
+        # print("Index: ", column_names.index(name))
         for subject, items in multiples.items():
           final_results[subject].append("")
           if supp_name in items:
-            print("I: ", i)
-            print("Items: ", items[supp_name])
+            # print("I: ", i)
+            # print("Items: ", items[supp_name])
             if i <= len(items[supp_name]):
               final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
