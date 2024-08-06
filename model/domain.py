@@ -79,9 +79,6 @@ class Domain(BaseNode):
         query = self.dm_query()
       elif self.name == "DS":
         query = self.ds_query()
-        metadata = self.get_ds_metadata()
-        # for x in metadata:
-        #   print("metadata",metadata)
       else:
         query = self.findings_query()
       # print(query)
@@ -331,6 +328,8 @@ class Domain(BaseNode):
         seq = 1
         result[seq_index] = seq
         current_usubjid = result[usubjid_index]
+    # print("Sorting dict")
+    # results = sorted(results, key=lambda key: key)
 
   def add_seq_list_of_dict(self, results, seq_var):
     current_usubjid = ""
@@ -343,6 +342,8 @@ class Domain(BaseNode):
         seq = 1
         result[seq_var] = seq
         current_usubjid = result['USUBJID']
+    # print("Sorting list of dict")
+    # results = sorted(results, key=lambda row: (row['USUBJID'],row[seq_var]))
 
   def add_seq(self, results, seq_index = None, usubjid_index = None):
     seq_var = self.name + "SEQ"
@@ -404,12 +405,12 @@ class Domain(BaseNode):
       variable_name = result["variable"]
       variable_index = [column_names.index(variable_name)][0]
       if not final_results[key][variable_index] == "": # Subject already have a value for variable
-        print("  variable",variable_name,variable_index)
-        print("  2.1 has previous value",final_results[key][variable_index])
+        # print("  variable",variable_name,variable_index)
+        # print("  2.1 has previous value",final_results[key][variable_index])
         if result["value"] != final_results[key][variable_index]:
-          print("  2.2",result["value"])
+          # print("  2.2",result["value"])
           if not variable_name in multiples[key]: # create "multiple"
-            print("  2.3: variable_name:",variable_name)
+            # print("  2.3: variable_name:",variable_name)
             multiples[key][variable_name] = [final_results[key][variable_index]]
             final_results[key][variable_index] = "MULTIPLE"
             if not variable_name in supp_quals:
@@ -418,22 +419,22 @@ class Domain(BaseNode):
           if len(multiples[key][variable_name]) > supp_quals[variable_name]:
             supp_quals[variable_name] = len(multiples[key][variable_name])
       else: # Subject does not have a value for variable
-        print("  3.1 no previous value",variable_name,"=",result['value'])
+        # print("  3.1 no previous value",variable_name,"=",result['value'])
         final_results[key][variable_index] = result["value"]
-        print("  3.9 adding next for SUBJID",final_results[key])
+        # print("  3.9 adding next for SUBJID",final_results[key])
       print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
     for supp_name, count in supp_quals.items():
-      #print("Count: ", count)
+      print("Count: ", count)
       for i in range(1, count + 1):
         name = "%s%s" % (supp_name, i)
         column_names.append(name)
-        #print("Index: ", column_names.index(name))
+        print("Index: ", column_names.index(name))
         for subject, items in multiples.items():
           final_results[subject].append("")
           if supp_name in items:
-            #print("I: ", i)
-            #print("Items: ", items[supp_name])
+            print("I: ", i)
+            print("Items: ", items[supp_name])
             if i <= len(items[supp_name]):
               final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
@@ -453,41 +454,14 @@ class Domain(BaseNode):
     # print(df.head())
     return df
 
-  def get_ds_metadata(self):
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
-        MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-        MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept)
-        WITH si, domain, bc
-        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
-        MATCH (bcp)-[:CODE_REL]->(ac:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)-[:HAS_TERM]->(term:SkosConcept)
-        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-        MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
-        WHERE  var.name = bcp.name
-        return
-              si.studyIdentifier as STUDYID
-              , domain.name as DOMAIN
-              , var.name as variable
-              , term.notation as value
-              , bc.uuid as bc_uuid
-      """ % (self.uuid)
-      print("ds metadata query",query)
-      results = session.run(query)
-      return [result.data() for result in results]
-
   def construct_ds_dataframe(self, results):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
-    print("COLS:", column_names)
-    # ['STUDYID', 'DOMAIN', 'USUBJID', 'DSSEQ', 'DSTERM', 'DSDECOD', 'DSCAT', 'DSSCAT', 'EPOCH', 'DSDTC', 'DSSTDTC', 'DSDY', 'DSSTDY']
     final_results = {}
     self.add_seq(results)
     for result in results:
-      print("DS",result)
+      # print("DS",result)
       if 'DSSEQ' in result.keys():
         key = "%s.%s" % (result['USUBJID'],result['DSSEQ'])
       else:
@@ -511,7 +485,6 @@ class Domain(BaseNode):
           final_results[key][column_names.index("DSCAT")] = result["DSCAT"]
         # final_results[key][column_names.index("DSSCAT")] = result["DSSCAT"]
         if "EPOCH" in result.keys():
-          print("EPOCH!!!",result["EPOCH"])
           final_results[key][column_names.index("EPOCH")] = result["EPOCH"]
         if "DSDTC" in result.keys():
           final_results[key][column_names.index("DSDTC")] = result["DSDTC"]
@@ -601,7 +574,7 @@ class Domain(BaseNode):
         if 'EPOCH' in result.keys() and result["EPOCH"]:
           record[column_names.index("EPOCH")] = result["EPOCH"]
         if result['baseline_timing'] == "Fixed Reference":
-          print("setting baseline var",column_names.index(baseline_var))
+          # print("setting baseline var",column_names.index(baseline_var))
           record[column_names.index(baseline_var)] = "Y"
         final_results[key] = record
       else:
