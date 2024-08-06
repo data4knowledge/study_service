@@ -118,11 +118,7 @@ class Domain(BaseNode):
           if 'INVID' in row.keys():
             record['INVID'] = row["INVID"]
         elif self.name == "DS":
-          # Add metadata
-          items = [item for item in metadata if row['bc_uuid'] == item['bc_uuid']]
-          for item in items:
-            record[item['variable']] = item['value']
-          for variable in ['EPOCH','DSDTC']:
+          for variable in ['EPOCH','DSDTC','decod']:
             if variable in row.keys():
               record[variable] = row[variable]
         else:
@@ -222,6 +218,7 @@ class Domain(BaseNode):
             , domain.name as DOMAIN
             , subj.identifier as USUBJID
             , right(subj.identifier,6) as SUBJECT
+            , bc.name as decod
             , var.name as variable
             , dp.value as value
             , site.name as SITEID
@@ -502,8 +499,8 @@ class Domain(BaseNode):
           final_results[key][column_names.index("DSSEQ")] = result["DSSEQ"]
         if "DSTERM" in result.keys():
           final_results[key][column_names.index("DSTERM")] = result["DSTERM"]
-        if "DSDECOD" in result.keys():
-          final_results[key][column_names.index("DSDECOD")] = result["DSDECOD"]
+        if "decod" in result.keys():
+          final_results[key][column_names.index("DSDECOD")] = result["decod"]
         if "DSCAT" in result.keys():
           final_results[key][column_names.index("DSCAT")] = result["DSCAT"]
         # final_results[key][column_names.index("DSSCAT")] = result["DSSCAT"]
