@@ -108,6 +108,8 @@ class Domain(BaseNode):
           record['baseline_timing'] = row["baseline_timing"]
         if 'EPOCH' in row.keys():
           record['EPOCH'] = row["EPOCH"]
+        if 'term' in row.keys():
+          record['term'] = row["term"]
         if self.name == "DM":
           record['SUBJID'] = row["SUBJECT"]
           record['SITEID'] = row["SITEID"]
@@ -195,13 +197,14 @@ class Domain(BaseNode):
     return query
 
   def ds_query(self):
-    # ONLY PLACE HOLDER RIGHT NOW
+    # ISSUE: Term is not the value from CRF. It is the standard decode of the BC
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
       MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
       WITH si, domain
       MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+      OPTIONAL MATCH (bc)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)
       MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
       MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
       MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
@@ -218,6 +221,7 @@ class Domain(BaseNode):
             , domain.name as DOMAIN
             , subj.identifier as USUBJID
             , right(subj.identifier,6) as SUBJECT
+            , c.decode as term
             , bc.name as decod
             , var.name as variable
             , dp.value as value
@@ -499,6 +503,8 @@ class Domain(BaseNode):
           final_results[key][column_names.index("DSSEQ")] = result["DSSEQ"]
         if "DSTERM" in result.keys():
           final_results[key][column_names.index("DSTERM")] = result["DSTERM"]
+        if "term" in result.keys():
+          final_results[key][column_names.index("DSTERM")] = result["term"]
         if "decod" in result.keys():
           final_results[key][column_names.index("DSDECOD")] = result["decod"]
         if "DSCAT" in result.keys():
