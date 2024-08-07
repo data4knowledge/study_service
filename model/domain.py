@@ -140,57 +140,6 @@ class Domain(BaseNode):
       return result
 
   def dm_query(self):
-    # Query as vertical findings. Now with RFICDTC. NB! Does not sort results
-    query = """
-      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
-      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-      WITH si, domain
-      MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
-      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
-      MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-      MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
-      MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
-      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
-      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
-      MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
-      MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
-      MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      WHERE  var.label = bcp.label
-      return
-      si.studyIdentifier as STUDYID
-      , domain.name as DOMAIN
-      , subj.identifier as USUBJID
-      , right(subj.identifier,6) as SUBJECT
-      , var.name as variable
-      , dp.value as value
-      , site.name as SITEID
-      , e.name as VISITNUM
-      , e.label as VISIT
-      , epoch.label as EPOCH
-      union
-      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
-      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-      MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept {name: "Informed Consent Obtained"})-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'DSSTDTC'})
-      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)
-      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
-      MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
-      MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
-      MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      return
-      si.studyIdentifier as STUDYID
-      , domain.name as DOMAIN
-      , subj.identifier as USUBJID
-      , right(subj.identifier,6) as SUBJECT
-      , 'RFICDTC' as variable
-      , dp.value as value
-      , site.name as SITEID
-      , e.name as VISITNUM
-      , e.label as VISIT
-      , epoch.label as EPOCH
-    """ % (self.uuid,self.uuid)
-    # Query as vertical findings. Now sorting results. With Country
     query = """
       call {
         MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
@@ -288,7 +237,7 @@ class Domain(BaseNode):
 
   def findings_query(self):
     # Query with timing.value as VISITDY
-    alt_query = """
+    query = """
       match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)-[:TYPE_REL]->(tim_ref:Code)
       OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
       OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
@@ -315,35 +264,35 @@ class Domain(BaseNode):
       ,bc.uri as uuid
       order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
     """ % (self.uuid)
-    return alt_query
-
-    query = """
-      match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
-      OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
-      MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-      MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
-      MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
-      WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
-      WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
-      RETURN 
-        si.studyIdentifier as STUDYID
-        ,domain.name as DOMAIN
-        ,s.identifier as USUBJID
-        ,test_code as test_code
-        ,bc.name as TEST
-        ,var.name as variable
-        ,d.value as value
-        ,e_order as VISITNUM
-        ,visit as VISIT
-        ,duration(TP['Main Timeline']) as ord
-        ,TP[timelines] as TPT
-        ,epoch[0] as  EPOCH 
-        ,bc.uri as uuid
-      order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
-    """ % (self.uuid)
-
     return query
+
+    # old_query = """
+    #   match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+    #   OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+    #   OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
+    #   MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+    #   MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
+    #   MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
+    #   WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
+    #   WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
+    #   RETURN 
+    #     si.studyIdentifier as STUDYID
+    #     ,domain.name as DOMAIN
+    #     ,s.identifier as USUBJID
+    #     ,test_code as test_code
+    #     ,bc.name as TEST
+    #     ,var.name as variable
+    #     ,d.value as value
+    #     ,e_order as VISITNUM
+    #     ,visit as VISIT
+    #     ,duration(TP['Main Timeline']) as ord
+    #     ,TP[timelines] as TPT
+    #     ,epoch[0] as  EPOCH 
+    #     ,bc.uri as uuid
+    #   order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
+    # """ % (self.uuid)
+
+    # return old_query
 
   def convert_str_datetime(self, date_time_str):
     # parser.parse is said to be able to handle incomplete dates, but might need fixing
