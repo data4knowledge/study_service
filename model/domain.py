@@ -190,7 +190,7 @@ class Domain(BaseNode):
       , e.label as VISIT
       , epoch.label as EPOCH
     """ % (self.uuid,self.uuid)
-    # Query as vertical findings. Now sorting results
+    # Query as vertical findings. Now sorting results. With Country
     query = """
       call {
         MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
@@ -203,6 +203,7 @@ class Domain(BaseNode):
         MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
         MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
         MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+        OPTIONAL MATCH (site)<-[:MANAGES_REL]-(:ResearchOrganization)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country:Code)
         MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
         MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
         MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
@@ -218,6 +219,7 @@ class Domain(BaseNode):
         , site.name as SITEID
         , e.label as VISIT
         , epoch.label as EPOCH
+        , country.code as COUNTRY
         union
         MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
         MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
@@ -225,6 +227,7 @@ class Domain(BaseNode):
         MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept {name: "Informed Consent Obtained"})-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'DSSTDTC'})
         MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)
         MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+        OPTIONAL MATCH (site)<-[:MANAGES_REL]-(:ResearchOrganization)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country:Code)
         MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
         MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
@@ -238,8 +241,9 @@ class Domain(BaseNode):
         , site.name as SITEID
         , e.label as VISIT
         , epoch.label as EPOCH
+        , country.code as COUNTRY
       }
-      return STUDYID, DOMAIN, USUBJID, SUBJECT, variable, value, SITEID, VISIT, EPOCH
+      return STUDYID, DOMAIN, USUBJID, SUBJECT, variable, value, SITEID, VISIT, EPOCH, COUNTRY
       order by USUBJID
     """ % (self.uuid,self.uuid)
     print(query)
