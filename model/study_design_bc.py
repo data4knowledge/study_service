@@ -19,7 +19,7 @@ class StudyDesignBC():
     bcs = cls._get_bcs(study_design)
     for bc in bcs:
       # print("--debug bc:",bc.name)
-      results[bc.name] = cls._add_propety(bc)
+      results[bc.name] = cls._add_property(bc)
       # application_logger.info(f"Inserted --DTC for '{bc.name}'")   
     return results
   
@@ -198,7 +198,7 @@ class StudyDesignBC():
       return results
 
   @staticmethod
-  def _add_propety(bc):
+  def _add_property(bc):
     uuids = {'property': str(uuid4()), 'code': str(uuid4()), 'aliasCode': str(uuid4())}
     db = Neo4jConnection()
     with db.session() as session:
