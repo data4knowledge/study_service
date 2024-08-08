@@ -39,7 +39,6 @@ class StudyDesignBC():
     #print(f"MAP {crm_map}")
     #print(f"PROPERTIES: {[i.name for i in properties]}")
     for p in properties:
-      # print(f"P: {p.name}")
       nodes = cls._match(p.name, crm_map)
       #print(f"N: {nodes}")
       if nodes:
@@ -384,16 +383,24 @@ class StudyDesignBC():
       # if bcp['name'] != copy_bc_name:
       # bcp_name = "Date of Birth"
 
-      var_crm = {
+      var_link_crm = {
         'BRTHDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'DSDECOD':'https://crm.d4k.dk/dataset/observation/observation_result/result/coding/code'
        ,'DSSTDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'DSTERM' :'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'VSPOS'  :'https://crm.d4k.dk/dataset/observation/position/coding/code'
        ,'DMDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
+       ,'EXDOSFRQ': 'https://crm.d4k.dk/dataset/therapeutic_intervention/frequency/coding/code'
+       ,'EXROUTE': 'https://crm.d4k.dk/dataset/therapeutic_intervention/route/coding/code'
+       ,'EXTRT': 'https://crm.d4k.dk/dataset/therapeutic_intervention/description/coding/code'
+       ,'EXDOSFRM': 'https://crm.d4k.dk/dataset/therapeutic_intervention/form/coding/code'
+       ,'EXDOSE': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/value'
+       ,'EXDOSU': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/unit'
+       ,'EXSTDTC': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
+       ,'EXENDTC': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value'
       }
 
-      for var,uri in var_crm.items():
+      for var,uri in var_link_crm.items():
         query = """
           MATCH (crm:CRMNode {uri:'%s'})
           MATCH (v:Variable {name:'%s'})

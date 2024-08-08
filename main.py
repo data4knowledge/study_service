@@ -56,6 +56,7 @@ async def delete_clean(background_tasks: BackgroundTasks):
   db.clear()
   crm = CRM()
   background_tasks.add_task(crm.execute)
+  background_tasks.add_task(crm.add_crm_nodes)
 
 @app.get("/v1/test", response_model=dict)
 @app.get("/test", response_model=dict)
