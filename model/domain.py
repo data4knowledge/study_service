@@ -153,11 +153,11 @@ class Domain(BaseNode):
         MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
         MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
         OPTIONAL MATCH (site)<-[:MANAGES_REL]-(:ResearchOrganization)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country:Code)
-        MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
+        MATCH (domain)-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm)
         MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
         MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-        WHERE  var.label = bcp.label
+        WHERE  var.label = bcp.label or bcp.name = crm.sdtm
         return
         si.studyIdentifier as STUDYID
         , domain.name as DOMAIN
@@ -374,7 +374,7 @@ class Domain(BaseNode):
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
         WHERE e.label = "Baseline"
         and bcp.name = "--DTC"
-        return distinct s.identifier as USUBJID, dp.value as baseline_date
+        return distinct s.identifier as USUBJID, dp.value as reference_date
       """
       # print("reference start date query",query)
       results = session.run(query)
@@ -385,6 +385,8 @@ class Domain(BaseNode):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
+    # Get reference dates
+    reference_dates = self.get_reference_start_dates()
     # Check if age can be derived
     if all(key in column_names for key in ('RFICDTC','BRTHDTC')):
       derive_age = True
@@ -428,6 +430,13 @@ class Domain(BaseNode):
         final_results[key][variable_index] = result["value"]
         # print("  3.9 adding next for SUBJID",final_results[key])
       # print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+      # Derive --DY
+      if result["variable"] == self.name+"DTC":
+        ref_date = next((item for item in reference_dates if item["USUBJID"] == result['USUBJID']), None)
+        if ref_date:
+          if self.name+'DY' in column_names:
+            index_dy = [column_names.index(self.name+'DY')][0]
+            final_results[key][index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
 
     for supp_name, count in supp_quals.items():
       # print("Count: ", count)
@@ -543,7 +552,8 @@ class Domain(BaseNode):
     baseline_var = self.name+"BLFL"
     column_names = self.variable_list()
     # print('column_names',column_names)
-    baseline_dates = self.get_reference_start_dates()
+    # Get reference dates
+    reference_dates = self.get_reference_start_dates()
 
     final_results = {}
     for result in results:
@@ -586,11 +596,11 @@ class Domain(BaseNode):
         record = final_results[key]
 
       if result["variable"] == self.name+"DTC":
-        baseline = next((item for item in baseline_dates if item["USUBJID"] == result['USUBJID']), None)
-        if baseline:
+        ref_date = next((item for item in reference_dates if item["USUBJID"] == result['USUBJID']), None)
+        if ref_date:
           if self.name+'DY' in column_names:
             index_dy = [column_names.index(self.name+'DY')][0]
-            record[index_dy] = self.sdtm_derive_dy(baseline['baseline_date'],result['value'])
+            record[index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
 
       variable_index = [column_names.index(result["variable"])][0]
       record[variable_index] = result["value"]
