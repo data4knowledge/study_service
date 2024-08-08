@@ -390,6 +390,7 @@ class StudyDesignBC():
        ,'DSSTDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'DSTERM' :'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'VSPOS'  :'https://crm.d4k.dk/dataset/observation/position/coding/code'
+       ,'DMDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
       }
 
       for var,uri in var_crm.items():
