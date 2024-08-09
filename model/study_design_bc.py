@@ -98,6 +98,11 @@ class StudyDesignBC():
     application_logger.info("Converted Date of Birth Surrgate to BC")   
 
   @classmethod
+  def remove_properties_from_exposure(cls, name):
+    cls._remove_properties_from_exposure()
+    application_logger.info("Removed properties from exposure")   
+
+  @classmethod
   def fix_links_to_crm(cls, name):
     cls._add_missing_links_to_crm()
     application_logger.info("Linked BRTHDTC to CRM")   
@@ -439,3 +444,23 @@ class StudyDesignBC():
       # application_logger.info(f"BRTHDTC CRM query {query}")
       results = db.query(query)
       application_logger.info(f"Created term and link to DSDECOD {[result.data() for result in results]}")
+
+  @staticmethod
+  def _remove_properties_from_exposure():
+    db = Neo4jConnection()
+    with db.session() as session:
+      # Just for simplifying life
+      properties = ["EXREFID","EXLOC","EXFAST","EXDOSTXT","EXDOSRGM","EXDIR","EXLAT"]
+      query = """
+        MATCH (bc:BiomedicalConcept {name:'Exposure Unblinded'})-[:PROPERTIES_REL]->(p:BiomedicalConceptProperty)
+        WHERE  p.name in %s
+        DETACH DELETE p
+        RETURN count(p)
+      """ % (properties)
+      print("Delete Exposure Unblinded properties query",query)
+      results = db.query(query)
+      print("Delete exposure properties results",results)
+      if results:
+        application_logger.info(f"Removed {properties}")
+      else:
+        application_logger.info(f"Info: Failed to remove {properties}")

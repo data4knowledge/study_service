@@ -139,6 +139,7 @@ class StudyFile(BaseNode):
       # Fix surrogates. Replace CDISC BC's with d4k
       self.set_status("running", "Fix Biomedical Concepts Surrogates", 70)
       result = StudyDesignBC.make_dob_surrogate_as_bc(study_design.name)
+      result = StudyDesignBC.remove_properties_from_exposure(study_design.name)
 
       self.set_status("running", "Fix Biomedical Concepts", 70)
       result = StudyDesignBC.fix(study_design.name)
