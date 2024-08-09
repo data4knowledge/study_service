@@ -416,11 +416,12 @@ class StudyDesignBC():
         """ % (uri,var)
         # print("DS crm query",query)
         results = db.query(query)
-        print("crm query results",results)
+        # print("crm query results",results)
         if results:
           application_logger.info(f"Created link to CRM from {var}")
         else:
           application_logger.info(f"Info: Failed to create link to CRM for {var}")
+          print("query",query)
 
       query = """
           // Create term and link to DSDECOD
@@ -457,7 +458,7 @@ class StudyDesignBC():
         DETACH DELETE p
         RETURN count(p)
       """ % (properties)
-      print("Delete Exposure Unblinded properties query",query)
+      # print("Delete Exposure Unblinded properties query",query)
       results = db.query(query)
       print("Delete exposure properties results",results)
       if results:

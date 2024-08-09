@@ -52,7 +52,7 @@ class CRM():
        ,{'sdtm': '--DOSE'  , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/value', 'datatype': 'quantity'}
        ,{'sdtm': '--DOSU'  , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/unit', 'datatype': 'quantity'}
        ,{'sdtm': '--STDTC' , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value', 'datatype': 'date_type'}
-       ,{'sdtm': '--ENDTC' , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value', 'datatype': 'date_type'}
+       ,{'sdtm': '--ENDTC' , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value', 'datatype': 'date_type'}
       ]
       for node in crm_vars:
         CRMNode.create(node)
