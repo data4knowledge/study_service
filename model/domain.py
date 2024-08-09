@@ -79,6 +79,8 @@ class Domain(BaseNode):
         query = self.dm_query()
       elif self.name == "DS":
         query = self.ds_query()
+      elif self.name == "EX":
+        query = self.intervention_query()
       else:
         query = self.findings_query()
       # print(query)
@@ -120,6 +122,8 @@ class Domain(BaseNode):
           for variable in ['EPOCH','DSDTC','decod']:
             if variable in row.keys():
               record[variable] = row[variable]
+        elif self.name == "EX":
+          record['trt'] = row['trt']
         else:
           record['test_code'] = row['test_code']
           record['test_label'] = row['test_label']
@@ -133,6 +137,9 @@ class Domain(BaseNode):
         # for x in results:
         #   print(x)
         df = self.construct_ds_dataframe(results)
+      elif self.name == "EX":
+        print("Creating EX dataframe")
+        df = self.construct_intervention_dataframe(results)
       else:
         df = self.construct_findings_dataframe(results)
       result = df.to_dict('index')
@@ -235,6 +242,43 @@ class Domain(BaseNode):
     # print(query)
     return query
 
+  def intervention_query(self):
+    # ISSUE: Need to fill in, if any
+    query = """
+      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
+      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      WITH si, domain
+      MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+      OPTIONAL MATCH (bc)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)
+      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
+      MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+      MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
+      MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
+      MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
+      MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      WHERE  var.name = bcp.name
+      return
+            si.studyIdentifier as STUDYID
+            , domain.name as DOMAIN
+            , subj.identifier as USUBJID
+            , right(subj.identifier,6) as SUBJECT
+            , c.decode as trt
+            , bc.name as decod
+            , var.name as variable
+            , dp.value as value
+            , site.name as SITEID
+            , e.label as VISIT
+            , epoch.label as EPOCH
+            , bc.uuid as bc_uuid
+    order by USUBJID, VISIT
+    """ % (self.uuid)
+    print(query)
+    return query
+
   def findings_query(self):
     # Query with timing.value as VISITDY
     query = """
@@ -265,34 +309,6 @@ class Domain(BaseNode):
       order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
     """ % (self.uuid)
     return query
-
-    # old_query = """
-    #   match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
-    #   OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-    #   OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
-    #   MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-    #   MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
-    #   MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
-    #   WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP
-    #   WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit
-    #   RETURN 
-    #     si.studyIdentifier as STUDYID
-    #     ,domain.name as DOMAIN
-    #     ,s.identifier as USUBJID
-    #     ,test_code as test_code
-    #     ,bc.name as TEST
-    #     ,var.name as variable
-    #     ,d.value as value
-    #     ,e_order as VISITNUM
-    #     ,visit as VISIT
-    #     ,duration(TP['Main Timeline']) as ord
-    #     ,TP[timelines] as TPT
-    #     ,epoch[0] as  EPOCH 
-    #     ,bc.uri as uuid
-    #   order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
-    # """ % (self.uuid)
-
-    # return old_query
 
   def convert_str_datetime(self, date_time_str):
     # parser.parse is said to be able to handle incomplete dates, but might need fixing
@@ -591,6 +607,69 @@ class Domain(BaseNode):
         if result['baseline_timing'] == "Fixed Reference":
           # print("setting baseline var",column_names.index(baseline_var))
           record[column_names.index(baseline_var)] = "Y"
+        final_results[key] = record
+      else:
+        record = final_results[key]
+
+      if result["variable"] == self.name+"DTC":
+        ref_date = next((item for item in reference_dates if item["USUBJID"] == result['USUBJID']), None)
+        if ref_date:
+          if self.name+'DY' in column_names:
+            index_dy = [column_names.index(self.name+'DY')][0]
+            record[index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
+
+      variable_index = [column_names.index(result["variable"])][0]
+      record[variable_index] = result["value"]
+    self.add_seq(final_results, column_names.index(seq_var), column_names.index("USUBJID"))
+    df = pd.DataFrame(columns=column_names)
+    for key, result in final_results.items():
+      df.loc[len(df.index)] = result
+    return df
+
+  def construct_intervention_dataframe(self, results):
+    # topic = self.topic()
+    topic = self.name+"TRT"
+    # topic_label = self.name+"TEST"
+    seq_var = self.name+"SEQ"
+    # baseline_var = self.name+"BLFL"
+    column_names = self.variable_list()
+    print('column_names',column_names)
+    # Get reference dates
+    reference_dates = self.get_reference_start_dates()
+
+    final_results = {}
+    for result in results:
+      key = "%s.%s.%s" % (result['USUBJID'],result['trt'], result['VISIT'])
+      if not key in final_results:
+        record = [""] * len(column_names)
+        record[column_names.index("STUDYID")] = result["STUDYID"]
+        record[column_names.index("DOMAIN")] = result["DOMAIN"]
+        # record[column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
+        record[column_names.index("USUBJID")] = result["USUBJID"]
+        record[column_names.index(topic)] = result["trt"]
+        # record[column_names.index(topic_label)] = result["test_label"]
+        # if 'VISIT' in result.keys():
+        #   if result["VISIT"]:
+        #     record[column_names.index("VISIT")] = result["VISIT"]
+        #   else:
+        #     record[column_names.index("VISIT")] = "Unplanned"
+        if 'VISITNUM' in result.keys() and result["VISITNUM"]:
+          record[column_names.index("VISITNUM")] = result["VISITNUM"]
+        if 'VISITDY' in result.keys():
+          dt = pd.Timedelta(result["VISITDY"])
+          if pd.isnull(dt):
+            pass
+          else:
+            planned_dy = dt.days*-1 if result['baseline_timing'] == "Before" else dt.days
+            record[column_names.index("VISITDY")] = planned_dy
+            # record[column_names.index("VISITDY")] = dt.days
+        if 'TPT' in result.keys() and result["TPT"]:
+          record[column_names.index(self.name+"TPT")] = result["TPT"]
+        if 'EPOCH' in result.keys() and result["EPOCH"]:
+          record[column_names.index("EPOCH")] = result["EPOCH"]
+        # if result['baseline_timing'] == "Fixed Reference":
+        #   # print("setting baseline var",column_names.index(baseline_var))
+        #   record[column_names.index(baseline_var)] = "Y"
         final_results[key] = record
       else:
         record = final_results[key]
