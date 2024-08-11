@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import List
+from typing import List, Optional
 from model.base_node import BaseNode
 from model.variable import Variable
 from model.biomedical_concept import BiomedicalConceptSimple
@@ -11,6 +11,7 @@ class Domain(BaseNode):
   name: str
   label: str
   structure: str
+  goc: Optional[str] = None
   ordinal: int
   items: List[Variable] = []
   bc_references: List[str] = []
@@ -243,7 +244,7 @@ class Domain(BaseNode):
     return query
 
   def intervention_query(self):
-    # ISSUE: Need to fill in, if any
+    # ISSUE: Now only EX. Need to check other interventions
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
@@ -325,17 +326,21 @@ class Domain(BaseNode):
       age = "N/A"
     return age
 
-  def sdtm_derive_dy(self, ref_start_date_str, end_date_str):
-    if ref_start_date_str and end_date_str:
-      ref_start = self.convert_str_datetime(ref_start_date_str)
-      dtc = self.convert_str_datetime(end_date_str)
-      dy = dtc - ref_start
-      # print("ref_start",ref_start,"dtc",dtc,"dy",dy)
-      if ref_start > dtc:
-        return dy.days
-      else:
-        return dy.days + 1
-    return None
+  def sdtm_derive_dy(self, start_date_str, end_date_str):
+    try:
+      if start_date_str and end_date_str:
+        ref_start = self.convert_str_datetime(start_date_str)
+        dtc = self.convert_str_datetime(end_date_str)
+        dy = dtc - ref_start
+        # print("ref_start",ref_start,"dtc",dtc,"dy",dy)
+        if ref_start > dtc:
+          return dy.days
+        else:
+          return dy.days + 1
+      return None
+    except Exception as e:
+      application_logger.exception(f"Could not derive duration/dy: {start_date_str} {end_date_str}", e)
+      return False
 
   def add_seq_dict(self, results, seq_index, usubjid_index):
     print("adding seq dict")
@@ -373,8 +378,15 @@ class Domain(BaseNode):
     elif isinstance(results, list) and isinstance(results[0], dict):
       self.add_seq_list_of_dict(results, seq_var)
     else:
-        application_logger.info(f"Don't know how to add --SEQ to {results.__class__}")
+        application_logger.info(f"add_seq: Don't know how to add --SEQ to {results.__class__}")
 
+  def add_duration_dict(self, results, index_dur, index_stdtc, index_endtc):
+    for key, result in results.items():
+      result[index_dur] = self.sdtm_derive_dy(result[index_stdtc], result[index_endtc])
+
+  # def add_duration_list_of_dict(self, results, ):
+  #   for key, result in results.items():
+  #     result[index_dur] = self.sdtm_derive_dy(result[index_stdtc], result[index_endtc])
 
   def get_reference_start_dates(self):
     db = Neo4jConnection()
@@ -647,15 +659,14 @@ class Domain(BaseNode):
         # record[column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
         record[column_names.index("USUBJID")] = result["USUBJID"]
         record[column_names.index(topic)] = result["trt"]
-        # record[column_names.index(topic_label)] = result["test_label"]
-        # if 'VISIT' in result.keys():
-        #   if result["VISIT"]:
-        #     record[column_names.index("VISIT")] = result["VISIT"]
-        #   else:
-        #     record[column_names.index("VISIT")] = "Unplanned"
-        if 'VISITNUM' in result.keys() and result["VISITNUM"]:
+        if 'VISIT' in column_names and 'VISIT' in result.keys():
+          if result["VISIT"]:
+            record[column_names.index("VISIT")] = result["VISIT"]
+          else:
+            record[column_names.index("VISIT")] = "Unplanned"
+        if 'VISITNUM' in column_names and 'VISITNUM' in result.keys() and result["VISITNUM"]:
           record[column_names.index("VISITNUM")] = result["VISITNUM"]
-        if 'VISITDY' in result.keys():
+        if 'VISITNUM' in column_names and 'VISITDY' in result.keys():
           dt = pd.Timedelta(result["VISITDY"])
           if pd.isnull(dt):
             pass
@@ -665,7 +676,7 @@ class Domain(BaseNode):
             # record[column_names.index("VISITDY")] = dt.days
         if 'TPT' in result.keys() and result["TPT"]:
           record[column_names.index(self.name+"TPT")] = result["TPT"]
-        if 'EPOCH' in result.keys() and result["EPOCH"]:
+        if 'EPOCH' in column_names and 'EPOCH' in result.keys() and result["EPOCH"]:
           record[column_names.index("EPOCH")] = result["EPOCH"]
         # if result['baseline_timing'] == "Fixed Reference":
         #   # print("setting baseline var",column_names.index(baseline_var))
@@ -674,16 +685,25 @@ class Domain(BaseNode):
       else:
         record = final_results[key]
 
-      if result["variable"] == self.name+"DTC":
+      if result["variable"] == self.name+"STDTC":
         ref_date = next((item for item in reference_dates if item["USUBJID"] == result['USUBJID']), None)
         if ref_date:
-          if self.name+'DY' in column_names:
-            index_dy = [column_names.index(self.name+'DY')][0]
+          if self.name+'STDY' in column_names:
+            index_dy = [column_names.index(self.name+'STDY')][0]
+            record[index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
+      if result["variable"] == self.name+"ENDTC":
+        ref_date = next((item for item in reference_dates if item["USUBJID"] == result['USUBJID']), None)
+        if ref_date:
+          if self.name+'STDY' in column_names:
+            index_dy = [column_names.index(self.name+'ENDY')][0]
             record[index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
 
       variable_index = [column_names.index(result["variable"])][0]
       record[variable_index] = result["value"]
     self.add_seq(final_results, column_names.index(seq_var), column_names.index("USUBJID"))
+    if self.name+"STDTC" in column_names and self.name+"ENDTC" in column_names and self.name+"DUR" in column_names:
+      self.add_duration_dict(final_results, column_names.index(self.name+"DUR"), column_names.index(self.name+"STDTC"), column_names.index(self.name+"ENDTC"))
+
     df = pd.DataFrame(columns=column_names)
     for key, result in final_results.items():
       df.loc[len(df.index)] = result

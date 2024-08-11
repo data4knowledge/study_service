@@ -58,11 +58,11 @@
     - node: "RESULT"
       data_type: "coding"
       property: "code"
-  - name: "DSSTDTC"
-    canonical: 
-    - node: "RESULT"
-      data_type: "quantity"
-      property: "value"
+  # - name: "DSSTDTC"
+  #   canonical: 
+  #   - node: "RESULT"
+  #     data_type: "quantity"
+  #     property: "value"
   - name: "BRTHDTC"
     canonical: 
     - node: "RESULT"
