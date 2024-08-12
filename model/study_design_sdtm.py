@@ -111,6 +111,13 @@ class StudyDesignSDTM():
       for record in result:
         print("DOMAIN:", record['d']['name'])
 
+  @classmethod
+  def add_permissible_sdtm_variables(cls, name):
+    study_design = cls._get_study_design(name)
+    cls._add_permissible_sdtm_variables(study_design.uuid)
+    application_logger.info("Created permissible variables")
+
+
   @staticmethod
   def _get_study_design(name):
     
@@ -165,3 +172,115 @@ class StudyDesignSDTM():
         crm_node = CRMNode.wrap(record['n'])
         results[crm_node.uri] = crm_node
       return results
+
+  @staticmethod
+  def _add_permissible_sdtm_variables(study_design_uuid):
+    order_of_timing_variables = [
+        'VISITNUM'
+        ,'VISIT'
+        ,'VISITDY'
+        ,'TAETORD'
+        ,'EPOCH'
+        ,'RPHASE'
+        ,'RPPLDY'
+        ,'RPPLSTDY'
+        ,'RPPLENDY'
+        ,'--DTC'
+        ,'--STDTC'
+        ,'--ENDTC'
+        ,'--DY'
+        ,'--STDY'
+        ,'--ENDY'
+        ,'--NOMDY'
+        ,'--NOMLBL'
+        ,'--RPDY'
+        ,'--RPSTDY'
+        ,'--RPENDY'
+        ,'--XDY'
+        ,'--XSTDY'
+        ,'--XENDY'
+        ,'--CHDY'
+        ,'--CHSTDY'
+        ,'--CHENDY'
+        ,'--DUR'
+        ,'--TPT'
+        ,'--TPTNUM'
+        ,'--ELTM'
+        ,'--TPTREF'
+        ,'--RFTDTC'
+        ,'--STRF'
+        ,'--ENRF'
+        ,'--EVLINT'
+        ,'--EVINTX'
+        ,'--STRTPT'
+        ,'--STTPT'
+        ,'--ENRTPT'
+        ,'--ENTPT'
+        ,'MIDS'
+        ,'RELMIDS'
+        ,'MIDSDTC'
+        ,'--STINT'
+        ,'--ENINT'
+        ,'--DETECT'
+        ,'--PTFL'
+        ,'--PDUR'
+    ]
+
+    db = Neo4jConnection()
+    with db.session() as session:
+      permissible = [
+        {'domain':'EX',
+         'name': 'VISIT',
+         'uri': 'https://sdtm.d4k.dk/ig/EX/VISIT',
+         'uuid': str(uuid4()),
+         'code_list': '',
+         'code_list_uri': '',
+         'core': 'Perm',
+         'data_type': 'Char',
+         'description': 'See IG',
+         'label': 'Visit Name',
+         'ordinal': 48,
+         'role': 'Timing',
+         'value_domain': ''},
+        {'domain':'EX',
+         'name': 'VISITNUM',
+         'uri': 'https://sdtm.d4k.dk/ig/EX/VISITNUM',
+         'uuid': str(uuid4()),
+         'code_list': '',
+         'code_list_uri': '',
+         'core': 'Perm',
+         'data_type': 'Char',
+         'description': 'See IG',
+         'label': 'Visit Name',
+         'ordinal': 55,
+         'role': 'Timing',
+         'value_domain': ''}
+      ]
+
+      for domain in set([var['domain'] for var in permissible]):
+        query = """
+          MATCH (sd:StudyDesign {uuid: '%s'})-[:DOMAIN_REL]->(domain:Domain)
+          WHERE domain.name = '%s'
+          return domain.uuid as uuid
+        """ % (study_design_uuid, domain)
+        print("-- st query",query)
+        results = db.query(query)
+        if results:
+          d = Domain.find(results[0]['uuid'])
+          for variable in [v for v in permissible if v['domain'] == domain]:
+            variable.pop('domain')
+            v = Variable.create(variable)
+            d.relationship(v, 'VARIABLE_REL')
+            application_logger.info(f"---  Info permissible variables: Added variable {domain}.{variable['name']}")
+        else:
+          application_logger.info(f"---  Info permissible variables: Failed to find domain {domain}")
+
+      # # Order variables
+      # for domain in set([var['domain'] for var in permissible]):
+      #   query = """
+      #     MATCH (sd:Domain {uuid: '%s'})-[:VARIABLE_REL]->(sv:Variable)
+      #     WHERE sd.name = "%s"
+      #     RETURN sv.ordinal as ordinal, sv.name as name ORDER BY toInteger(sv.ordinal)
+      #   """ % (study_design_uuid, domain)
+      #   print("-- st query",query)
+      #   results = db.query(query)

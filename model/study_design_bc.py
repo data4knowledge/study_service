@@ -95,17 +95,17 @@ class StudyDesignBC():
     bcp_uuids = cls._copy_properties(bc_uuid, 'Date of Birth', 'Race')
     # print("bcp_uuids",bcp_uuids)
     cls._copy_bc_relationships_from_bc(bc_uuid, 'Race')
-    application_logger.info("Converted Date of Birth Surrgate to BC")   
+    application_logger.info("Converted Date of Birth Surrgate to BC")
 
   @classmethod
   def remove_properties_from_exposure(cls, name):
     cls._remove_properties_from_exposure()
-    application_logger.info("Removed properties from exposure")   
+    application_logger.info("Removed properties from exposure")
 
   @classmethod
   def fix_links_to_crm(cls, name):
     cls._add_missing_links_to_crm()
-    application_logger.info("Linked BRTHDTC to CRM")   
+    application_logger.info("Linked specific variables to CRM")
 
 
 
@@ -390,29 +390,6 @@ class StudyDesignBC():
         else:
           application_logger.info(f"Info: Failed to create link to CRM for {var}")
           print("query",query)
-
-      # query = """
-      #     // Create term and link to DSDECOD
-      #     MERGE (t:SkosConcept {uri:'https://ct.d4k.dk/cdisc/dataset/sc/2014-03-28/sdtm/C114118/C16735'})
-      #     SET t.pref_label = 'Informed Consent'
-      #     SET t.identifier = 'C16735'
-      #     SET t.alt_label = '[]'
-      #     SET t.notation = 'INFORMED CONSENT OBTAINED'
-      #     SET t.name = 'Informed Consent'
-      #     SET t.definition = 'Consent by a patient for participation in a clinical study after achieving an understanding of the relevant medical facts and the risks involved.'
-      #     SET t.id = 106651
-      #     SET t.extensible = 'False'
-      #     SET t.fake_node = 'yes'
-      #     SET t.uuid = 'FakeUUIDInformedConcentObtained'
-      #     with t
-      #     MATCH (bcp:BiomedicalConceptProperty)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)
-      #     WHERE bcp.name = 'DSDECOD'
-      #     MERGE (c)-[:HAS_TERM]->(t)
-      #     return bcp,c,t
-      # """
-      # # application_logger.info(f"BRTHDTC CRM query {query}")
-      # results = db.query(query)
-      # application_logger.info(f"Created term and link to DSDECOD {[result.data() for result in results]}")
 
   @staticmethod
   def _remove_properties_from_exposure():

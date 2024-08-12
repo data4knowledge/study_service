@@ -152,7 +152,11 @@ class StudyFile(BaseNode):
       self.set_status("running", "Adding SDTM domains", 80)
       result = StudyDesignSDTM.create(study_design.name)
 
-      # Link BRTHDTC to CRM
+      # Add permissable SDTM variables
+      self.set_status("running", "Add permissible SDTM variables", 89)
+      result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design.name)
+
+      # Add missing links to CRM
       self.set_status("running", "Link BRTHDTC to CRM", 89)
       result = StudyDesignBC.fix_links_to_crm(study_design.name)
 
