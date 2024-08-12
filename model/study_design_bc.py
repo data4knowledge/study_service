@@ -303,39 +303,6 @@ class StudyDesignBC():
           # print("query",query)
           results = session.run(query)
           print("Created link between BC and BCP",[result.data() for result in results])
-
-          # # Copy property nodes relationships: DataContract
-          # dc_uri="https://study.d4k.dk/study-cdisc-pilot-lzzt/"+bc_uuid+"/"+uuid
-          # query = """
-          #     MATCH (source_bcp:BiomedicalConceptProperty {uuid:'%s'})<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]-(sai:ScheduledActivityInstance)
-          #     MATCH (bcp:BiomedicalConceptProperty {uuid:'%s'})
-          #     with sai, bcp
-          #     CREATE (dc:DataContract {uri:'%s', fake_node: 'yes'})
-          #     CREATE (bcp)<-[r1:PROPERTIES_REL]-(dc)-[r2:INSTANCES_REL]->(sai)
-          #     set r1.fake_relationship = 'yes'
-          #     set r2.fake_relationship = 'yes'
-          #     RETURN 'done'
-          # """ % (bcp['uuid'], uuid, dc_uri)
-          # print(query)
-          # results = session.run(query)
-          # for result in results:
-          #   print("result",result.data())
-          # print("Created Data Contract")
-
-          # # Copy property nodes relationships: IS_A_REL        
-          # query = """
-          #     MATCH (source_bcp:BiomedicalConceptProperty {uuid:"%s"})-[:IS_A_REL]->(crm:CRMNode)
-          #     MATCH (bcp:BiomedicalConceptProperty {uuid:"%s"})
-          #     with crm, bcp
-          #     MERGE (bcp)-[r:IS_A_REL]->(crm)
-          #     set r.fake_relationship = "yes"
-          #     return *
-          # """ % (bcp['uuid'], uuid)
-          # # print(query)
-          # results = session.run(query)
-          # for result in results:
-          #   print("result",result.data())
-          # print("Created property node IS_A_REL")
     return bcp_uuids
       
   @staticmethod
