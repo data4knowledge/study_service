@@ -383,6 +383,19 @@ class Domain(BaseNode):
       results = session.run(query)
       return [result.data() for result in results]
 
+  def get_exposure_max_min_dates(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      # FIX: QUERY TO BE UNIQUE FOR STUDY
+      query = """
+        MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        WHERE bc.name = "Exposure Unblinded" and bcp.name in ['EXSTDTC','EXENDTC']
+        return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
+      """
+      results = session.run(query)
+      return [result.data() for result in results]
+
 
   def construct_dm_dataframe(self, results):
     multiples = {}
@@ -390,6 +403,7 @@ class Domain(BaseNode):
     column_names = self.variable_list()
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
+    dose_dates = self.get_exposure_max_min_dates()
     # Check if age can be derived
     if all(key in column_names for key in ('RFICDTC','BRTHDTC')):
       derive_age = True
@@ -412,6 +426,12 @@ class Domain(BaseNode):
           final_results[key][column_names.index("INVNAM")] = result["INVNAM"]
         if "COUNTRY" in result.keys():
           final_results[key][column_names.index("COUNTRY")] = result["COUNTRY"]
+        if "RFXSTDTC" in column_names and "RFXENDTC" in column_names :
+          dose_start_end = next((item for item in dose_dates if item["identifier"] == result['USUBJID']), None)
+          if dose_start_end:
+            final_results[key][column_names.index("RFXSTDTC")] = dose_start_end['min']
+            final_results[key][column_names.index("RFXENDTC")] = dose_start_end['max']
+
       variable_name = result["variable"]
       variable_index = [column_names.index(variable_name)][0]
       if not final_results[key][variable_index] == "": # Subject already have a value for variable
