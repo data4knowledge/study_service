@@ -160,6 +160,10 @@ class StudyFile(BaseNode):
       self.set_status("running", "Link BRTHDTC to CRM", 89)
       result = StudyDesignBC.fix_links_to_crm(study_design.name)
 
+      # Add missing BC links to SDTM
+      self.set_status("running", "Link BC to SDTM", 89)
+      result = StudyDesignSDTM.add_links_to_sdtm(study_design.name)
+
       self.set_status("running", "Linking Biomedical Concepts", 90)
       result = StudyDesignBC.create(study_design.name)
 

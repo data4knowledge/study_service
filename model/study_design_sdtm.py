@@ -117,6 +117,16 @@ class StudyDesignSDTM():
     cls._add_permissible_sdtm_variables(study_design.uuid)
     application_logger.info("Created permissible variables")
 
+  @classmethod
+  def add_links_to_sdtm(cls, name):
+    study_design = cls._get_study_design(name)
+    domain_uuid = cls._find_domain(study_design.uuid, 'DS')
+    domain = Domain.find(domain_uuid)
+    bc_set = cls._get_bcs_by_name(study_design, "Exposure Unblinded")
+    for bc in bc_set:
+      print("bc",bc)
+      domain.relationship(bc, 'USING_BC_REL')
+      application_logger.info(f"Linked domain '{domain.name}' -> '{bc.name}', '{bc.uuid}'")   
 
   @staticmethod
   def _get_study_design(name):
@@ -131,6 +141,21 @@ class StudyDesignSDTM():
       result = session.run(query)
       for record in result:
         return StudyDesign.wrap(record['sd'])
+      return None
+
+  @staticmethod
+  def _find_domain(study_design_uuid, domain):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:DOMAIN_REL]->(domain:Domain)
+        WHERE domain.name = '%s'
+        return domain.uuid as uuid
+      """ % (study_design_uuid, domain)
+      print("-- find query", query)
+      results = session.run(query)
+      for record in results:
+        return record['uuid']
       return None
 
   @staticmethod
@@ -225,21 +250,19 @@ class StudyDesignSDTM():
         ,'--PTFL'
         ,'--PDUR'
     ]
+    permissible = [
+      {'domain':'EX','name': 'VISIT','uri': 'https://sdtm.d4k.dk/ig/EX/VISIT','uuid': str(uuid4()),'code_list': '','code_list_uri': '','core': 'Perm','data_type': 'Char','description': 'See IG','label': 'Visit Name','ordinal': 48,'role': 'Timing','value_domain': ''},
+      # {'domain':'EX','name': 'VISITNUM','uri': 'https://sdtm.d4k.dk/ig/EX/VISITNUM','uuid': str(uuid4()),'code_list': '','code_list_uri': '','core': 'Perm','data_type': 'Char','description': 'See IG','label': 'Visit Name','ordinal': 55,'role': 'Timing','value_domain': ''}
+    ]
 
     db = Neo4jConnection()
     with db.session() as session:
-      permissible = [
-        {'domain':'EX','name': 'VISIT','uri': 'https://sdtm.d4k.dk/ig/EX/VISIT','uuid': str(uuid4()),'code_list': '','code_list_uri': '','core': 'Perm','data_type': 'Char','description': 'See IG','label': 'Visit Name','ordinal': 48,'role': 'Timing','value_domain': ''},
-        # {'domain':'EX','name': 'VISITNUM','uri': 'https://sdtm.d4k.dk/ig/EX/VISITNUM','uuid': str(uuid4()),'code_list': '','code_list_uri': '','core': 'Perm','data_type': 'Char','description': 'See IG','label': 'Visit Name','ordinal': 55,'role': 'Timing','value_domain': ''}
-      ]
-
       for domain in set([var['domain'] for var in permissible]):
         query = """
           MATCH (sd:StudyDesign {uuid: '%s'})-[:DOMAIN_REL]->(domain:Domain)
           WHERE domain.name = '%s'
           return domain.uuid as uuid
         """ % (study_design_uuid, domain)
-        print("-- st query",query)
         results = db.query(query)
         if results:
           d = Domain.find(results[0]['uuid'])
