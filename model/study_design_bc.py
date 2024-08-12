@@ -390,6 +390,7 @@ class StudyDesignBC():
 
       var_link_crm = {
         'BRTHDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+       ,'RFICDTC':'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
        ,'DSDECOD':'https://crm.d4k.dk/dataset/observation/observation_result/result/coding/code'
        ,'DSSTDTC':'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
        ,'DSTERM' :'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
