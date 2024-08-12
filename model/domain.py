@@ -733,8 +733,9 @@ class Domain(BaseNode):
       "--TPTNUM", "--ELTM", "--TPTREF", "--RFTDTC", "--PTFL", "--PDUR",
       "--TSTCND", "--BDAGNT", "--TSTOPO", "--STRESC", "--STRESN", "--STRESU"
     ]
+    # "RFXSTDTC", "RFXENDTC",
     full_hide_list = [
-      "TAETORD", "RFSTDTC", "RFENDTC", "RFXSTDTC", "RFXENDTC", "RFCSTDTC", "RFCENDTC", "RFPENDTC"
+      "TAETORD", "RFSTDTC", "RFENDTC", "RFCSTDTC", "RFCENDTC", "RFPENDTC"
     ]
     if name in full_hide_list:
       return True

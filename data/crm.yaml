@@ -53,11 +53,11 @@
     - node: "DATE TIME"
       data_type: "date_time"
       property: "value"
-  - name: "--DECOD"
-    canonical: 
-    - node: "RESULT"
-      data_type: "coding"
-      property: "code"
+  # - name: "--DECOD"
+  #   canonical: 
+  #   - node: "RESULT"
+  #     data_type: "coding"
+  #     property: "code"
   # - name: "DSSTDTC"
   #   canonical: 
   #   - node: "RESULT"

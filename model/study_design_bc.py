@@ -391,7 +391,7 @@ class StudyDesignBC():
       var_link_crm = {
         'BRTHDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'DSDECOD':'https://crm.d4k.dk/dataset/observation/observation_result/result/coding/code'
-       ,'DSSTDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+       ,'DSSTDTC':'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
        ,'DSTERM' :'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'VSPOS'  :'https://crm.d4k.dk/dataset/observation/position/coding/code'
        ,'DMDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
