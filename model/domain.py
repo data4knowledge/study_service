@@ -6,6 +6,8 @@ from model.biomedical_concept import BiomedicalConceptSimple
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
 from dateutil import parser 
+from model.utility.configuration import ConfigurationNode, Configuration
+
 class Domain(BaseNode):
   uri: str
   name: str
@@ -15,6 +17,7 @@ class Domain(BaseNode):
   ordinal: int
   items: List[Variable] = []
   bc_references: List[str] = []
+  configuration: dict = {}
 
   def bcs(self, page, size, filter):
     skip_offset_clause = ""
@@ -73,6 +76,9 @@ class Domain(BaseNode):
     return None
 
   def data(self):
+    configuration = ConfigurationNode.get()
+    print("configuration",configuration)
+    self.configuration = configuration
     db = Neo4jConnection()
     with db.session() as session:
       results = []
@@ -426,11 +432,13 @@ class Domain(BaseNode):
           final_results[key][column_names.index("INVNAM")] = result["INVNAM"]
         if "COUNTRY" in result.keys():
           final_results[key][column_names.index("COUNTRY")] = result["COUNTRY"]
-        if "RFXSTDTC" in column_names and "RFXENDTC" in column_names :
-          dose_start_end = next((item for item in dose_dates if item["identifier"] == result['USUBJID']), None)
-          if dose_start_end:
-            final_results[key][column_names.index("RFXSTDTC")] = dose_start_end['min']
-            final_results[key][column_names.index("RFXENDTC")] = dose_start_end['max']
+        if 'exposure_dates' in self.configuration.demography:
+          first_exposure_to_study_drug = self.first_exposure_of_study_drug()
+          if "RFXSTDTC" in column_names and "RFXENDTC" in column_names :
+            dose_start_end = next((item for item in dose_dates if item["identifier"] == result['USUBJID']), None)
+            if dose_start_end:
+              final_results[key][column_names.index("RFXSTDTC")] = dose_start_end['min']
+              final_results[key][column_names.index("RFXENDTC")] = dose_start_end['max']
 
       variable_name = result["variable"]
       variable_index = [column_names.index(variable_name)][0]
@@ -511,7 +519,8 @@ class Domain(BaseNode):
     column_names = self.variable_list()
     final_results = {}
     self.add_seq(results)
-    first_exposure_to_study_drug = self.first_exposure_of_study_drug()
+    if 'first_exposure' in self.configuration.disposition:
+      first_exposure_to_study_drug = self.first_exposure_of_study_drug()
     for result in results:
       # print("DS",result)
       if 'DSSEQ' in result.keys():
