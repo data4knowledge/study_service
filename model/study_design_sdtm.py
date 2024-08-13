@@ -252,7 +252,7 @@ class StudyDesignSDTM():
     ]
     permissible = [
       {'domain':'EX','name': 'VISIT','uri': 'https://sdtm.d4k.dk/ig/EX/VISIT','uuid': str(uuid4()),'code_list': '','code_list_uri': '','core': 'Perm','data_type': 'Char','description': 'See IG','label': 'Visit Name','ordinal': 48,'role': 'Timing','value_domain': ''},
-      # {'domain':'EX','name': 'VISITNUM','uri': 'https://sdtm.d4k.dk/ig/EX/VISITNUM','uuid': str(uuid4()),'code_list': '','code_list_uri': '','core': 'Perm','data_type': 'Char','description': 'See IG','label': 'Visit Name','ordinal': 55,'role': 'Timing','value_domain': ''}
+      {'domain':'EX','name': 'VISITNUM','uri': 'https://sdtm.d4k.dk/ig/EX/VISITNUM','uuid': str(uuid4()),'code_list': '','code_list_uri': '','core': 'Perm','data_type': 'Char','description': 'See IG','label': 'Visit Name','ordinal': 55,'role': 'Timing','value_domain': ''}
     ]
 
     db = Neo4jConnection()

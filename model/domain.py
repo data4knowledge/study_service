@@ -178,7 +178,7 @@ class Domain(BaseNode):
       , country.code as COUNTRY
       order by USUBJID
     """ % (self.uuid)
-    print(query)
+    # print(query)
     return query
 
   def ds_query(self):
@@ -215,7 +215,7 @@ class Domain(BaseNode):
             , epoch.label as EPOCH
             , bc.uuid as bc_uuid
     """ % (self.uuid)
-    # print(query)
+    print(query)
     return query
 
   def intervention_query(self):
@@ -491,12 +491,27 @@ class Domain(BaseNode):
     # print(df.head())
     return df
 
+  def first_exposure_of_study_drug(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      # FIX: QUERY TO BE UNIQUE FOR STUDY
+      query = """
+        MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        WHERE bc.name = "Exposure Unblinded" and bcp.name in ['EXSTDTC','EXENDTC']
+        return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
+      """
+      results = session.run(query)
+      return [result.data() for result in results]
+
+
   def construct_ds_dataframe(self, results):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
     final_results = {}
     self.add_seq(results)
+    first_exposure_to_study_drug = self.first_exposure_of_study_drug()
     for result in results:
       # print("DS",result)
       if 'DSSEQ' in result.keys():
