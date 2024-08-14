@@ -25,7 +25,8 @@ class ConfigurationNode(BaseNode):
     result = tx.run(query)
     for row in result:
       return cls.wrap(row['a'])
-    return None
+    print("Could not get configuration")
+    return cls.wrap({"uuid":"failed"})
 
 class Configuration():
 

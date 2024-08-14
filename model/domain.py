@@ -18,6 +18,7 @@ class Domain(BaseNode):
   items: List[Variable] = []
   bc_references: List[str] = []
   configuration: dict = {}
+  sd_uuid: str = ""
 
   def bcs(self, page, size, filter):
     skip_offset_clause = ""
@@ -76,9 +77,8 @@ class Domain(BaseNode):
     return None
 
   def data(self):
-    configuration = ConfigurationNode.get()
-    print("configuration",configuration)
-    self.configuration = configuration
+    self.configuration = ConfigurationNode.get()
+    self.sd_uuid = self.get_study_uuid()
     db = Neo4jConnection()
     with db.session() as session:
       results = []
@@ -293,7 +293,8 @@ class Domain(BaseNode):
     return query
 
   def convert_str_datetime(self, date_time_str):
-    # parser.parse is said to be able to handle incomplete dates, but might need fixing
+    # ASSUMPTION: Assuming complete dates are sent
+    # ISSUE: parser.parse is said to be able to handle incomplete dates, but might need fixing
     return parser.parse(date_time_str)
 
   def sdtm_derive_age(self,reference_start_date,brthdtc):
@@ -369,36 +370,42 @@ class Domain(BaseNode):
   #   for key, result in results.items():
   #     result[index_dur] = self.sdtm_derive_dy(result[index_stdtc], result[index_endtc])
 
+  def get_study_uuid(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'}) return sd.uuid as uuid""" % (self.uuid)
+      results = session.run(query)
+      for result in results:
+        return result['uuid']
+      return None
+
   def get_reference_start_dates(self):
     db = Neo4jConnection()
     with db.session() as session:
-      # FIX: QUERY TO BE UNIQUE FOR STUDY
-      # FIX: QUERY SHOULD USE REFERENCE START DATE, NOT INFORMED CONSENT
-      query = """
-        MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(:DataContract)-[:PROPERTIES_REL]->(:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(:BiomedicalConcept {name:"Informed Consent Obtained"})
-        return s.identifier as USUBJID, dp.value as consent_date
-      """
+      # FIXED: Query is unique for study
+      # FIX: MAKE QUERY GENERIC USING CONFIGURATION
+      # FIX: SHOULD USE REFERENCE START DATE, NOT INFORMED CONSENT
       query = """
         MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
-        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
         WHERE e.label = "Baseline"
         and bcp.name = "--DTC"
         return distinct s.identifier as USUBJID, dp.value as reference_date
-      """
-      # print("reference start date query",query)
+      """ % (self.sd_uuid)
+      print("reference start date query",query)
       results = session.run(query)
       return [result.data() for result in results]
 
   def get_exposure_max_min_dates(self):
     db = Neo4jConnection()
     with db.session() as session:
-      # FIX: QUERY TO BE UNIQUE FOR STUDY
+      # FIXED: Query is unique for study
       query = """
         MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
-        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
         WHERE bc.name = "Exposure Unblinded" and bcp.name in ['EXSTDTC','EXENDTC']
         return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
-      """
+      """ % (self.sd_uuid)
       results = session.run(query)
       return [result.data() for result in results]
 
@@ -502,13 +509,14 @@ class Domain(BaseNode):
   def first_exposure_of_study_drug(self):
     db = Neo4jConnection()
     with db.session() as session:
-      # FIX: QUERY TO BE UNIQUE FOR STUDY
+      # FIXED: Query is unique for study
+      # FIX: QUERY TO BE GENERIC
       query = """
         MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
-        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
         WHERE bc.name = "Exposure Unblinded" and bcp.name in ['EXSTDTC','EXENDTC']
         return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
-      """
+      """ % (self.sd_uuid)
       results = session.run(query)
       return [result.data() for result in results]
 
