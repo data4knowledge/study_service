@@ -5,9 +5,11 @@ from typing import List, Literal
 
 class ConfigurationNode(BaseNode):
   name: str = ""
-  study_products_bcs: List[str]= []
+  study_product_bcs: List[str]= []
   disposition: List[str]= []
   demography: List[str]= []
+  crm_start: str = ""
+  crm_end: str = ""
 
   @classmethod
   def get(cls):
