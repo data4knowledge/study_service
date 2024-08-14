@@ -22,8 +22,6 @@ class ConfigurationNode(BaseNode):
     query = """
       MATCH (a:%s) RETURN a
     """ % (cls.__name__)
-    print("query",query)
-    # result = tx.run(query, uuid1=str(uuid4()))
     result = tx.run(query)
     for row in result:
       return cls.wrap(row['a'])
