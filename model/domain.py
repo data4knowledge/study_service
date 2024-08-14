@@ -519,13 +519,6 @@ class Domain(BaseNode):
     with db.session() as session:
       # FIXED: Query is unique for study
       # FIXED: Query is generic. Query uses configuration for exposure BCs and start/end from crm
-      odl_query = """
-        MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
-        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
-        MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
-        WHERE bc.name in %s and crm.sdtm in ['%s','%s']
-        return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
-      """ % (self.sd_uuid, bcs, crm_start, crm_end)
       query = """
         MATCH (subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(sd:StudyDesign {uuid: '%s'})
@@ -542,14 +535,14 @@ class Domain(BaseNode):
         with si, subj, crm, bc, dp, epoch
         RETURN
         si.studyIdentifier as STUDYID
-        , "DSEX" as DOMAIN
+        , "DS" as DOMAIN
         , subj.identifier as USUBJID
         , right(subj.identifier,6) as SUBJECT
         , crm.sdtm as crm
-        , "First exposure" as term
         , bc.name as bc
+        , "First Exposure" as term
+        , "First Exposure to Study Drug" as decod
         , "DSSTDTC" as variable
-        , "FIRST EXPOSURE TO STUDY DRUG" as decod
         , dp.value as value
         , epoch.label as EPOCH
         order by USUBJID, value
@@ -557,7 +550,13 @@ class Domain(BaseNode):
       # """ % (self.sd_uuid, bcs, crm_start, crm_end)
       print("f query", query)
       results = session.run(query)
-      return [result.data() for result in results]
+      rows = []
+      current_subject = ""
+      for row in [result.data() for result in results]:
+        if not row['USUBJID'] == current_subject:
+          rows.append(row)
+          current_subject = row['USUBJID']
+      return rows
 
 
   def construct_ds_dataframe(self, results):
@@ -567,8 +566,8 @@ class Domain(BaseNode):
     final_results = {}
     if 'first_exposure' in self.configuration.disposition:
       first_exposure_to_study_drug = self.first_last_exposure_of_study_drug()
-      print("Getting first exposure")
-      results = results + first_exposure_to_study_drug
+      # results = results + first_exposure_to_study_drug
+      results = sorted(results + first_exposure_to_study_drug, key=lambda i: (i['USUBJID'],i['value']))
     # if 'last_exposure' in self.configuration.disposition:
     #   first_exposure_to_study_drug = self.first_last_exposure_of_study_drug()
     self.add_seq(results)
@@ -591,7 +590,6 @@ class Domain(BaseNode):
           final_results[key][column_names.index("DSTERM")] = result["DSTERM"]
         if "term" in result.keys():
           final_results[key][column_names.index("DSTERM")] = result["term"]
-        print("result['decod']",result["decod"])
         if "decod" in result.keys():
           final_results[key][column_names.index("DSDECOD")] = result["decod"]
           if result["decod"] in self.configuration.mandatory_bcs:
