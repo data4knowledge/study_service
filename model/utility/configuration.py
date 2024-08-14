@@ -10,6 +10,7 @@ class ConfigurationNode(BaseNode):
   demography: List[str]= []
   crm_start: str = ""
   crm_end: str = ""
+  mandatory_bcs: List[str] = []
 
   @classmethod
   def get(cls):

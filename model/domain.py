@@ -154,6 +154,7 @@ class Domain(BaseNode):
       return result
 
   def dm_query(self):
+    # FIX: REMOVE HARD CODING OF ELI LILLY
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
@@ -189,6 +190,7 @@ class Domain(BaseNode):
 
   def ds_query(self):
     # ISSUE: Term is not the value from CRF. It is the standard decode of the BC
+    # FIX: REMOVE HARD CODING OF ELI LILLY
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
@@ -513,16 +515,46 @@ class Domain(BaseNode):
     crm_start = self.configuration.crm_start
     crm_end = self.configuration.crm_end
     db = Neo4jConnection()
+    query = self.intervention_query()
     with db.session() as session:
       # FIXED: Query is unique for study
       # FIXED: Query is generic. Query uses configuration for exposure BCs and start/end from crm
-      query = """
+      odl_query = """
         MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
         MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
         WHERE bc.name in %s and crm.sdtm in ['%s','%s']
         return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
       """ % (self.sd_uuid, bcs, crm_start, crm_end)
+      query = """
+        MATCH (subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(sd:StudyDesign {uuid: '%s'})
+        MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
+        WHERE bc.name in %s and crm.sdtm in ['%s']
+        WITH *
+        MATCH (sd:StudyDesign)-[:BIOMEDICAL_CONCEPTS_REL]->(bc)
+        MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+        // MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+        MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)
+        MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+        with si, subj, crm, bc, dp, epoch
+        RETURN
+        si.studyIdentifier as STUDYID
+        , "DSEX" as DOMAIN
+        , subj.identifier as USUBJID
+        , right(subj.identifier,6) as SUBJECT
+        , crm.sdtm as crm
+        , "First exposure" as term
+        , bc.name as bc
+        , "DSSTDTC" as variable
+        , "FIRST EXPOSURE TO STUDY DRUG" as decod
+        , dp.value as value
+        , epoch.label as EPOCH
+        order by USUBJID, value
+      """ % (self.sd_uuid, bcs, crm_start)
+      # """ % (self.sd_uuid, bcs, crm_start, crm_end)
       print("f query", query)
       results = session.run(query)
       return [result.data() for result in results]
@@ -533,12 +565,13 @@ class Domain(BaseNode):
     supp_quals = {}
     column_names = self.variable_list()
     final_results = {}
-    self.add_seq(results)
     if 'first_exposure' in self.configuration.disposition:
       first_exposure_to_study_drug = self.first_last_exposure_of_study_drug()
       print("Getting first exposure")
+      results = results + first_exposure_to_study_drug
     # if 'last_exposure' in self.configuration.disposition:
     #   first_exposure_to_study_drug = self.first_last_exposure_of_study_drug()
+    self.add_seq(results)
     for result in results:
       # print("DS",result)
       if 'DSSEQ' in result.keys():
@@ -558,8 +591,14 @@ class Domain(BaseNode):
           final_results[key][column_names.index("DSTERM")] = result["DSTERM"]
         if "term" in result.keys():
           final_results[key][column_names.index("DSTERM")] = result["term"]
+        print("result['decod']",result["decod"])
         if "decod" in result.keys():
           final_results[key][column_names.index("DSDECOD")] = result["decod"]
+          if result["decod"] in self.configuration.mandatory_bcs:
+            final_results[key][column_names.index("DSCAT")] = "Protocol Milestone"
+          else:
+            final_results[key][column_names.index("DSCAT")] = "Other event"
+
         if "DSCAT" in result.keys():
           final_results[key][column_names.index("DSCAT")] = result["DSCAT"]
         # final_results[key][column_names.index("DSSCAT")] = result["DSSCAT"]
