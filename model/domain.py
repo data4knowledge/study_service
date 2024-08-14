@@ -397,18 +397,22 @@ class Domain(BaseNode):
       return [result.data() for result in results]
 
   def get_exposure_max_min_dates(self):
+    bcs = self.configuration.study_product_bcs
+    crm_start = self.configuration.crm_start
+    crm_end = self.configuration.crm_end
     db = Neo4jConnection()
     with db.session() as session:
       # FIXED: Query is unique for study
+      # FIXED: Query uses configuration for exposure BCs and start/end from crm
       query = """
         MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
-        WHERE bc.name = "Exposure Unblinded" and bcp.name in ['EXSTDTC','EXENDTC']
+        MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
+        WHERE bc.name in %s and crm.sdtm in ['%s','%s']
         return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
-      """ % (self.sd_uuid)
+      """ % (self.sd_uuid, bcs, crm_start, crm_end)
       results = session.run(query)
       return [result.data() for result in results]
-
 
   def construct_dm_dataframe(self, results):
     multiples = {}
@@ -439,13 +443,11 @@ class Domain(BaseNode):
           final_results[key][column_names.index("INVNAM")] = result["INVNAM"]
         if "COUNTRY" in result.keys():
           final_results[key][column_names.index("COUNTRY")] = result["COUNTRY"]
-        if 'exposure_dates' in self.configuration.demography:
-          first_exposure_to_study_drug = self.first_exposure_of_study_drug()
-          if "RFXSTDTC" in column_names and "RFXENDTC" in column_names :
-            dose_start_end = next((item for item in dose_dates if item["identifier"] == result['USUBJID']), None)
-            if dose_start_end:
-              final_results[key][column_names.index("RFXSTDTC")] = dose_start_end['min']
-              final_results[key][column_names.index("RFXENDTC")] = dose_start_end['max']
+        if "RFXSTDTC" in column_names and "RFXENDTC" in column_names :
+          dose_start_end = next((item for item in dose_dates if item["identifier"] == result['USUBJID']), None)
+          if dose_start_end:
+            final_results[key][column_names.index("RFXSTDTC")] = dose_start_end['min']
+            final_results[key][column_names.index("RFXENDTC")] = dose_start_end['max']
 
       variable_name = result["variable"]
       variable_index = [column_names.index(variable_name)][0]
@@ -506,17 +508,22 @@ class Domain(BaseNode):
     # print(df.head())
     return df
 
-  def first_exposure_of_study_drug(self):
+  def first_last_exposure_of_study_drug(self):
+    bcs = self.configuration.study_product_bcs
+    crm_start = self.configuration.crm_start
+    crm_end = self.configuration.crm_end
     db = Neo4jConnection()
     with db.session() as session:
       # FIXED: Query is unique for study
-      # FIX: QUERY TO BE GENERIC
+      # FIXED: Query is generic. Query uses configuration for exposure BCs and start/end from crm
       query = """
         MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
-        WHERE bc.name = "Exposure Unblinded" and bcp.name in ['EXSTDTC','EXENDTC']
+        MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
+        WHERE bc.name in %s and crm.sdtm in ['%s','%s']
         return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
-      """ % (self.sd_uuid)
+      """ % (self.sd_uuid, bcs, crm_start, crm_end)
+      print("f query", query)
       results = session.run(query)
       return [result.data() for result in results]
 
@@ -528,7 +535,10 @@ class Domain(BaseNode):
     final_results = {}
     self.add_seq(results)
     if 'first_exposure' in self.configuration.disposition:
-      first_exposure_to_study_drug = self.first_exposure_of_study_drug()
+      first_exposure_to_study_drug = self.first_last_exposure_of_study_drug()
+      print("Getting first exposure")
+    # if 'last_exposure' in self.configuration.disposition:
+    #   first_exposure_to_study_drug = self.first_last_exposure_of_study_drug()
     for result in results:
       # print("DS",result)
       if 'DSSEQ' in result.keys():
