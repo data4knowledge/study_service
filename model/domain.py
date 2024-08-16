@@ -139,6 +139,7 @@ class Domain(BaseNode):
           record['test_code'] = row['test_code']
           record['test_label'] = row['test_label']
         results.append(record)
+      print("len(results)",len(results))
       # for x in results[0:5]:
       #   print(x)
       if self.name == "DM":
@@ -695,6 +696,29 @@ si.studyIdentifier as STUDYID
       else:
         final_results[key][variable_index] = result["value"]
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+
+    for supp_name, count in supp_quals.items():
+      #print("Count: ", count)
+      for i in range(1, count + 1):
+        name = "%s%s" % (supp_name, i)
+        column_names.append(name)
+        #print("Index: ", column_names.index(name))
+        for subject, items in multiples.items():
+          final_results[subject].append("")
+          if supp_name in items:
+            #print("I: ", i)
+            #print("Items: ", items[supp_name])
+            if i <= len(items[supp_name]):
+              final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
+              #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
+
+    df = pd.DataFrame(columns=column_names)
+    # print(df.head())
+    for subject, result in final_results.items():
+      df.loc[len(df.index)] = result
+    # print(df.head())
+    return df
+
 
   def construct_ae_dataframe(self, results):
     multiples = {}
