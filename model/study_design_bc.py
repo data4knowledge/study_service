@@ -98,9 +98,13 @@ class StudyDesignBC():
     application_logger.info("Converted Date of Birth Surrgate to BC")
 
   @classmethod
-  def remove_properties_from_exposure(cls, name):
+  def pretty_properties_for_bc(cls, name):
     cls._remove_properties_from_exposure()
-    application_logger.info("Removed properties from exposure")
+
+    study_design = cls._get_study_design(name)
+    bcs = cls._get_bcs_by_name(study_design, "Adverse Event Prespecified")
+    cls._add_properties_to_ae(bcs)
+    application_logger.info("Added properties to AE")
 
   @classmethod
   def fix_links_to_crm(cls, name):
@@ -411,3 +415,66 @@ class StudyDesignBC():
         application_logger.info(f"Removed {properties}")
       else:
         application_logger.info(f"Info: Failed to remove {properties}")
+
+  @staticmethod
+  def _get_study_design(name):
+    
+    from model.study_design import StudyDesign
+    
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign {name: '%s'}) return sd
+      """ % (name)
+      result = session.run(query)
+      for record in result:
+        return StudyDesign.wrap(record['sd'])
+      return None
+
+
+  @staticmethod
+  def _get_bcs_by_name(study_design, name):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept) WHERE bc.name = '%s' RETURN DISTINCT bc
+      """ % (study_design.uuid, name)
+      result = session.run(query)
+      for record in result:
+        results.append(BiomedicalConceptSimple.wrap(record['bc']))
+      return results
+
+  @staticmethod
+  def _add_properties_to_ae(bcs):
+    for bc in bcs:
+      print("bc",bc)
+      properties = [
+        {'name': 'AELLT','label': 'MedDRA Lowest Level Term','datatype': 'integer','isRequired': True, 'isEnabled': True}
+      ]
+      print("properties",properties)
+
+
+      db = Neo4jConnection()
+      with db.session() as session:
+        uuids = {'property': str(uuid4()), 'code': str(uuid4()), 'aliasCode': str(uuid4())}
+        for p in properties:
+          query = """
+            MATCH (bc:BiomedicalConcept {uuid: '%s'})
+            WITH bc
+            CREATE (c:Code {uuid: $s_uuid1, id: 'tbd', code: 'tbd', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'tbd', instanceType: 'Code'})
+            CREATE (ac:AliasCode {uuid: $s_uuid2, id: 'tbd', instanceType: 'AliasCode'})
+            CREATE (p:BiomedicalConceptProperty {uuid: $s_uuid3, id: 'tbd', name: '%s', label: '%s', isRequired: %s, isEnabled: %s, datatype: '%s', instanceType: 'BiomedicalConceptProperty'})
+            CREATE (bc)-[:PROPERTIES_REL]->(p)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
+            RETURN p.uuid as uuid
+          """ % (bc.uuid, p['name'], p['label'], p['isRequired'], p['isEnabled'], p['datatype'])
+          print("query",query)
+          result = session.run(query, 
+            s_uuid1=str(uuid4()), 
+            s_uuid2=str(uuid4()), 
+            s_uuid3=str(uuid4())
+          )
+          for row in result:
+            # p_uuid = [r['uuid'] for r in result]
+            p_uuid = next((r for r in result),None)
+          application_logger.info(f"Added AE property '{p['name']}' {p_uuid}")
