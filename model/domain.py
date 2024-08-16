@@ -139,7 +139,6 @@ class Domain(BaseNode):
           record['test_code'] = row['test_code']
           record['test_label'] = row['test_label']
         results.append(record)
-      print("len(results)",len(results))
       # for x in results[0:5]:
       #   print(x)
       if self.name == "DM":
@@ -211,12 +210,12 @@ class Domain(BaseNode):
       MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
       MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
       MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
-      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
+      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm)
       MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
       MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
       MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
       // WHERE  var.label = bcp.label
-      WHERE  var.name = bcp.name
+      WHERE  var.name = bcp.name or crm.sdtm = "--DTC"
       return
             si.studyIdentifier as STUDYID
             , domain.name as DOMAIN
@@ -231,7 +230,7 @@ class Domain(BaseNode):
             , epoch.label as EPOCH
             , bc.uuid as bc_uuid
     """ % (self.uuid)
-    print(query)
+    print("ds_query",query)
     return query
 
   def ae_query(self):
@@ -296,7 +295,7 @@ si.studyIdentifier as STUDYID
 // , epoch.label as EPOCH
 , bc.uuid as bc_uuid
     """ % (self.uuid)
-    print(query)
+    print("ae query",query)
     return query
 
   def intervention_query(self):
@@ -333,7 +332,7 @@ si.studyIdentifier as STUDYID
             , bc.uuid as bc_uuid
     order by USUBJID, VISIT
     """ % (self.uuid)
-    print(query)
+    print("intervention query",query)
     return query
 
   def findings_query(self):
@@ -467,7 +466,7 @@ si.studyIdentifier as STUDYID
         and bcp.name = "--DTC"
         return distinct s.identifier as USUBJID, dp.value as reference_date
       """ % (self.sd_uuid)
-      print("reference start date query",query)
+      # print("reference start date query",query)
       results = session.run(query)
       return [result.data() for result in results]
 
@@ -588,7 +587,7 @@ si.studyIdentifier as STUDYID
     crm_start = self.configuration.crm_start
     crm_end = self.configuration.crm_end
     db = Neo4jConnection()
-    query = self.intervention_query()
+    # query = self.intervention_query()
     with db.session() as session:
       # FIXED: Query is unique for study
       # FIXED: Query is generic. Query uses configuration for exposure BCs and start/end from crm
@@ -621,7 +620,7 @@ si.studyIdentifier as STUDYID
         order by USUBJID, value
       """ % (self.sd_uuid, bcs, crm_start)
       # """ % (self.sd_uuid, bcs, crm_start, crm_end)
-      print("f query", query)
+      # print("first last exposure query", query)
       results = session.run(query)
       rows = []
       current_subject = ""
@@ -637,19 +636,21 @@ si.studyIdentifier as STUDYID
     supp_quals = {}
     column_names = self.variable_list()
     final_results = {}
+    reference_dates = self.get_reference_start_dates()
     if 'first_exposure' in self.configuration.disposition:
       first_exposure_to_study_drug = self.first_last_exposure_of_study_drug()
       # results = results + first_exposure_to_study_drug
       results = sorted(results + first_exposure_to_study_drug, key=lambda i: (i['USUBJID'],i['value']))
     # if 'last_exposure' in self.configuration.disposition:
     #   first_exposure_to_study_drug = self.first_last_exposure_of_study_drug()
-    self.add_seq(results)
     for result in results:
       # print("DS",result)
       if 'DSSEQ' in result.keys():
-        key = "%s.%s" % (result['USUBJID'],result['DSSEQ'])
+        # key = "%s.%s" % (result['USUBJID'],result['DSSEQ'])
+        key = "%s.%s.%s" % (result['USUBJID'],result['term'],result['DSSEQ'])
       else:
-        key = "%s." % (result['USUBJID'])
+        # key = "%s." % (result['USUBJID'])
+        key = "%s.%s" % (result['USUBJID'],result['term'])
       if not key in final_results:
         multiples[key] = {}
         final_results[key] = [""] * len(column_names)
@@ -659,8 +660,8 @@ si.studyIdentifier as STUDYID
         final_results[key][column_names.index("USUBJID")] = result["USUBJID"]
         if "DSSEQ" in result.keys():
           final_results[key][column_names.index("DSSEQ")] = result["DSSEQ"]
-        if "DSTERM" in result.keys():
-          final_results[key][column_names.index("DSTERM")] = result["DSTERM"]
+        # if "DSTERM" in result.keys():
+        #   final_results[key][column_names.index("DSTERM")] = result["DSTERM"]
         if "term" in result.keys():
           final_results[key][column_names.index("DSTERM")] = result["term"]
         if "decod" in result.keys():
@@ -669,19 +670,13 @@ si.studyIdentifier as STUDYID
             final_results[key][column_names.index("DSCAT")] = "Protocol Milestone"
           else:
             final_results[key][column_names.index("DSCAT")] = "Other event"
-
         if "DSCAT" in result.keys():
           final_results[key][column_names.index("DSCAT")] = result["DSCAT"]
-        # final_results[key][column_names.index("DSSCAT")] = result["DSSCAT"]
+        if "DSSCAT" in result.keys():
+          final_results[key][column_names.index("DSSCAT")] = result["DSSCAT"]
         if "EPOCH" in result.keys():
           final_results[key][column_names.index("EPOCH")] = result["EPOCH"]
-        if "DSDTC" in result.keys():
-          final_results[key][column_names.index("DSDTC")] = result["DSDTC"]
-        if "DSSTDTC" in result.keys():
-          final_results[key][column_names.index("DSSTDTC")] = result["DSSTDTC"]
-        if "DSENDTC" in result.keys():
-          final_results[key][column_names.index("DSENDTC")] = result["DSENDTC"]
-      variable_index = [column_names.index(result["variable"])][0]
+      variable_index = column_names.index(result["variable"])
       variable_name = result["variable"]
       if not final_results[key][variable_index] == "":
         if result["value"] != final_results[key][variable_index]:
@@ -697,6 +692,16 @@ si.studyIdentifier as STUDYID
         final_results[key][variable_index] = result["value"]
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
 
+    # Derive DSSTDY
+    for key, result in final_results.items():
+      usubjid_index = column_names.index('USUBJID')
+      stdtc_index = column_names.index(self.name+'STDTC')
+      stdy_index = column_names.index(self.name+'STDY')
+      if stdtc_index and stdy_index:
+        ref_date = next((item for item in reference_dates if item["USUBJID"] == result[usubjid_index]), None)
+        if ref_date:
+          result[stdy_index] = self.sdtm_derive_dy(ref_date['reference_date'],result[stdtc_index])
+
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)
       for i in range(1, count + 1):
@@ -711,6 +716,8 @@ si.studyIdentifier as STUDYID
             if i <= len(items[supp_name]):
               final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
+
+    self.add_seq(results)
 
     df = pd.DataFrame(columns=column_names)
     # print(df.head())
