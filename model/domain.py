@@ -134,7 +134,8 @@ class Domain(BaseNode):
         elif self.name == "EX":
           record['trt'] = row['trt']
         elif self.name == "AE":
-          record['term'] = row['term']
+          record['key'] = row['key']
+          # record['term'] = row['term']
         else:
           record['test_code'] = row['test_code']
           record['test_label'] = row['test_label']
@@ -285,7 +286,8 @@ si.studyIdentifier as STUDYID
 , subj.identifier as USUBJID
 , right(subj.identifier,6) as SUBJECT
 // , c.decode as term
-, r.key as term
+// , r.key as term
+, r.key as key
 // , bc.name as decod
 // , var.name as variable
 , bcp.name as variable
@@ -294,6 +296,7 @@ si.studyIdentifier as STUDYID
 // , e.label as VISIT
 // , epoch.label as EPOCH
 , bc.uuid as bc_uuid
+order by key
     """ % (self.uuid)
     print("ae query",query)
     return query
@@ -736,14 +739,18 @@ si.studyIdentifier as STUDYID
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
+    column_names.append('AEDTC')
+    column_names.append('--DTC')
+    print("column_names",column_names)
+    print("column_names.index('AEDTC')",column_names.index('AEDTC'))
     final_results = {}
-    self.add_seq(results)
     for result in results:
       # print("AE",result)
-      if 'AESEQ' in result.keys():
-        key = "%s.%s" % (result['USUBJID'],result['AESEQ'])
-      else:
-        key = "%s." % (result['USUBJID'])
+      key = result['key']
+      # if 'AESEQ' in result.keys():
+      #   key = "%s.%s" % (result['USUBJID'],result['AESEQ'])
+      # else:
+      #   key = "%s." % (result['USUBJID'])
       if not key in final_results:
         multiples[key] = {}
         final_results[key] = [""] * len(column_names)
@@ -775,7 +782,7 @@ si.studyIdentifier as STUDYID
           final_results[key][column_names.index("AESTDTC")] = result["AESTDTC"]
         if "AEENDTC" in result.keys():
           final_results[key][column_names.index("AEENDTC")] = result["AEENDTC"]
-      variable_index = [column_names.index(result["variable"])][0]
+      variable_index = column_names.index(result["variable"])
       variable_name = result["variable"]
       if not final_results[key][variable_index] == "":
         if result["value"] != final_results[key][variable_index]:
@@ -805,6 +812,10 @@ si.studyIdentifier as STUDYID
             if i <= len(items[supp_name]):
               final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
+
+    # self.add_seq(results)
+    self.add_seq(final_results, column_names.index(self.name+"SEQ"), column_names.index("USUBJID"))
+
 
     df = pd.DataFrame(columns=column_names)
     # print(df.head())
