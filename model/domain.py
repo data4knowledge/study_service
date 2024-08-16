@@ -318,20 +318,22 @@ class Domain(BaseNode):
       MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
       MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
       WHERE  var.name = bcp.name
+      WITH si, domain, subj, c, bc, var, dp, site, e, epoch, collect(toInteger(split(e.id,'_')[1]))[0] as e_order
       return
-            si.studyIdentifier as STUDYID
-            , domain.name as DOMAIN
-            , subj.identifier as USUBJID
-            , right(subj.identifier,6) as SUBJECT
-            , c.decode as trt
-            , bc.name as decod
-            , var.name as variable
-            , dp.value as value
-            , site.name as SITEID
-            , e.label as VISIT
-            , epoch.label as EPOCH
-            , bc.uuid as bc_uuid
-    order by USUBJID, VISIT
+      si.studyIdentifier as STUDYID
+      , domain.name as DOMAIN
+      , subj.identifier as USUBJID
+      , right(subj.identifier,6) as SUBJECT
+      , c.decode as trt
+      , bc.name as decod
+      , var.name as variable
+      , dp.value as value
+      , site.name as SITEID
+      , e.label as VISIT
+      , e_order as VISITNUM
+      , epoch.label as EPOCH
+      , bc.uuid as bc_uuid
+      order by USUBJID, VISIT
     """ % (self.uuid)
     print("intervention query",query)
     return query
@@ -918,7 +920,13 @@ class Domain(BaseNode):
     seq_var = self.name+"SEQ"
     # baseline_var = self.name+"BLFL"
     column_names = self.variable_list()
-    print('column_names',column_names)
+    print('1 column_names',column_names)
+    # Fix order of VISIT, VISITNUM
+    column_names.remove('VISIT')
+    column_names.insert(column_names.index('EPOCH'),'VISIT')
+    column_names.remove('VISITNUM')
+    column_names.insert(column_names.index('EPOCH'),'VISITNUM')
+    print('2 column_names',column_names)
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
 
