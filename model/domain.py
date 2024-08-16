@@ -86,6 +86,8 @@ class Domain(BaseNode):
         query = self.dm_query()
       elif self.name == "DS":
         query = self.ds_query()
+      elif self.name == "AE":
+        query = self.ae_query()
       elif self.name == "EX":
         query = self.intervention_query()
       else:
@@ -131,6 +133,8 @@ class Domain(BaseNode):
               record[variable] = row[variable]
         elif self.name == "EX":
           record['trt'] = row['trt']
+        elif self.name == "AE":
+          record['term'] = row['term']
         else:
           record['test_code'] = row['test_code']
           record['test_label'] = row['test_label']
@@ -141,9 +145,12 @@ class Domain(BaseNode):
         df = self.construct_dm_dataframe(results)
       elif self.name == "DS":
         print("Creating DS dataframe")
+        df = self.construct_ds_dataframe(results)
+      elif self.name == "AE":
+        print("Creating AE dataframe")
         # for x in results:
         #   print(x)
-        df = self.construct_ds_dataframe(results)
+        df = self.construct_ae_dataframe(results)
       elif self.name == "EX":
         print("Creating EX dataframe")
         df = self.construct_intervention_dataframe(results)
@@ -222,6 +229,71 @@ class Domain(BaseNode):
             , e.label as VISIT
             , epoch.label as EPOCH
             , bc.uuid as bc_uuid
+    """ % (self.uuid)
+    print(query)
+    return query
+
+  def ae_query(self):
+    # FIX: REMOVE HARD CODING OF ELI LILLY
+    query = """
+      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
+      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      WITH si, domain
+      MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+      OPTIONAL MATCH (bc)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)
+      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
+      MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+      MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
+      MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
+      // MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
+      // MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
+      // MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      // WHERE  var.label = bcp.label
+      WHERE  var.name = bcp.name
+      return
+            si.studyIdentifier as STUDYID
+            , domain.name as DOMAIN
+            , subj.identifier as USUBJID
+            , right(subj.identifier,6) as SUBJECT
+            , c.decode as term
+            , bc.name as decod
+            , var.name as variable
+            , dp.value as value
+            , site.name as SITEID
+            // , e.label as VISIT
+            // , epoch.label as EPOCH
+            , bc.uuid as bc_uuid
+    """ % (self.uuid)
+    query = """
+      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
+MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+WITH si, domain
+MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+MATCH (bcp)<-[:PROPERTIES_REL]->(dc:DataContract)
+MATCH (dc)<-[:FOR_DC_REL]-(:DataPoint)-[:SOURCE]->(r:Record)
+WITH si, domain, dc, r
+MATCH (r)<-[:SOURCE]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)
+MATCH (dp)-[:FOR_DC_REL]->(dc:DataContract)
+MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+return
+si.studyIdentifier as STUDYID
+, domain.name as DOMAIN
+, subj.identifier as USUBJID
+, right(subj.identifier,6) as SUBJECT
+// , c.decode as term
+, r.key as term
+// , bc.name as decod
+// , var.name as variable
+, bcp.name as variable
+, dp.value as value
+// , site.name as SITEID
+// , e.label as VISIT
+// , epoch.label as EPOCH
+, bc.uuid as bc_uuid
     """ % (self.uuid)
     print(query)
     return query
@@ -608,6 +680,65 @@ class Domain(BaseNode):
           final_results[key][column_names.index("DSSTDTC")] = result["DSSTDTC"]
         if "DSENDTC" in result.keys():
           final_results[key][column_names.index("DSENDTC")] = result["DSENDTC"]
+      variable_index = [column_names.index(result["variable"])][0]
+      variable_name = result["variable"]
+      if not final_results[key][variable_index] == "":
+        if result["value"] != final_results[key][variable_index]:
+          if not variable_name in multiples[key]:
+            multiples[key][variable_name] = [final_results[key][variable_index]]
+            final_results[key][variable_index] = "MULTIPLE"
+            if not variable_name in supp_quals:
+              supp_quals[variable_name] = 1
+          multiples[key][variable_name].append(result["value"])
+          if len(multiples[key][variable_name]) > supp_quals[variable_name]:
+            supp_quals[variable_name] = len(multiples[key][variable_name])
+      else:
+        final_results[key][variable_index] = result["value"]
+      #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+
+  def construct_ae_dataframe(self, results):
+    multiples = {}
+    supp_quals = {}
+    column_names = self.variable_list()
+    final_results = {}
+    self.add_seq(results)
+    for result in results:
+      # print("AE",result)
+      if 'AESEQ' in result.keys():
+        key = "%s.%s" % (result['USUBJID'],result['AESEQ'])
+      else:
+        key = "%s." % (result['USUBJID'])
+      if not key in final_results:
+        multiples[key] = {}
+        final_results[key] = [""] * len(column_names)
+        final_results[key][column_names.index("STUDYID")] = result["STUDYID"]
+        final_results[key][column_names.index("DOMAIN")] = result["DOMAIN"]
+        # final_results[key][column_names.index("USUBJID")] = "%s.%s" % (result["STUDYID"], result["SUBJID"])
+        final_results[key][column_names.index("USUBJID")] = result["USUBJID"]
+        if "AESEQ" in result.keys():
+          final_results[key][column_names.index("AESEQ")] = result["AESEQ"]
+        if "AETERM" in result.keys():
+          final_results[key][column_names.index("AETERM")] = result["AETERM"]
+        if "term" in result.keys():
+          final_results[key][column_names.index("AETERM")] = result["term"]
+        if "decod" in result.keys():
+          final_results[key][column_names.index("AEDECOD")] = result["decod"]
+          if result["decod"] in self.configuration.mandatory_bcs:
+            final_results[key][column_names.index("AECAT")] = "Protocol Milestone"
+          else:
+            final_results[key][column_names.index("AECAT")] = "Other event"
+
+        if "AECAT" in result.keys():
+          final_results[key][column_names.index("AECAT")] = result["AECAT"]
+        # final_results[key][column_names.index("AESCAT")] = result["AESCAT"]
+        if "EPOCH" in result.keys():
+          final_results[key][column_names.index("EPOCH")] = result["EPOCH"]
+        if "AEDTC" in result.keys():
+          final_results[key][column_names.index("AEDTC")] = result["AEDTC"]
+        if "AESTDTC" in result.keys():
+          final_results[key][column_names.index("AESTDTC")] = result["AESTDTC"]
+        if "AEENDTC" in result.keys():
+          final_results[key][column_names.index("AEENDTC")] = result["AEENDTC"]
       variable_index = [column_names.index(result["variable"])][0]
       variable_name = result["variable"]
       if not final_results[key][variable_index] == "":
