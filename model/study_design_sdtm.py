@@ -117,16 +117,16 @@ class StudyDesignSDTM():
     cls._add_permissible_sdtm_variables(study_design.uuid)
     application_logger.info("Created permissible variables")
 
-  @classmethod
-  def add_links_to_sdtm(cls, name):
-    study_design = cls._get_study_design(name)
-    domain_uuid = cls._find_domain(study_design.uuid, 'DS')
-    domain = Domain.find(domain_uuid)
-    bc_set = cls._get_bcs_by_name(study_design, "Exposure Unblinded")
-    for bc in bc_set:
-      print("bc",bc)
-      domain.relationship(bc, 'USING_BC_REL')
-      application_logger.info(f"Linked domain '{domain.name}' -> '{bc.name}', '{bc.uuid}'")   
+  # @classmethod
+  # def add_links_to_sdtm(cls, name):
+  #   study_design = cls._get_study_design(name)
+  #   domain_uuid = cls._find_domain(study_design.uuid, 'DS')
+  #   domain = Domain.find(domain_uuid)
+  #   bc_set = cls._get_bcs_by_name(study_design, "Exposure Unblinded")
+  #   for bc in bc_set:
+  #     print("bc",bc)
+  #     domain.relationship(bc, 'USING_BC_REL')
+  #     application_logger.info(f"(Hard coded) Linked domain '{domain.name}' -> '{bc.name}', '{bc.uuid}'")   
 
   @staticmethod
   def _get_study_design(name):
