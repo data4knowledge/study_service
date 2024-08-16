@@ -922,10 +922,11 @@ class Domain(BaseNode):
     column_names = self.variable_list()
     print('1 column_names',column_names)
     # Fix order of VISIT, VISITNUM
-    column_names.remove('VISIT')
-    column_names.insert(column_names.index('EPOCH'),'VISIT')
+    column_names = [c for c in column_names if not c in ['EXLOC','EXTPT','EXLOT','EXLAT','EXDIR','EXSCAT','EXLNKGRP','EXLNKID','EXDOSTXT','EXDOSRGM','EXFAST','EXADJ','EXCAT']]
     column_names.remove('VISITNUM')
     column_names.insert(column_names.index('EPOCH'),'VISITNUM')
+    column_names.remove('VISIT')
+    column_names.insert(column_names.index('EPOCH'),'VISIT')
     print('2 column_names',column_names)
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
