@@ -118,6 +118,8 @@ class Domain(BaseNode):
           record['EPOCH'] = row["EPOCH"]
         if 'term' in row.keys():
           record['term'] = row["term"]
+        if '--DTC' in row.keys():
+          record[self.name+'DTC'] = row["--DTC"]
         if self.name == "DM":
           record['SUBJID'] = row["SUBJECT"]
           record['SITEID'] = row["SITEID"]
@@ -270,33 +272,29 @@ class Domain(BaseNode):
     """ % (self.uuid)
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
-MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-WITH si, domain
-MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
-MATCH (bcp)<-[:PROPERTIES_REL]->(dc:DataContract)
-MATCH (dc)<-[:FOR_DC_REL]-(:DataPoint)-[:SOURCE]->(r:Record)
-WITH si, domain, dc, r
-MATCH (r)<-[:SOURCE]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)
-MATCH (dp)-[:FOR_DC_REL]->(dc:DataContract)
-MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
-return
-si.studyIdentifier as STUDYID
-, domain.name as DOMAIN
-, subj.identifier as USUBJID
-, right(subj.identifier,6) as SUBJECT
-// , c.decode as term
-// , r.key as term
-, r.key as key
-// , bc.name as decod
-// , var.name as variable
-, bcp.name as variable
-, dp.value as value
-// , site.name as SITEID
-// , e.label as VISIT
-// , epoch.label as EPOCH
-, bc.uuid as bc_uuid
-order by key
+      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      WITH si, domain
+      MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+      MATCH (bcp)<-[:PROPERTIES_REL]->(dc:DataContract)
+      MATCH (dc)<-[:FOR_DC_REL]-(:DataPoint)-[:SOURCE]->(r:Record)
+      WITH si, domain, dc, r
+      MATCH (r)<-[:SOURCE]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)
+      MATCH (dp)-[:FOR_DC_REL]->(dc:DataContract)
+      MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+      return
+      si.studyIdentifier as STUDYID
+      , domain.name as DOMAIN
+      , subj.identifier as USUBJID
+      , right(subj.identifier,6) as SUBJECT
+      , r.key as key
+      , CASE bcp.name WHEN '--DTC' THEN 'AEDTC' ELSE bcp.name END as variable
+      , dp.value as value
+      // , site.name as SITEID
+      // , e.label as VISIT
+      // , epoch.label as EPOCH
+      , bc.uuid as bc_uuid
+      order by key
     """ % (self.uuid)
     print("ae query",query)
     return query
@@ -396,7 +394,7 @@ order by key
           return dy.days
         else:
           return dy.days + 1
-      return None
+      return
     except Exception as e:
       application_logger.exception(f"Could not derive duration/dy: {start_date_str} {end_date_str}", e)
       return False
@@ -739,13 +737,13 @@ order by key
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
-    column_names.append('AEDTC')
-    column_names.append('--DTC')
-    print("column_names",column_names)
-    print("column_names.index('AEDTC')",column_names.index('AEDTC'))
+    pilot_study_vars = ['STUDYID', 'DOMAIN', 'USUBJID', 'AESEQ', 'AESPID', 'AETERM', 'AELLT', 'AELLTCD', 'AEDECOD', 'AEPTCD', 'AEHLT', 'AEHLTCD', 'AEHLGT', 'AEHLGTCD', 'AEBODSYS', 'AEBDSYCD', 'AESOC', 'AESOCCD', 'AESEV', 'AESER', 'AEACN', 'AEREL', 'AEOUT', 'AESCAN', 'AESCONG', 'AESDISAB', 'AESDTH', 'AESHOSP', 'AESLIFE', 'AESOD', 'AEDTC', 'AESTDTC', 'AEENDTC', 'AESTDY', 'AEENDY']
+    column_names = [i for i in column_names if i in pilot_study_vars]
+    column_names.insert(column_names.index('AESTDTC'),'AEDTC')
     final_results = {}
+    reference_dates = self.get_reference_start_dates()
     for result in results:
-      # print("AE",result)
+      print("result.keys()",result.keys())
       key = result['key']
       # if 'AESEQ' in result.keys():
       #   key = "%s.%s" % (result['USUBJID'],result['AESEQ'])
@@ -797,6 +795,30 @@ order by key
       else:
         final_results[key][variable_index] = result["value"]
       #print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
+
+    # Derive AESTDY
+    for key, result in final_results.items():
+      usubjid_index = column_names.index('USUBJID')
+      stdtc_index = column_names.index(self.name+'STDTC')
+      stdy_index = column_names.index(self.name+'STDY')
+      if stdtc_index and stdy_index:
+        ref_date = next((item for item in reference_dates if item["USUBJID"] == result[usubjid_index]), None)
+        if ref_date and result[stdtc_index]:
+          result[stdy_index] = self.sdtm_derive_dy(ref_date['reference_date'],result[stdtc_index])
+
+    # Derive AEENDY
+    for key, result in final_results.items():
+      # print("deriving AEENDY")
+      usubjid_index = column_names.index('USUBJID')
+      endtc_index = column_names.index(self.name+'ENDTC')
+      endy_index = column_names.index(self.name+'ENDY')
+      if endtc_index and stdy_index:
+        ref_date = next((item for item in reference_dates if item["USUBJID"] == result[usubjid_index]), None)
+        if ref_date and result[endtc_index]:
+          print("ref_date",ref_date,result[endtc_index])
+          result[endy_index] = self.sdtm_derive_dy(ref_date['reference_date'],result[endtc_index])
+          print("result[endy_index]",result[endy_index])
+
 
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)

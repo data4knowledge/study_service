@@ -450,7 +450,8 @@ class StudyDesignBC():
     for bc in bcs:
       print("bc",bc)
       properties = [
-        {'name': 'AELLT','label': 'MedDRA Lowest Level Term','datatype': 'integer','isRequired': True, 'isEnabled': True}
+        {'name': 'AELLT','label': 'MedDRA Lowest Level Term','datatype': 'integer','isRequired': True, 'isEnabled': True},
+        {'name': 'AEBODSYS','label': 'Body System','datatype': 'string','isRequired': True, 'isEnabled': True}
       ]
       print("properties",properties)
 
