@@ -813,7 +813,6 @@ order by key
               final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
 
-    # self.add_seq(results)
     self.add_seq(final_results, column_names.index(self.name+"SEQ"), column_names.index("USUBJID"))
 
 
