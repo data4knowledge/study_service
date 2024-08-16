@@ -215,7 +215,7 @@ class Domain(BaseNode):
       MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
       MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
       // WHERE  var.label = bcp.label
-      WHERE  var.name = bcp.name or crm.sdtm = "--DTC"
+      WHERE  var.name = bcp.name
       return
             si.studyIdentifier as STUDYID
             , domain.name as DOMAIN
@@ -399,7 +399,9 @@ si.studyIdentifier as STUDYID
       return False
 
   def add_seq_dict(self, results, seq_index, usubjid_index):
-    print("adding seq dict")
+    assert seq_index, "add_seq_dict: parameter 'seq_index' missing"
+    assert usubjid_index, "add_seq_dict: parameter 'usubjid_index' missing"
+    print("adding seq dict",seq_index,usubjid_index)
     current_usubjid = ""
     seq = 0
     for key, result in results.items():
@@ -414,6 +416,7 @@ si.studyIdentifier as STUDYID
     # results = sorted(results, key=lambda key: key)
 
   def add_seq_list_of_dict(self, results, seq_var):
+    print("adding seq list of dict", seq_var)
     current_usubjid = ""
     seq = 0
     for result in results:
@@ -634,7 +637,10 @@ si.studyIdentifier as STUDYID
   def construct_ds_dataframe(self, results):
     multiples = {}
     supp_quals = {}
+    seq_var = self.name+"SEQ"
     column_names = self.variable_list()
+    column_names.remove("DSDTC")
+    column_names.remove("DSDY")
     final_results = {}
     reference_dates = self.get_reference_start_dates()
     if 'first_exposure' in self.configuration.disposition:
@@ -717,8 +723,7 @@ si.studyIdentifier as STUDYID
               final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
 
-    self.add_seq(results)
-
+    self.add_seq(final_results,column_names.index(seq_var), column_names.index("USUBJID"))
     df = pd.DataFrame(columns=column_names)
     # print(df.head())
     for subject, result in final_results.items():
