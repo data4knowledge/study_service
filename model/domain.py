@@ -854,7 +854,7 @@ class Domain(BaseNode):
     seq_var = self.name+"SEQ"
     baseline_var = self.name+"BLFL"
     column_names = self.variable_list()
-    column_names = [c for c in column_names if not c in ['VSCAT','VSSCAT']]
+    column_names = [c for c in column_names if not c in ['VSCAT','VSSCAT','VSSTAT','VSREASND','VSLAT']]
     # print('column_names',column_names)
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
