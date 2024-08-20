@@ -41,18 +41,29 @@ class CRM():
       application_logger.exception(f"Exception raised while creating CRM nodes", e)
       return False
 
+
   def add_crm_nodes(self):
     try:
       application_logger.info(f"N.B! Creating extra CRM nodes")
       crm_vars = [
-        {'sdtm': '--DOSFRQ', 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/frequency/coding/code', 'datatype': 'coding'}
-       ,{'sdtm': '--ROUTE' , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/route/coding/code', 'datatype': 'coding'}
-       ,{'sdtm': '--TRT'   , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/description/coding/code', 'datatype': 'coding'}
-       ,{'sdtm': '--DOSFRM', 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/form/coding/code', 'datatype': 'coding'}
-       ,{'sdtm': '--DOSE'  , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/value', 'datatype': 'quantity'}
-       ,{'sdtm': '--DOSU'  , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/unit', 'datatype': 'quantity'}
-       ,{'sdtm': '--STDTC' , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value', 'datatype': 'date_type'}
-       ,{'sdtm': '--ENDTC' , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'uri': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value', 'datatype': 'date_type'}
+        {'sdtm': '--DOSFRQ'  , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/frequency/coding/code'     , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': '--ROUTE'  , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/route/coding/code'         , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': '--TRT'    , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/description/coding/code'   , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': '--DOSFRM' , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/form/coding/code'          , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': '--DOSE'   , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/value', 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'quantity'}
+        ,{'sdtm': '--DOSU'   , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/unit' , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'quantity'}
+        ,{'sdtm': '--STDTC'  , 'uri': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'         , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'date_type'}
+        ,{'sdtm': '--ENDTC'  , 'uri': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value'           , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'date_type'}
+        ,{'sdtm': 'AERLDEV'  , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/causality/device'                     , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AERELNST' , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/causality/non_study_treatment'        , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AEREL'    , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/causality/related'                    , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AEACNDEV' , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/response/concomitant_treatment'       , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AEACNOTH' , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/response/other'                       , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AEACN'    , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/response/study_treatment'             , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AESER'    , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/serious'                              , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AESEV'    , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/severity'                             , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AETERM'   , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/term'                                 , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
+        ,{'sdtm': 'AETOXGR'  , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/toxicity/grade'                       , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
       ]
       for node in crm_vars:
         CRMNode.create(node)

@@ -73,3 +73,8 @@
     - node: "POSITION"
       data_type: "coding"
       property: "code"
+  - name: "--LOC"
+    canonical:
+    - node: "LOCATION"
+      data_type: "coding"
+      property: "code"
