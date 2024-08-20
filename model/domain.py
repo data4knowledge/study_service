@@ -186,7 +186,7 @@ class Domain(BaseNode):
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
       , subj.identifier as USUBJID
-      , right(subj.identifier,6) as SUBJECT
+      , right(subj.identifier,4) as SUBJECT
       , var.name as variable
       , dp.value as value
       , site.name as SITEID
@@ -223,7 +223,6 @@ class Domain(BaseNode):
             si.studyIdentifier as STUDYID
             , domain.name as DOMAIN
             , subj.identifier as USUBJID
-            , right(subj.identifier,6) as SUBJECT
             , c.decode as term
             , bc.name as decod
             , var.name as variable
@@ -260,7 +259,6 @@ class Domain(BaseNode):
             si.studyIdentifier as STUDYID
             , domain.name as DOMAIN
             , subj.identifier as USUBJID
-            , right(subj.identifier,6) as SUBJECT
             , c.decode as term
             , bc.name as decod
             , var.name as variable
@@ -286,7 +284,6 @@ class Domain(BaseNode):
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
       , subj.identifier as USUBJID
-      , right(subj.identifier,6) as SUBJECT
       , r.key as key
       , CASE bcp.name WHEN '--DTC' THEN 'AEDTC' ELSE bcp.name END as variable
       , dp.value as value
@@ -323,7 +320,6 @@ class Domain(BaseNode):
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
       , subj.identifier as USUBJID
-      , right(subj.identifier,6) as SUBJECT
       , c.decode as trt
       , bc.name as decod
       , var.name as variable
@@ -615,7 +611,6 @@ class Domain(BaseNode):
         si.studyIdentifier as STUDYID
         , "DS" as DOMAIN
         , subj.identifier as USUBJID
-        , right(subj.identifier,6) as SUBJECT
         , crm.sdtm as crm
         , bc.name as bc
         , "First Exposure" as term
