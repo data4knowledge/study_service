@@ -745,7 +745,6 @@ class Domain(BaseNode):
     final_results = {}
     reference_dates = self.get_reference_start_dates()
     for result in results:
-      print("result.keys()",result.keys())
       key = result['key']
       # if 'AESEQ' in result.keys():
       #   key = "%s.%s" % (result['USUBJID'],result['AESEQ'])
@@ -817,10 +816,7 @@ class Domain(BaseNode):
       if endtc_index and stdy_index:
         ref_date = next((item for item in reference_dates if item["USUBJID"] == result[usubjid_index]), None)
         if ref_date and result[endtc_index]:
-          print("ref_date",ref_date,result[endtc_index])
           result[endy_index] = self.sdtm_derive_dy(ref_date['reference_date'],result[endtc_index])
-          print("result[endy_index]",result[endy_index])
-
 
     for supp_name, count in supp_quals.items():
       #print("Count: ", count)
