@@ -377,6 +377,18 @@ class StudyDesignBC():
        ,'EXDOSU': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/unit'
        ,'EXSTDTC': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
        ,'EXENDTC': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value'
+       ,'AESTDTC': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
+       ,'AEENDTC': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value'
+       ,'AERLDEV'  : 'https://crm.d4k.dk/dataset/adverse_event/causality/device'
+       ,'AERELNST' : 'https://crm.d4k.dk/dataset/adverse_event/causality/non_study_treatment'
+       ,'AEREL'    : 'https://crm.d4k.dk/dataset/adverse_event/causality/related'
+       ,'AEACNDEV' : 'https://crm.d4k.dk/dataset/adverse_event/response/concomitant_treatment'
+       ,'AEACNOTH' : 'https://crm.d4k.dk/dataset/adverse_event/response/other'
+       ,'AEACN'    : 'https://crm.d4k.dk/dataset/adverse_event/response/study_treatment'
+       ,'AESER'    : 'https://crm.d4k.dk/dataset/adverse_event/serious'
+       ,'AESEV'    : 'https://crm.d4k.dk/dataset/adverse_event/severity'
+       ,'AETERM'   : 'https://crm.d4k.dk/dataset/adverse_event/term'
+       ,'AETOXGR'  : 'https://crm.d4k.dk/dataset/adverse_event/toxicity/grade'
       }
 
       for var,uri in var_link_crm.items():
