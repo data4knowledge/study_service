@@ -367,7 +367,7 @@ class StudyDesignBC():
        ,'DSDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
        ,'DSTERM' :'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'VSPOS'  :'https://crm.d4k.dk/dataset/observation/position/coding/code'
-       ,'VSLOC'  :'https://crm.d4k.dk/dataset/observation/location/coding/code'
+       ,'VSLOC'  :'https://crm.d4k.dk/dataset/common/location/coding/code'
        ,'DMDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
        ,'EXDOSFRQ': 'https://crm.d4k.dk/dataset/therapeutic_intervention/frequency/coding/code'
        ,'EXROUTE': 'https://crm.d4k.dk/dataset/therapeutic_intervention/route/coding/code'
@@ -489,6 +489,5 @@ class StudyDesignBC():
             s_uuid3=str(uuid4())
           )
           for row in result:
-            # p_uuid = [r['uuid'] for r in result]
-            p_uuid = next((r for r in result),None)
+            p_uuid = [r['uuid'] for r in result]
           application_logger.info(f"Added AE property '{p['name']}' {p_uuid}")
