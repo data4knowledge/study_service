@@ -17,6 +17,7 @@ from model.activity import Activity
 from model.encounter import Encounter
 from model.schedule_timeline import ScheduleTimeline
 from model.population_definition import StudyDesignPopulation, StudyCohort
+from model.study_define import StudyDefine
 #from d4kms_service import Neo4jConnection
 
 class StudyDesign(NodeNameLabelDesc):
@@ -154,6 +155,9 @@ class StudyDesign(NodeNameLabelDesc):
 
   def sdtm_domains(self, page, size, filter):
     return StudyDesignSDTM.domains(self.uuid, page, size, filter)
+
+  def sdtm_define(self, page, size, filter):
+    return StudyDefine.make_define(self.uuid, page, size, filter)
 
   def biomedical_concepts_unlinked(self, page, size, filter):
     return StudyDesignBC.unlinked(self.uuid, page, size, filter)
