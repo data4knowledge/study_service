@@ -54,31 +54,8 @@ class StudyDefine():
 
   @classmethod
   def make_define(cls, uuid, page, size, filter):
-    main()
-    print("Tjena, här är vi")
-    skip_offset_clause = ""
-    if page != 0:
-      offset = (page - 1) * size
-      skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[]->(d:Domain) RETURN COUNT(d) AS count
-      """ % (uuid)
-      result = session.run(query)
-      count = 0
-      for record in result:
-        count = record['count']
-      query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[]->(d:Domain) RETURN d
-        ORDER BY d.name %s
-      """ % (uuid, skip_offset_clause)
-      #print(query)
-      result = session.run(query)
-      results = []
-      for record in result:
-        results.append(Domain.wrap(record['d']).__dict__)
-    result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
+    xml = main()
+    result = {'xml': xml, 'items': [], 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 
 
@@ -978,12 +955,10 @@ def main():
     with open(DEFINE_XML,'w') as f:
       for line in lines:
          f.write(line)
-      # lines = f.readlines()
+    with open(DEFINE_XML,'r') as f:
+      xml = f.read()
+    return xml
 
-    # write_define_xml(DEFINE_XML,define)
-    # write_define_xml(DEFINE_XML,json_data)
-    # write_define_xml1(DEFINE_XML,define)
-    # write_define_xml2(DEFINE_XML,json_data)
   except Exception as e:
     write_tmp("define-debug.txt",debug)
     print("Error",e)
