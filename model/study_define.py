@@ -496,19 +496,29 @@ def item_defs_variable(domains):
           idf.set('Length', '8')
           idf.set('SASFieldName', item['name'])
           idf.append(description('en',item['label']))
-          if next((x for x in d['codelist'] if x['uuid'] == item['uuid']), None):
-            # print("found codelist", d['name'], item['name'])
-            cl_ref = ET.Element('CodeListRef')
-            cl_ref.set('CodeListOID', codelist_oid(item))
-            idf.append(cl_ref)
           if d['goc'] in ['FINDINGS','FINDINGS ABOUT']:
+            # If variable has vlm
             if next((x for x in d['vlm'] if x['uuid'] == item['uuid']), None):
-              print("referencing valuelist ", d['name'], item['name'])
+              print("-- referencing valuelist ", d['name'], item['name'])
+              debug.append(f"-- adding ValueListRef {d['name']} {item['name']}")
               vl_ref = ET.Element('def:ValueListRef')
               vl_ref.set('ValueListOID', value_list_oid(item))
               idf.append(vl_ref)
+            # If variable only has codelist
+            elif next((x for x in d['codelist'] if x['uuid'] == item['uuid']), None):
+              debug.append(f"-- adding CodelistRef (abnormal) {d['name']} {item['name']}")
+              # print("found codelist", d['name'], item['name'])
+              cl_ref = ET.Element('CodeListRef')
+              cl_ref.set('CodeListOID', codelist_oid(item))
+              idf.append(cl_ref)
           else:
-            pass
+            if next((x for x in d['codelist'] if x['uuid'] == item['uuid']), None):
+              debug.append(f"-- adding CodelistRef (normal) {d['name']} {item['name']}")
+              # print("found codelist", d['name'], item['name'])
+              cl_ref = ET.Element('CodeListRef')
+              cl_ref.set('CodeListOID', codelist_oid(item))
+              idf.append(cl_ref)
+
           idf.append(origin('Collected','Sponsor'))
               # print("Not referencing ", d['name'], item['name'])
             # <def:ValueListRef ValueListOID="VL.LB.LBORRES"/>
@@ -654,7 +664,7 @@ def vlm_codelists_defs(domains):
             debug.append(f"  Ignoring key: {key}")
           else:
             debug.append(f"  Add vml_codelist: {key}")
-            cl = ET.Element('Codelist')
+            cl = ET.Element('CodeList')
             cl.set('OID', vlm_codelist_oid(item))
             cl.set('Name', vlm_codelist_name(item))
             cl.set('def:StandardOID', "STD.2")
