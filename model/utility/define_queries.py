@@ -22,23 +22,9 @@ def _add_missing_links_to_crm_query(uri, var):
     """ % (uri, var)
     return query
 
-def study_info_query():
-    # query = """
-    #   MATCH (sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-    #   MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(:Organization {name:'Eli Lilly'})
-    #   MATCH (sv)-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion)<-[:VERSIONS_REL]->(spd:StudyProtocolDocument)
-    #   return *
-    #   """
-    # results = session.run(query)
-    # data = [r.data() for r in results]
-    # for x in data:
-    #   #  debug.append(x)
-    #    for k,v in x.items():
-    #     debug.append(f"{k}")
-    #     for k1,v1 in v.items():
-    #       debug.append(f"  {k1}: {v1}")
+def study_info_query(uuid):
     query = """
-    MATCH (sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
+    MATCH (sd:StudyDesign {uuid: '%s'})<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
     MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(:Organization {name:'Eli Lilly'})
     MATCH (sv)-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion)<-[:VERSIONS_REL]->(spd:StudyProtocolDocument)
     return 
@@ -47,7 +33,7 @@ def study_info_query():
     sd.description as description,
     sv.rationale as rationale,
     spd.name as protocol_name
-    """
+    """ % (uuid)
     return query
 
 def domains_query(uuid):

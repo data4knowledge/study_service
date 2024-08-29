@@ -54,7 +54,7 @@ class StudyDefine():
 
   @classmethod
   def make_define(cls, uuid, page, size, filter):
-    xml = main()
+    xml = main(uuid)
     result = {'xml': xml, 'items': [], 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 
@@ -164,10 +164,10 @@ def _add_missing_links_to_crm():
         # print("query", query)
   db.close()
 
-def get_study_info():
+def get_study_info(uuid):
     db = Neo4jConnection()
     with db.session() as session:
-      query = study_info_query()
+      query = study_info_query(uuid)
       # debug.append(query)
       results = session.run(query)
       data = [r.data() for r in results]
@@ -849,9 +849,9 @@ def where_clause_defs(domains):
 DEFINE_XML = Path.cwd()  / "uploads" / "define.xml"
 # DEFINE_XML = Path('/Users/johannes/dev/python/github/study_service/uploads/define.xml')
 
-def main():
+def main(uuid):
   try:
-    study_info = get_study_info()
+    study_info = get_study_info(uuid)
     domains = get_domains_and_variables(study_info['uuid'])
     # debug.append(f"study_info {study_info}")
 
