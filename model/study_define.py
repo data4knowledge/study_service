@@ -63,6 +63,16 @@ DOMAIN_CLASS = {
   'TRIAL DESIGN'    :['TA', 'TD', 'TE', 'TI', 'TM', 'TS', 'TV'],
 }
 
+DOMAIN_KEY_SEQUENCE = {
+  'AE' : {'STUDYID': '1', 'USUBJID': '2', 'AEDECOD': '3', 'AESTDTC': '4'},
+  'DM' : {'STUDYID': '1', 'USUBJID': '2'},
+  'DS' : {'STUDYID': '1', 'USUBJID': '2', 'DSDECOD': '3', 'DSSTDTC': '4'},
+  'EX' : {'STUDYID': '1', 'USUBJID': '2', 'EXTRT': '3', 'EXSTDTC': '4'},
+#  'LB' : {'STUDYID': '1', 'USUBJID': '2', 'LBTESTCD': '3', 'LBSPEC': '4', 'VISITNUM': '5', 'LBTPTREF': '6', 'LBTPTNUM': '7'},
+  'LB' : {'STUDYID': '1', 'USUBJID': '2', 'LBTESTCD': '3', 'LBSPEC': '4', 'VISITNUM': '5', 'LBDTC': '6'},
+  'VS' : {'STUDYID': '1', 'USUBJID': '2', 'VSTESTCD': '3', 'VSSPEC': '4', 'VISITNUM': '5', 'VSTPTREF': '6', 'VSTPTNUM': '7'}
+}
+
 xml_header = """<?xml version="1.0" encoding="UTF-8"?>\n<?xml-stylesheet type="text/xsl" href="stylesheets/define2-1.xsl"?>\n"""
 
 # NOTE: Fix proper links when loading
@@ -359,7 +369,8 @@ def set_variable_refs(variables):
       ref.set('Mandatory', mandatory)
       order = int(v['ordinal'])
       ref.set('OrderNumber', str(order))
-      # ref.set('KeySequence', "1")
+      if v['name'] in DOMAIN_KEY_SEQUENCE[v['domain']]:
+        ref.set('KeySequence', DOMAIN_KEY_SEQUENCE[v['domain']][v['name']])
       variable_refs.append(ref)
     return variable_refs
 
