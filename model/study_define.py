@@ -281,7 +281,7 @@ def comment_def(oid, text, lang = 'en', leaf_id = None, page_refs = None, ref_ty
 def comment_defs():
   comment_defs = []
   comment_def_oid = "COM.STD.1"
-  comment = comment_def(comment_def_oid, "Yada yada yada")
+  comment = comment_def(comment_def_oid, "From CDISC Library")
   comment_defs.append(comment)
   return comment_defs
 
@@ -310,11 +310,14 @@ def standards():
 
   return standards
 
-def metadata_version(oid = 'Not set', name = 'Not set', description = 'Not set'):
+def metadata_version(oid = 'Not set', name = 'Not set', description = None):
   metadata = ET.Element('MetaDataVersion')
   metadata.set("OID", oid)
   metadata.set("Name", name)
-  metadata.set("Description", description)
+  if description:
+    metadata.set("Description", description)
+  else:
+    metadata.set("Description", "Generated from USDM")
   metadata.set("def:DefineVersion", "2.1.7")
   return metadata
 
@@ -538,7 +541,6 @@ def codelist_oid(item):
     # return f"CL.{pretty_string(variable)}.{uuid}"
     # return f"CL.{pretty_string(item['name'])}.{item['uuid']}"
     return f"CL.{pretty_string(item['name'])}"
-    # return f"CL.{variable}"
 
 def test_codelist_oid(item):
     # return f"CL.{item['domain']}.{pretty_string(variable)}"
@@ -548,7 +550,6 @@ def test_codelist_oid(item):
 def vlm_codelist_oid(item):
     # return f"CL.{item['domain']}.{pretty_string(variable)}"
     return f"VLM.CL.{item['domain']}.{pretty_string(item['name'])}.{item['testcd']}"
-    # return f"CL.{variable}"
 
 def alias(context, code):
     a = ET.Element('Alias')
@@ -776,7 +777,7 @@ def main(uuid):
     study.append(set_globalvariables(study_name=study_info['study_name'], study_description=study_info['rationale'], protocol_name=study_info['protocol_name']))
 
     # MetadataVersion -------->
-    metadata = metadata_version(oid=study_info['uuid'], name=study_info['study_name'],description="This is some kind of description")
+    metadata = metadata_version(oid=study_info['uuid'], name=study_info['study_name'])
 
     # Standards
     metadata.append(ET.Comment("*********************************"))
