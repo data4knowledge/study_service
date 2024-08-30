@@ -27,7 +27,9 @@ class StudyCrf():
   @classmethod
   def make_crf(self, uuid, page, size, filter):
     self._get_configuration(self)
-    bcs = StudyDesignBC.get_bcs(uuid)
+    bcs = StudyDesignBC.get_bcs_and_properties(uuid)
+    for x in bcs:
+      print(x)
     result = {'items': bcs, 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 

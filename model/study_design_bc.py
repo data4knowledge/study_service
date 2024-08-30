@@ -24,9 +24,9 @@ class StudyDesignBC():
     return results
 
   @classmethod
-  def get_bcs(cls, uuid):
+  def get_bcs_and_properties(cls, uuid):
     study_design = cls._get_study_design_by_uuid(uuid)
-    bcs = cls._get_bcs(study_design)
+    bcs = cls._get_bcs_and_properties(study_design)
     return bcs
 
   @classmethod
@@ -226,6 +226,22 @@ class StudyDesignBC():
         results.append(BiomedicalConceptSimple.wrap(record['bc']))
       return results
 
+  @staticmethod
+  def _get_bcs_and_properties(study_design):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]-(bcp:BiomedicalConceptProperty)
+        RETURN DISTINCT bc, bcp
+      """ % (study_design.uuid)
+      result = session.run(query)
+      for record in result:
+        # results.append(record['bc'].data())
+        results.append(record.data())
+        # results.append(BiomedicalConceptSimple.wrap(record['bc']))
+      return results
+    
   @staticmethod
   def _add_property(bc):
     uuids = {'property': str(uuid4()), 'code': str(uuid4()), 'aliasCode': str(uuid4())}
