@@ -18,16 +18,6 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-def write_tmp(name, data):
-    TMP_PATH = Path.cwd() / "uploads" / "saved_debug"
-    OUTPUT_FILE = TMP_PATH / name
-    print("Writing file...",OUTPUT_FILE.name,OUTPUT_FILE, end="")
-    with open(OUTPUT_FILE, 'w') as f:
-        for it in data:
-            f.write(str(it))
-            f.write('\n')
-    print(" ...done")
-
 class StudyDefine():
   define_xml: str
 
@@ -74,20 +64,6 @@ DOMAIN_CLASS = {
 }
 
 xml_header = """<?xml version="1.0" encoding="UTF-8"?>\n<?xml-stylesheet type="text/xsl" href="stylesheets/define2-1.xsl"?>\n"""
-
-
-debug = []
-
-
-def check_crm_links():
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = crm_link_query()
-      results = session.run(query)
-      crm_links = [r.data() for r in results]
-      for x in crm_links:
-        debug.append([v for k,v in x.items()])
-    db.close()
 
 # NOTE: Fix proper links when loading
 def _add_missing_links_to_crm():
@@ -138,7 +114,7 @@ def get_study_info(uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = study_info_query(uuid)
-      # debug.append(query)
+      # debug.append('study_info query'); debug.append(query)
       results = session.run(query)
       data = [r.data() for r in results]
     db.close()
@@ -176,14 +152,9 @@ def get_define_vlm(domain_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = define_vlm_query(domain_uuid)
-      # debug.append("vlm query")
-      # debug.append(query)
+      # debug.append("vlm query"); debug.append(query)
       results = session.run(query)
       data = [r for r in results.data()]
-      # debug.append("vlm--->")
-      # for d in data:
-      #    debug.append(d)
-      # debug.append("vlm<---")
     db.close()
     return data
 
@@ -194,10 +165,6 @@ def get_define_codelist(domain_uuid):
       # debug.append("codelist query"); debug.append(query)
       results = session.run(query)
       data = [r for r in results.data()]
-      # debug.append("codelist--->")
-      # for d in data:
-      #    debug.append(d)
-      # debug.append("codelist<---")
     db.close()
     return data
 
@@ -205,14 +172,8 @@ def get_concept_info(identifiers):
     db = Neo4jConnection()
     with db.session() as session:
       query = find_ct_query(identifiers)
-      # debug.append("ct_find query")
-      # debug.append(query)
       results = session.run(query)
       data = [r for r in results.data()]
-      # debug.append("codelist--->")
-      # for d in data:
-      #    debug.append(d)
-      # debug.append("codelist<---")
     db.close()
     return data
 
@@ -223,10 +184,6 @@ def get_define_test_codes(domain_uuid):
       # debug.append("test_codes query"); debug.append(query)
       results = session.run(query)
       data = [r for r in results.data()]
-      # debug.append("test_codes--->")
-      # for d in data:
-      #    debug.append(d)
-      # debug.append("test_codes<---")
     db.close()
     return data
 
@@ -234,7 +191,6 @@ def pretty_string(text):
    return text.replace(' ','_')
 
 def odm_properties(root):
-  # now = datetime.now().replace(tzinfo=datetime.timezone.utc).isoformat()
   now = datetime.now().isoformat()
   root.set('xmlns',"http://www.cdisc.org/ns/odm/v1.3")
   root.set('xmlns:xlink',"http://www.w3.org/1999/xlink")
@@ -340,11 +296,9 @@ def get_unique_vars(vars):
 
 
 def get_domains_and_variables(uuid):
-  debug.append(f"--get_domains_and_variables")
   domains = []
   raw_domains = get_domains(uuid)
   for d in raw_domains:
-    debug.append(f"get_domains_and_variables domain {d['name']}")
     item = {}
     for k,v in d._properties.items():
         item[k] = v
@@ -357,12 +311,7 @@ def get_domains_and_variables(uuid):
       test_codes = get_define_test_codes(d['uuid'])
       item['test_codes'] = test_codes
     vlm_metadata = get_define_vlm(d['uuid'])
-    debug.append(f"len(vlm_metadata) {len(vlm_metadata)}")
     item['vlm'] = vlm_metadata
-    # # vlm = vlm_metadata
-    # for m in vlm_metadata:
-    #   # debug.append(f"check var {m['name']}")
-    #   vs = [v for v in all_variables if v['name'] == m['name']]
 
     item['goc'] = next((x for x,y in DOMAIN_CLASS.items() if d['name'] in y), "Fix")
 
@@ -416,7 +365,6 @@ def set_variable_refs(variables):
     return variable_refs
 
 def item_group_defs(domains):
-    debug.append(f"--item_group_defs")
     igds = []
     for d in domains:
         igd = ET.Element('ItemGroupDef')
@@ -451,11 +399,9 @@ def item_def_vlm_oid(item):
     return f"IDVO.{item['domain']}.{pretty_string(item['name'])}.{item['testcd']}"
 
 def item_defs_variable(domains):
-    debug.append(f"--item_defs_variable")
     idfs = []
     for d in domains:
         for item in d['variables']:
-          # debug.append(f"2 item {item}")
           idf = ET.Element('ItemDef')
           idf.set('OID', item_def_oid(item))
           idf.set('Name', item['name'])
@@ -472,30 +418,22 @@ def item_defs_variable(domains):
           if d['goc'] in ['FINDINGS','FINDINGS ABOUT']:
             # If variable has vlm
             if next((x for x in d['vlm'] if x['uuid'] == item['uuid']), None):
-              print("-- referencing valuelist ", d['name'], item['name'])
-              debug.append(f"-- adding ValueListRef {d['name']} {item['name']}")
               vl_ref = ET.Element('def:ValueListRef')
               vl_ref.set('ValueListOID', value_list_oid(item))
               idf.append(vl_ref)
             # If variable only has codelist
             elif next((x for x in d['codelist'] if x['uuid'] == item['uuid']), None):
-              debug.append(f"-- adding CodelistRef (abnormal) {d['name']} {item['name']}")
-              # print("found codelist", d['name'], item['name'])
               cl_ref = ET.Element('CodeListRef')
               cl_ref.set('CodeListOID', codelist_oid(item))
               idf.append(cl_ref)
           else:
+            # If variable only has codelist
             if next((x for x in d['codelist'] if x['uuid'] == item['uuid']), None):
-              debug.append(f"-- adding CodelistRef (normal) {d['name']} {item['name']}")
-              # print("found codelist", d['name'], item['name'])
               cl_ref = ET.Element('CodeListRef')
               cl_ref.set('CodeListOID', codelist_oid(item))
               idf.append(cl_ref)
 
           idf.append(origin('Collected','Sponsor'))
-              # print("Not referencing ", d['name'], item['name'])
-            # <def:ValueListRef ValueListOID="VL.LB.LBORRES"/>
-
           idfs.append(idf)
     return idfs
 
@@ -503,17 +441,14 @@ def var_test_key(item):
    return f"{item['name']}.{item['testcd']}"
 
 def vlm_item_defs(domains):
-    debug.append(f"--vlm_item_defs")
     idfs = {}
     for d in domains:
-      # debug.append(f"vlm_item_defs domain {d['name']}")
       if d['goc'] in ['FINDINGS','FINDINGS ABOUT']:
         for item in d['vlm']:
           key = var_test_key(item)
           if key in idfs:
-            debug.append(f"  Ignoring key: {key}")
+            pass
           else:
-            debug.append(f"  Now adding item_def_test: {item}")
             idf = ET.Element('ItemDef')
             idf.set('OID', item_def_vlm_oid(item))
             idf.set('Name', f"{item['name']} {item['testcd']}")
@@ -527,8 +462,7 @@ def vlm_item_defs(domains):
             idf.set('Length', '8')
             idf.set('SASFieldName', item['name'])
             idf.append(description('en',item['label']))
-            # if next((x for x in d['codelist'] if x['uuid'] == item['uuid']), None):
-            #   print("found codelist", d['name'], item['name'])
+            # vlm item always has a codelist
             cl_ref = ET.Element('CodeListRef')
             cl_ref.set('CodeListOID', vlm_codelist_oid(item))
             idf.append(cl_ref)
@@ -564,7 +498,6 @@ def enumerated_item(code, context, value):
     return e
 
 def codelist_item(code, short, long, context):
-    # debug.append(f"code {code} short {short} long {long} context {context}")
     e = ET.Element('CodeListItem')
     e.set('CodedValue', short)
     d = ET.SubElement(e,'Decode')
@@ -581,7 +514,6 @@ def codelist_name(item):
 
 # Create codelists for domain variable
 def codelist_defs(domains):
-    debug.append(f"--codelist_defs")
     codelists = []
     for d in domains:
         for item in d['codelist']:
@@ -612,16 +544,14 @@ def vlm_codelist_name(item):
 
 # Create codelist for VLM
 def vlm_codelists_defs(domains):
-    debug.append(f"--vlm_codelists_defs")
     vlm_codelists = {}
     for d in domains:
       if d['goc'] in ['FINDINGS','FINDINGS ABOUT']:
         for item in d['vlm']:
           key = var_test_key(item)
           if key in vlm_codelists:
-            debug.append(f"  Ignoring key: {key}")
+            pass
           else:
-            debug.append(f"  Add vml_codelist: {key}")
             cl = ET.Element('CodeList')
             cl.set('OID', vlm_codelist_oid(item))
             cl.set('Name', vlm_codelist_name(item))
@@ -651,12 +581,10 @@ def test_codelist_name(item):
 
 # Create codelist for TESTCD/TEST
 def test_codes_defs(domains):
-    debug.append(f"--test_codes_defs")
     test_codes = []
     for d in domains:
         if 'test_codes' in d:
           for item in d['test_codes']:
-            debug.append(f"test_codes_defs {item}")
             cl = ET.Element('CodeList')
             cl.set('OID', test_codelist_oid(item))
             cl.set('Name', test_codelist_name(item))
@@ -672,7 +600,6 @@ def value_list_oid(item):
     return f"VL.{item['domain']}.{item['name']}"
 
 def value_list_defs(domains):
-    debug.append(f"--value_list_defs")
     vlds = []
     for d in domains:
         if d['goc'] in ['FINDINGS','FINDINGS ABOUT']:
@@ -687,7 +614,7 @@ def value_list_defs(domains):
               for vlm in vlms:
                 key = var_test_key(vlm)
                 if key in item_refs:
-                  debug.append(f"  ignoring : {key}")
+                  pass
                 else:
                   item_ref = ET.Element('ItemRef')
                   item_ref.set('ItemOID', item_def_vlm_oid(vlm))
@@ -695,17 +622,14 @@ def value_list_defs(domains):
                   item_ref.set('Mandatory', 'No')
                   wcd = ET.Element("def:WhereClauseRef")
                   wcd.set('WhereClauseOID', where_clause_oid(vlm)) 
-                  debug.append(f"vld where oid {where_clause_oid(vlm)}")
                   item_ref.append(wcd)
                   i += 1
                   item_refs[key] = item_ref
               for ref in item_refs.values():
                 vld.append(ref)
-              debug.append(f"vld {ET.tostring(vld)}")
               vlds.append(vld)
     return vlds
 
-# def where_clause_oid(var_uuid, domain, variable, test):
 def where_clause_oid(item):
     return f"WC.{item['domain']}.{item['name']}.{item['testcd']}" #.{var_uuid}"
 
@@ -725,39 +649,19 @@ def range_check(decodes,comparator, soft_hard, item_oid):
         range_check.append(check_value)
     return range_check
 
-def get_unique_var_decode(vars):
-  unique_var_decodes = []
-  for v in vars:
-      if 'bc' in v:
-        v.pop('bc')
-      if 'bc_uuid' in v:
-        v.pop('bc_uuid')
-      if 'decodes' in v:
-        v.pop('decodes')
-      unique_var_decodes.append(v)
-  unique_var_decodes = list({v['testcd']:v for v in unique_var_decodes}.values())
-  debug.append(f"  added {[x['testcd'] for x in unique_var_decodes]}")
-  return unique_var_decodes
-
-
 def where_clause_defs(domains):
-    debug.append(f"--where_clause_defs")
     wcds = {}
     for d in domains:
         if d['goc'] in ['FINDINGS','FINDINGS ABOUT']:
-          debug.append(f"\n where_clause_defs domain: {d['name']}")
           testcd_var = next((v for v in d['variables'] if v['name'] == d['name']+"TESTCD"),"Not found")
           testcd_oid = item_def_oid(testcd_var)
           for v in d['vlm']:
             key = var_test_key(v)
             if key in wcds:
-              debug.append(f"  ignoring : {key}")
+              pass
             else:
-              debug.append(f"  doing : {key}")
-              debug.append(f"  v['name']: {v['name']}")
               wcd = ET.Element('def:WhereClauseDef')
               wcd.set('OID',where_clause_oid(v))
-              debug.append(f"    wcd oid {where_clause_oid(v)}")
               wcd.append(range_check(v['testcd'], 'EQ', 'Soft', testcd_oid))
               wcds[key] = wcd
     return list(wcds.values())
@@ -855,12 +759,11 @@ def main(uuid):
     study.append(metadata)
     root.append(study)
 
-    write_tmp("define-debug.txt",debug)
-
+    # Generate ODM define
     tree = ET.ElementTree(root)
     ET.indent(tree, space="   ", level=0)
     tree.write(DEFINE_XML, encoding="utf-8")
-    # add stylesheet
+    # Generate final define. Add stylesheet before rest of content
     with open(DEFINE_XML,'r') as f:
       lines = f.readlines()
     lines.insert(0,xml_header) 
@@ -872,11 +775,5 @@ def main(uuid):
     return xml
 
   except Exception as e:
-    write_tmp("define-debug.txt",debug)
     print("Error",e)
     print(traceback.format_exc())
-    debug.append(f"Error: {e}")
-
-if __name__ == "__main__":
-    _add_missing_links_to_crm()
-    main()
