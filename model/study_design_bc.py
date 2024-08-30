@@ -22,7 +22,13 @@ class StudyDesignBC():
       results[bc.name] = cls._add_property(bc)
       # application_logger.info(f"Inserted --DTC for '{bc.name}'")   
     return results
-  
+
+  @classmethod
+  def get_bcs(cls, uuid):
+    study_design = cls._get_study_design_by_uuid(uuid)
+    bcs = cls._get_bcs(study_design)
+    return bcs
+
   @classmethod
   def create(cls, name):
     results = {}
@@ -138,6 +144,21 @@ class StudyDesignBC():
       query = """
         MATCH (sd:StudyDesign {name: '%s'}) return sd
       """ % (name)
+      result = session.run(query)
+      for record in result:
+        return StudyDesign.wrap(record['sd'])
+      return None
+
+  @staticmethod
+  def _get_study_design_by_uuid(uuid):
+    
+    from model.study_design import StudyDesign
+    
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'}) return sd
+      """ % (uuid)
       result = session.run(query)
       for record in result:
         return StudyDesign.wrap(record['sd'])
@@ -428,22 +449,6 @@ class StudyDesignBC():
         application_logger.info(f"Removed {properties}")
       else:
         application_logger.info(f"Info: Failed to remove {properties}")
-
-  @staticmethod
-  def _get_study_design(name):
-    
-    from model.study_design import StudyDesign
-    
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (sd:StudyDesign {name: '%s'}) return sd
-      """ % (name)
-      result = session.run(query)
-      for record in result:
-        return StudyDesign.wrap(record['sd'])
-      return None
-
 
   @staticmethod
   def _get_bcs_by_name(study_design, name):
