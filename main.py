@@ -512,13 +512,24 @@ async def get_study_sdtm_domains(uuid: str, page: int=0, size: int=0, filter: st
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
 @app.get("/v1/studyDesigns/{uuid}/define", 
-  summary="Get the SDTM domains for a study design",
-  description="Provides the SDTM domains for a given study design.",
+  summary="Get the define-xml for a study design",
+  description="Provides the define-xml for a given study design.",
   response_model=dict)
 async def get_study_sdtm_define(uuid: str, page: int=0, size: int=0, filter: str=""):
   study_design = StudyDesign.find(uuid)
   if study_design:
     return study_design.sdtm_define(page, size, filter)
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
+@app.get("/v1/studyDesigns/{uuid}/crf",
+  summary="Get the CRF for a study design",
+  description="Provides the CRF for a given study design.",
+  response_model=dict)
+async def get_study_crf(uuid: str, page: int=0, size: int=0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design.study_crf(page, size, filter)
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
