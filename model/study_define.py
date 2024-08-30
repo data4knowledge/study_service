@@ -114,7 +114,7 @@ def get_study_info(uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = study_info_query(uuid)
-      # debug.append('study_info query'); debug.append(query)
+      # print('study_info query'); print(query)
       results = session.run(query)
       data = [r.data() for r in results]
     db.close()
@@ -126,8 +126,9 @@ def get_domains(uuid):
       query = domains_query(uuid)
       # print("domains query", query)
       results = session.run(query)
-      return [r['d'] for r in results]
+      data = [r['d'] for r in results]
     db.close()
+    return data
 
 def get_variables(uuid):
     db = Neo4jConnection()
@@ -152,7 +153,7 @@ def get_define_vlm(domain_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = define_vlm_query(domain_uuid)
-      # debug.append("vlm query"); debug.append(query)
+      # print("vlm query"); print(query)
       results = session.run(query)
       data = [r for r in results.data()]
     db.close()
@@ -162,7 +163,7 @@ def get_define_codelist(domain_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = define_codelist_query(domain_uuid)
-      # debug.append("codelist query"); debug.append(query)
+      # print("codelist query"); print(query)
       results = session.run(query)
       data = [r for r in results.data()]
     db.close()
@@ -181,7 +182,7 @@ def get_define_test_codes(domain_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = define_test_codes_query(domain_uuid)
-      # debug.append("test_codes query"); debug.append(query)
+      # print("test_codes query"); print(query)
       results = session.run(query)
       data = [r for r in results.data()]
     db.close()
@@ -233,18 +234,19 @@ def comment_def(oid, text, lang = 'en', leaf_id = None, page_refs = None, ref_ty
   # Add page reference
   return c
    
-# ISSUE: Hardcoded
+# NOTE: Hardcoded
 def comment_defs():
   comment_defs = []
   comment_def_oid = "COM.STD.1"
-  comment = comment_def(comment_def_oid, "From CDISC Library")
+  comment = comment_def(comment_def_oid, "From CDISC Library SDTM")
+  comment_defs.append(comment)
+  comment_def_oid = "COM.STD.2"
+  comment = comment_def(comment_def_oid, "From CDISC Library Controlled Terminology")
   comment_defs.append(comment)
   return comment_defs
 
-# ISSUE: Hardcoded
+# NOTE: Hardcoded
 def standards():
-
-
   standards = ET.Element('def:Standards')
 
   standard1 = ET.Element('def:Standard')
@@ -262,6 +264,7 @@ def standards():
   standard1.set("Type", "CT")
   standard1.set("Version", "2023-12-09")
   standard1.set("Status", "Final")
+  standard1.set("def:CommentOID", "COM.STD.2")
   standards.append(standard1)
 
   return standards
@@ -273,13 +276,9 @@ def metadata_version(oid = 'Not set', name = 'Not set', description = None):
   if description:
     metadata.set("Description", description)
   else:
-    metadata.set("Description", "Generated from USDM")
+    metadata.set("Description", "Generated from USDM and Biomedical Concepts (CDISC Library + d4k adaptions)")
   metadata.set("def:DefineVersion", "2.1.7")
   return metadata
-
-# {'sd': {'instanceType': 'StudyDesign', 'name': 'Study Design 1', 'description': 'The main design for the study', 'id': 'StudyDesign_1', 'label': '', 'uuid': '39309ff3-546c-4439-aa6f-74f16ad36f8f', 'rationale': 'The discontinuation rate associated with this oral dosing regimen was 58.6% in previous studies, and alternative clinical strategies have been sought to improve tolerance for the compound. To that end, development of a Transdermal Therapeutic System (TTS) has been initiated.'},
-#  'si': {'instanceType': 'StudyIdentifier', 'id': 'StudyIdentifier_1', 'studyIdentifier': 'H2Q-MC-LZZT', 'uuid': '224be614-0648-440e-b8ae-2cb0c642c1f1'},
-#  'sv': {'versionIdentifier': '2', 'instanceType': 'StudyVersion', 'id': 'StudyVersion_1', 'uuid': 'f347c6df-94ea-406e-a5df-c3e6d6942dbd', 'rationale': 'The discontinuation rate associated with this oral dosing regimen was 58.6% in previous studies, and alternative clinical strategies have been sought to improve tolerance for the compound. To that end, development of a Transdermal Therapeutic System (TTS) has been initiated.'}}
 
 def get_unique_vars(vars):
   unique_vars = []
@@ -354,7 +353,7 @@ def set_variable_refs(variables):
     variable_refs = []
     for v in variables:
       ref = ET.Element('ItemRef')
-      # debug.append(f"  variable_refs item_oid {item_def_oid(v)}")
+      # print(f"  variable_refs item_oid {item_def_oid(v)}")
       ref.set('ItemOID', item_def_oid(v))
       mandatory = 'No' if v['core'] == 'Perm' else 'Yes'
       ref.set('Mandatory', mandatory)
@@ -374,8 +373,9 @@ def item_group_defs(domains):
         igd.set('Repeating', 'No')
         igd.set('IsReferenceData', 'No')
         igd.set('SASDatasetName', d['name'])
-        igd.set('def:Structure', 'tbc')
+        igd.set('def:Structure', d['structure'])
         igd.set('Purpose', 'Tabulation')
+        igd.set('Keys', d['ordinal'])
         igd.set('def:StandardOID', 'STD.1')
         igd.set('def:ArchiveLocationID', f"LI.{d['name']}")
         igd.append(description('en',d['label']))
