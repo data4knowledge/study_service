@@ -522,9 +522,9 @@ async def get_study_sdtm_define(uuid: str, page: int=0, size: int=0, filter: str
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
-@app.get("/v1/studyDesigns/{uuid}/crf",
-  summary="Get the CRF for a study design",
-  description="Provides the CRF for a given study design.",
+@app.get("/v1/studyDesigns/{uuid}/forms",
+  summary="Get the BC collection forms for a study design",
+  description="Provides the forms from BCs for a given study design.",
   response_model=dict)
 async def get_study_crf(uuid: str, page: int=0, size: int=0, filter: str=""):
   study_design = StudyDesign.find(uuid)
