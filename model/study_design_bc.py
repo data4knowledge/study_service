@@ -232,9 +232,35 @@ class StudyDesignBC():
     with db.session() as session:
       results = []
       query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]-(bcp:BiomedicalConceptProperty)
-        RETURN DISTINCT bc, bcp
+        // Find BC's used
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)
+        WITH distinct bc.name as bc_name
+        WITH collect(bc_name) as names
+        unwind names as name
+        // Get only one match per name
+        CALL {
+          WITH name
+          MATCH (bc:BiomedicalConcept)
+          WHERE bc.name = name
+          return bc
+          limit 1
+        }
+        WITH bc
+        MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        MATCH (bcp)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
+        return bc.name as bc, cd.decode as bc_name, bcp.name as bcp, crm.datatype as datatype, collect({code:c.code,decod:c.decode}) as decodes
+        union
+        MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        WHERE NOT EXISTS {
+          (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
+        }
+        return bc.name as bc, cd.decode as bc_name, bcp.name as bcp, crm.datatype as datatype, [] as decodes
       """ % (study_design.uuid)
+      print("bc-prop query", query)
       result = session.run(query)
       for record in result:
         # results.append(record['bc'].data())

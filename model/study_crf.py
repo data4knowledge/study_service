@@ -28,8 +28,10 @@ class StudyCrf():
   def make_crf(self, uuid, page, size, filter):
     self._get_configuration(self)
     bcs = StudyDesignBC.get_bcs_and_properties(uuid)
-    for x in bcs:
-      print(x)
+    first = next(iter(bcs))
+    print(first)
+    # for x in bcs:
+    #   print(x)
     result = {'items': bcs, 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 
@@ -42,9 +44,9 @@ class StudyCrf():
       ConfigurationNode.create_default_configuration()
     
     self.configuration = configuration
-    for parameter in self.configuration:
-      print(parameter)
-    print("self.configuration", self.configuration)
+    # for parameter in self.configuration:
+    #   print(parameter)
+    # print("self.configuration", self.configuration)
 
   # def get_bcs(cls):
   #   print("Getting bcs")
