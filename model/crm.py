@@ -52,8 +52,8 @@ class CRM():
         ,{'sdtm': '--DOSFRM' , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/form/coding/code'          , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
         ,{'sdtm': '--DOSE'   , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/value', 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'quantity'}
         ,{'sdtm': '--DOSU'   , 'uri': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/unit' , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'quantity'}
-        ,{'sdtm': '--STDTC'  , 'uri': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'         , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'date_type'}
-        ,{'sdtm': '--ENDTC'  , 'uri': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value'           , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'date_type'}
+        ,{'sdtm': '--STDTC'  , 'uri': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'         , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'date_time'}
+        ,{'sdtm': '--ENDTC'  , 'uri': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value'           , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'date_time'}
         ,{'sdtm': 'AERLDEV'  , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/causality/device'                     , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
         ,{'sdtm': 'AERELNST' , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/causality/non_study_treatment'        , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
         ,{'sdtm': 'AEREL'    , 'uri': 'https://crm.d4k.dk/dataset/adverse_event/causality/related'                    , 'uuid': str(uuid4()), 'crm_uuid': 'tbd', 'datatype': 'coding'}
