@@ -249,16 +249,22 @@ class StudyDesignBC():
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-        MATCH (bcp)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
-        return bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, collect({code:c.code,pref_label:c.decode,notation:c.decode}) as terms
+        OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+        OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+        WHERE NOT EXISTS {
+          (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
+        }
+        WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, var.name as variable, "" as code, "" as pref_label, "" as notation
+        return bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, [] as terms
         union
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-        WHERE NOT EXISTS {
-          (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
-        }
-        return bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, [] as terms
+        MATCH (bcp)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
+        OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+        OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+        WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
+        return bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
       """ % (study_design.uuid)
       print("bc-prop query", query)
       result = session.run(query)
