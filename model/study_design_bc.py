@@ -249,13 +249,14 @@ class StudyDesignBC():
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-        OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
-        OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        WHERE NOT EXISTS {
+        WHERE NOT EXISTS { 
           (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
         }
+        WITH bc, bcp, cd, crm
+        OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+        OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
         WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, var.name as variable, "" as code, "" as pref_label, "" as notation
-        return bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, [] as terms
+        return "first" as from, bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, [] as terms
         union
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
@@ -264,7 +265,7 @@ class StudyDesignBC():
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
         WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
-        return bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
+        return "second" as from, bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
       """ % (study_design.uuid)
       print("bc-prop query", query)
       result = session.run(query)
