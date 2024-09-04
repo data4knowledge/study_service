@@ -28,11 +28,12 @@ class StudyCrf():
   def make_crf(self, uuid, page, size, filter):
     self._get_configuration(self)
     bcs = StudyDesignBC.get_bcs_and_properties(uuid)
+    visits = StudyDesignBC.get_visits(uuid)
     first = next(iter(bcs))
     print(first)
     # for x in bcs:
     #   print(x)
-    result = {'items': bcs, 'page': page, 'size': size, 'filter': filter, 'count': 1 }
+    result = {'items': bcs, 'visits': visits, 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 
   @staticmethod

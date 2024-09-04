@@ -30,6 +30,12 @@ class StudyDesignBC():
     return bcs
 
   @classmethod
+  def get_visits(cls, uuid):
+    # study_design = cls._get_study_design_by_uuid(uuid)
+    visits = cls._get_visits(uuid)
+    return visits
+
+  @classmethod
   def create(cls, name):
     results = {}
     study_design = cls._get_study_design(name)
@@ -268,6 +274,27 @@ class StudyDesignBC():
         return "second" as from, bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
       """ % (study_design.uuid)
       print("bc-prop query", query)
+      result = session.run(query)
+      for record in result:
+        # results.append(record['bc'].data())
+        results.append(record.data())
+        # results.append(BiomedicalConceptSimple.wrap(record['bc']))
+      return results
+
+  @staticmethod
+  def _get_visits(uuid):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)
+        MATCH (bc)-[:PROPERTIES_REL]->(bcp)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst)-[:ENCOUNTER_REL]-(enc)
+        WITH distinct bc.name as bc_name, enc.label as label, enc.name as visit, enc.description as description, toInteger(split(enc.id,'_')[1]) as visitnum
+        order by bc_name, visitnum
+        // return bc_name, collect({label:label, visit:visit, description:description, visitnum:visitnum}) as visits
+        return bc_name, collect(label) as visits
+      """ % (uuid)
+      print("get-visits query", query)
       result = session.run(query)
       for record in result:
         # results.append(record['bc'].data())
