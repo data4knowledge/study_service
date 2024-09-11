@@ -72,6 +72,11 @@ class StudyDesignBC():
     return results
 
   @classmethod
+  def create_cdisc_pilot_mappings(cls, name):
+    print("Copy of create data contracts")
+
+
+  @classmethod
   def unlinked(cls, uuid, page, size, filter):
     skip_offset_clause = ""
     if page != 0:

@@ -167,6 +167,9 @@ class StudyFile(BaseNode):
       self.set_status("running", "Linking Biomedical Concepts", 90)
       result = StudyDesignBC.create(study_design.name)
 
+      # Create CDISC pilot study mappings
+      result = StudyDesignBC.create_cdisc_pilot_mappings(study_design.name)
+
       self.set_status("complete", "Finished", 100)
       return True
 
