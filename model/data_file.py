@@ -7,6 +7,7 @@ from uuid import uuid4
 from service.github_service import GithubService
 from service.aura_service import AuraService
 from service.local_service import LocalService
+from service.domain_service import DomainService
 
 class DataFile(BaseNode):
   uuid: str = ""
@@ -16,6 +17,7 @@ class DataFile(BaseNode):
   status: str = ""
   error: str = ""
   data_type: str = ""
+  extension: str = ""
   upload_service: str = None
 
   def __init__(self, *a, **kw):
@@ -25,13 +27,15 @@ class DataFile(BaseNode):
 
   def create(self, filename, contents, data_type):
     if not self._check_extension(filename):
-      self.error = "Invalid extension, must be '.csv'"
+      self.error = "Invalid extension, must be '.csv' or '.json"
       return False
     self.filename = filename
     self.uuid = str(uuid4())
     self.dir_path = os.path.join("uploads", self.uuid)
     self.full_path = os.path.join("uploads", self.uuid, filename)
     self.data_type = data_type
+    _, self.extension =  os.path.splitext(filename)
+
     db = Neo4jConnection()
     with db.session() as session:
       self.set_status("commencing", "Uploading file", 0)
@@ -87,7 +91,7 @@ class DataFile(BaseNode):
       elif self.upload_service.upper().startswith('LOCAL'):
         self.set_status("running", "Uploading to github", 15)
         local = LocalService()
-        file_count = local.file_list(self.dir_path, "*.csv")
+        file_count = local.file_list(self.dir_path, f"*{self.extension}")
         for index in range(file_count):
           more = local.next()
           count = local.progress()
@@ -97,10 +101,18 @@ class DataFile(BaseNode):
         files = local.upload_file_list(self.uuid)
 
       self.set_status("running", "Loading database", 80)
-      aura = AuraService()
-      application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
-      if self.data_type == 'identifier':
+      if self.data_type == 'domain':
         try:
+          ds = DomainService()
+          ds.import_domain(files[0]['file_path'])
+        except Exception as e:
+          self.error = f"Couldn't load file"
+          application_logger.exception(self.error, e)
+          return False
+      elif self.data_type == 'identifier':
+        try:
+          aura = AuraService()
+          application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
           aura.load_identifiers(files[0]['file_path'])
         except Exception as e:
           self.error = f"Couldn't load file"
@@ -108,6 +120,8 @@ class DataFile(BaseNode):
           return False
       elif self.data_type == 'subject': 
         try:
+          aura = AuraService()
+          application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
           aura.load_datapoints(files[0]['file_path'])
         except Exception as e:
           self.error = f"Couldn't load file"
@@ -158,7 +172,8 @@ class DataFile(BaseNode):
     return None
 
   def _check_extension(self, filename):
-    return True if filename.endswith('.csv') else False
+    _, ext =  os.path.splitext(filename)
+    return True if ext in ['.json', '.csv'] else False
 
   @staticmethod
   def _set_status(tx, uuid, status, stage, percentage):

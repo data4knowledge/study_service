@@ -560,7 +560,7 @@ async def create_study_data_file(request: Request, background_tasks: BackgroundT
     background_tasks.add_task(df.execute)
     return df.uuid
   else:
-    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
+    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {df.error}")
 
 @app.get("/v1/studyDesigns/{uuid}/dataFiles/{file_uuid}/status", 
   summary="Get study design data file status",
