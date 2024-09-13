@@ -261,8 +261,8 @@ class StudyDesignBC():
         WITH bc, bcp, cd, crm
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, var.name as variable, "" as code, "" as pref_label, "" as notation
-        return "first" as from, bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, [] as terms
+        WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+        return "first" as from, bc, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
         union
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
@@ -270,8 +270,8 @@ class StudyDesignBC():
         MATCH (bcp)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
-        return "second" as from, bc, bc_name, name, data_type, collect({domain:domain,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
+        WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
+        return "second" as from, bc, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
       """ % (study_design.uuid)
       print("bc-prop query", query)
       result = session.run(query)
