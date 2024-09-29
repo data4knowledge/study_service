@@ -7,6 +7,7 @@ from uuid import uuid4
 from service.github_service import GithubService
 from service.aura_service import AuraService
 from service.local_service import LocalService
+from model.utility.raw_data import import_raw_data
 
 class DataFile(BaseNode):
   uuid: str = ""
@@ -109,6 +110,20 @@ class DataFile(BaseNode):
       elif self.data_type == 'subject': 
         try:
           aura.load_datapoints(files[0]['file_path'])
+        except Exception as e:
+          self.error = f"Couldn't load file"
+          application_logger.exception(self.error, e)
+          return False
+      elif self.data_type == 'raw_data': 
+        try:
+          # aura.load_datapoints(files[0]['file_path'])
+          print("I'm processing raw data")
+          print("filename", self.filename)
+          print("full_path", self.full_path)
+          print("dir_path", self.dir_path)
+
+          import_raw_data(self.dir_path, self.filename)
+          print("I'm loading raw data")
         except Exception as e:
           self.error = f"Couldn't load file"
           application_logger.exception(self.error, e)
