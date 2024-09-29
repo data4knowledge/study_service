@@ -361,8 +361,9 @@ class Domain(BaseNode):
       ,TP[timelines] as TPT
       ,epoch[0] as  EPOCH 
       ,bc.uri as uuid
-      order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
+      order by DOMAIN, USUBJID, VISITNUM, ord ,VISIT, test_code
     """ % (self.uuid)
+      # order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
     return query
 
   def convert_str_datetime(self, date_time_str):
