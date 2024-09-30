@@ -13,6 +13,7 @@ from usdm_db import USDMDb
 from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_sdtm import StudyDesignSDTM
 from model.study_design_bc import StudyDesignBC
+from model.utility.configuration import ConfigurationNode
 
 import os
 import yaml
@@ -166,6 +167,9 @@ class StudyFile(BaseNode):
 
       self.set_status("running", "Linking Biomedical Concepts", 90)
       result = StudyDesignBC.create(study_design.name)
+
+      self.set_status("running", "Linking Biomedical Concepts", 99)
+      ConfigurationNode.create_default_configuration()
 
       self.set_status("complete", "Finished", 100)
       return True
