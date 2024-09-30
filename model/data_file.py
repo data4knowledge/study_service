@@ -116,14 +116,11 @@ class DataFile(BaseNode):
           return False
       elif self.data_type == 'raw_data': 
         try:
-          # aura.load_datapoints(files[0]['file_path'])
-          print("I'm processing raw data")
-          print("filename", self.filename)
-          print("full_path", self.full_path)
-          print("dir_path", self.dir_path)
-
-          import_raw_data(self.dir_path, self.filename)
-          print("I'm loading raw data")
+          print("Processing raw data to identifiers and datapoints")
+          import_files = import_raw_data(self.dir_path, self.filename)
+          url_path = files[0]['file_path'].rsplit("/",1)[0]
+          aura.load_identifiers(os.path.join(url_path, import_files['identifiers']))
+          aura.load_datapoints(os.path.join(url_path, import_files['datapoints']))
         except Exception as e:
           self.error = f"Couldn't load file"
           application_logger.exception(self.error, e)

@@ -87,9 +87,11 @@ class AuraService():
           MATCH (dc:DataContract {{uri:data_row['DC_URI']}})
           MATCH (design:StudyDesign {{name:'Study Design 1'}})
           MERGE (d:DataPoint {{uri: data_row['DATAPOINT_URI'], value: data_row['VALUE']}})
+          MERGE (record:Record {{key:data_row['RECORD_KEY']}})
           MERGE (s:Subject {{identifier:data_row['USUBJID']}})
           MERGE (dc)<-[:FOR_DC_REL]-(d)
           MERGE (d)-[:FOR_SUBJECT_REL]->(s)
+          MERGE (d)-[:SOURCE]->(record)
           RETURN count(*) as count
       """
       # application_logger.debug(f"QUERY: {query}")
