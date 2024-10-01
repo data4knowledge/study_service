@@ -486,6 +486,7 @@ class StudyDesignBC():
        ,'AESEV'    : 'https://crm.d4k.dk/dataset/adverse_event/severity'
        ,'AETERM'   : 'https://crm.d4k.dk/dataset/adverse_event/term'
        ,'AETOXGR'  : 'https://crm.d4k.dk/dataset/adverse_event/toxicity/grade'
+       ,'AELOC'  :'https://crm.d4k.dk/dataset/common/location/coding/code'
       }
 
       for var,uri in var_link_crm.items():
