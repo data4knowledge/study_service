@@ -75,51 +75,6 @@ DOMAIN_KEY_SEQUENCE = {
 
 xml_header = """<?xml version="1.0" encoding="UTF-8"?>\n<?xml-stylesheet type="text/xsl" href="stylesheets/define2-1.xsl"?>\n"""
 
-# NOTE: Fix proper links when loading
-def _add_missing_links_to_crm():
-  db = Neo4jConnection()
-  with db.session() as session:
-    var_link_crm = {
-        'BRTHDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
-       ,'RFICDTC':'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
-       ,'DSDECOD':'https://crm.d4k.dk/dataset/observation/observation_result/result/coding/code'
-       ,'DSSTDTC':'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
-       ,'DSDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
-       ,'DSTERM' :'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
-       ,'VSPOS'  :'https://crm.d4k.dk/dataset/observation/position/coding/code'
-       ,'VSLOC'  :'https://crm.d4k.dk/dataset/common/location/coding/code'
-       ,'DMDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
-       ,'EXDOSFRQ': 'https://crm.d4k.dk/dataset/therapeutic_intervention/frequency/coding/code'
-       ,'EXROUTE': 'https://crm.d4k.dk/dataset/therapeutic_intervention/route/coding/code'
-       ,'EXTRT': 'https://crm.d4k.dk/dataset/therapeutic_intervention/description/coding/code'
-       ,'EXDOSFRM': 'https://crm.d4k.dk/dataset/therapeutic_intervention/form/coding/code'
-       ,'EXDOSE': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/value'
-       ,'EXDOSU': 'https://crm.d4k.dk/dataset/therapeutic_intervention/single_dose/quantity/unit'
-       ,'EXSTDTC': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
-       ,'EXENDTC': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value'
-       ,'AESTDTC': 'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
-       ,'AEENDTC': 'https://crm.d4k.dk/dataset/common/period/period_end/date_time/value'
-       ,'AERLDEV'  : 'https://crm.d4k.dk/dataset/adverse_event/causality/device'
-       ,'AERELNST' : 'https://crm.d4k.dk/dataset/adverse_event/causality/non_study_treatment'
-       ,'AEREL'    : 'https://crm.d4k.dk/dataset/adverse_event/causality/related'
-       ,'AEACNDEV' : 'https://crm.d4k.dk/dataset/adverse_event/response/concomitant_treatment'
-       ,'AEACNOTH' : 'https://crm.d4k.dk/dataset/adverse_event/response/other'
-       ,'AEACN'    : 'https://crm.d4k.dk/dataset/adverse_event/response/study_treatment'
-       ,'AESER'    : 'https://crm.d4k.dk/dataset/adverse_event/serious'
-       ,'AESEV'    : 'https://crm.d4k.dk/dataset/adverse_event/severity'
-       ,'AETERM'   : 'https://crm.d4k.dk/dataset/adverse_event/term'
-       ,'AETOXGR'  : 'https://crm.d4k.dk/dataset/adverse_event/toxicity/grade'
-    }
-
-    for var,uri in var_link_crm.items():
-      query = _add_missing_links_to_crm_query(uri, var)
-      results = db.query(query)
-      if results:
-        pass
-      else:
-        print(f"Warning: Failed to create link to CRM for {var}")
-  db.close()
-
 def get_study_info(uuid):
     db = Neo4jConnection()
     with db.session() as session:
