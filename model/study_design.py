@@ -163,6 +163,9 @@ class StudyDesign(NodeNameLabelDesc):
   def study_crf(self, page, size, filter):
     return StudyCrf.make_crf(self.uuid, page, size, filter)
 
+  def datapoint_form(self, datapoint, page, size, filter):
+    return StudyCrf.datapoint_crf(datapoint, page, size, filter)
+
   def biomedical_concepts_unlinked(self, page, size, filter):
     return StudyDesignBC.unlinked(self.uuid, page, size, filter)
 

@@ -118,6 +118,8 @@ class Domain(BaseNode):
           record['EPOCH'] = row["EPOCH"]
         if 'term' in row.keys():
           record['term'] = row["term"]
+        if 'dp_uri' in row.keys():
+          record['dp_uri'] = row["dp_uri"]
         if '--DTC' in row.keys():
           record[self.name+'DTC'] = row["--DTC"]
         if self.name == "DM":
@@ -187,6 +189,7 @@ class Domain(BaseNode):
       , domain.name as DOMAIN
       , subj.identifier as USUBJID
       , right(subj.identifier,4) as SUBJECT
+      , dp.uri as dp_uri
       , var.name as variable
       , dp.value as value
       , site.name as SITEID
@@ -495,6 +498,9 @@ class Domain(BaseNode):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
+    for col in column_names:
+      column_names.append(col+"_uri")
+    print("column_names",column_names)
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
     dose_dates = self.get_exposure_max_min_dates()
@@ -545,6 +551,7 @@ class Domain(BaseNode):
       else: # Subject does not have a value for variable
         # print("  3.1 no previous value",variable_name,"=",result['value'])
         final_results[key][variable_index] = result["value"]
+        final_results[key][99] = result['dp_uri']
         # print("  3.9 adding next for SUBJID",final_results[key])
       # print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
       # Derive --DY

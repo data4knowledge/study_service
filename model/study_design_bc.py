@@ -30,6 +30,12 @@ class StudyDesignBC():
     return bcs
 
   @classmethod
+  def get_datapoint_stuff(cls, datapoint):
+    bcs = cls._get_datapoint_stuff(datapoint)
+    # bcs = cls._get_bcs_and_properties(study_design)
+    return bcs
+
+  @classmethod
   def get_visits(cls, uuid):
     # study_design = cls._get_study_design_by_uuid(uuid)
     visits = cls._get_visits(uuid)
@@ -280,6 +286,28 @@ class StudyDesignBC():
         results.append(record.data())
         # results.append(BiomedicalConceptSimple.wrap(record['bc']))
       return results
+
+  @staticmethod
+  def _get_datapoint_stuff(dp_uri):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint {uri:'%s'})-[:FOR_DC_REL]-(dc:DataContract)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        OPTIONAL MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        return "datatpoint_form" as from, bc.name as bc, bcp.name as name, crm.datatype as data_type, [] as sdtm, [] as terms
+      """ % (dp_uri)
+      print("query", query)
+      results = session.run(query)
+      # data = {}
+      data = []
+      for result in results.data():
+        data.append(result)
+        # for k,v in result.items():
+        #   data[k] = v
+        #   print(k,v)
+    return data
+
 
   @staticmethod
   def _get_visits(uuid):
