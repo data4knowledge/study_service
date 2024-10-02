@@ -38,14 +38,6 @@ app = FastAPI(
 
 # FOR DEBUGGING
 se = ServiceEnvironment()
-print("----> Environment variables")
-env_vars = {k:v for (k,v) in os.environ.items() if k in ['NEO4J_URI','NEO4J_DB_NAME'] or 'SERVER' in k}
-for k,v in env_vars.items():
-    if 'SERVER' in k:
-      print(f"  {k:15} {'server' if 'fly' in v else 'local':10} {v:35} ")
-    else:
-      print(f"  {k:15} {v:35} ")
-
 
 @app.get("/", 
   summary="Get system and version",
