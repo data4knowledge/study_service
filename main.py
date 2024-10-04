@@ -50,6 +50,17 @@ se = ServiceEnvironment()
 async def read_root():
   return SystemOut(**{ 'system_name': SYSTEM_NAME, 'version': VERSION, 'environment': ServiceEnvironment().environment() })
 
+@app.get("/ping", 
+  summary="Check service and DB",
+  description="A simple microservice healthcheck that counts node in the database to check connectivity.", 
+  response_model=dict)
+@app.get("/v1/ping", 
+  summary="Check service and DB",
+  description="A simple microservice healthcheck that counts node in the database to check connectivity.", 
+  response_model=dict)
+def ping():
+  return { 'count': Neo4jConnection().count() }
+
 @app.delete("/v1/clean", 
   summary="Delete database",
   description="Deletes the entire database.",
