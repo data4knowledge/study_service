@@ -111,49 +111,51 @@ class StudyDesignDataContract():
 
   @staticmethod
   def _set_data_contract(tx, name, parsed_name, uri_root):
+    # Main timeline
     query= """
-      call apoc.cypher.run("MATCH(study:Study{name:$s})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
+      MATCH(study:Study{name:'%s'})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
       MATCH(sd)-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline) where not (tl)<-[:TIMELINE_REL]-()
       MATCH(tl)-[r4:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)-[r5:ACTIVITY_REL]->(act:Activity)-[r6:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)-[r7:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty) 
-      return distinct study, 
+      with distinct study, sd, tl, act, act_inst_main, act_inst_main.uuid as act_inst_uuid, bc, bc_prop
+      WITH
+      study, 
       sd, 
       tl, 
       act, 
-      act_inst_main,
-      act_inst_main.uuid as act_inst_uuid,
-      null as act_inst,  
-      bc,
+      act_inst_main, 
+      act_inst_uuid, 
+      bc, 
       bc_prop
-            UNION
-      MATCH(study:Study{name:$s})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
+      MERGE (dc:DataContract{uri:'%s' + '%s' + '/' + act_inst_uuid + '/' + bc_prop.uuid})
+            MERGE (dc)-[:PROPERTIES_REL]->(bc_prop)
+            MERGE (dc)-[:INSTANCES_REL]->(act_inst_main)
+            SET study.uri = '%s' + '%s'
+    """ % (name, uri_root, parsed_name, uri_root, parsed_name)
+    results = tx.run(query)
+
+    # Sub timeline
+    query= """
+      MATCH(study:Study{name:'%s'})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
       MATCH(sd)-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline)<-[r4:TIMELINE_REL]-(act_main)<-[r5:ACTIVITY_REL]-(act_inst_main:ScheduledActivityInstance)
       MATCH(tl)-[r6:INSTANCES_REL]->(act_inst:ScheduledActivityInstance)-[r7:ACTIVITY_REL]->(act:Activity)-[r8:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)-[r9:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty) 
-      return distinct study, 
+      with study, sd, tl, act, act_inst_main, act_inst_main.uuid+'/'+ act_inst.uuid as act_inst_uuid, act_inst, bc, bc_prop
+      WITH
+      study, 
       sd, 
       tl, 
       act, 
-      act_inst_main,
-      act_inst_main.uuid+'/'+ act_inst.uuid as act_inst_uuid,
-      act_inst,  
-      bc,
-      bc_prop",{s:'%s'}) YIELD value
-      WITH value.study as study, 
-      value.sd as sd, 
-      value.tl as tl, 
-      value.act as act, 
-      value.act_inst_main as act_inst_main, 
-      value.act_inst as act_inst, 
-      value.bc as bc, 
-      value.bc_prop as bc_prop, 
-      value. act_inst_uuid as  act_inst_uuid
-      WITH study, sd, tl,act,act_inst_main,act_inst,bc,bc_prop,act_inst_uuid
+      act_inst_main, 
+      act_inst, 
+      bc, 
+      bc_prop, 
+      act_inst_uuid
       MERGE (dc:DataContract{uri:'%s' + '%s' + '/' + act_inst_uuid + '/' + bc_prop.uuid})
             MERGE (dc)-[:PROPERTIES_REL]->(bc_prop)
             MERGE (dc)-[:INSTANCES_REL]->(act_inst)
             MERGE (dc)-[:INSTANCES_REL]->(act_inst_main)
             SET study.uri = '%s' + '%s'
     """ % (name, uri_root, parsed_name, uri_root, parsed_name)
-    #print(f"SDC QUERY: {query}")
+    # print(f"SDC2 QUERY: {query}")
     results = tx.run(query)
     #for row in results:
     #  return StudyFile.wrap(row['sf'])
