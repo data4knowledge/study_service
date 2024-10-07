@@ -8,6 +8,7 @@ from service.bc_service import BCService
 from service.sdtm_service import SDTMService
 from model.crm import CRMNode
 from model.biomedical_concept import BiomedicalConceptSimple
+from service.ct_service import CTService
 
 import json
 import copy
@@ -73,6 +74,9 @@ DOMAIN_KEY_SEQUENCE = {
   'VS' : {'STUDYID': '1', 'USUBJID': '2', 'VSTESTCD': '3', 'VSSPEC': '4', 'VISITNUM': '5', 'VSTPTREF': '6', 'VSTPTNUM': '7'}
 }
 
+ct = CTService()
+define_terms = {}
+
 xml_header = """<?xml version="1.0" encoding="UTF-8"?>\n<?xml-stylesheet type="text/xsl" href="stylesheets/define2-1.xsl"?>\n"""
 
 def get_study_info(uuid):
@@ -135,12 +139,17 @@ def get_define_codelist(domain_uuid):
     return data
 
 def get_concept_info(identifiers):
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = find_ct_query(identifiers)
-      results = session.run(query)
-      data = [r for r in results.data()]
-    db.close()
+    data = []
+    for identifier in identifiers:
+      if identifier in define_terms:
+          data.append(define_terms[identifier])
+      else:
+        response = ct.find_by_identifier(identifier)
+        first = response[0] if len(response) > 0 else None
+        if first:
+          cli = {'code': first['child']['identifier'], 'pref_label': first['child']['pref_label'], 'notation': first['child']['notation']}
+          data.append(cli)
+          define_terms[identifier] = cli
     return data
 
 def get_define_test_codes(domain_uuid):
