@@ -364,6 +364,7 @@ class Domain(BaseNode):
       order by DOMAIN, USUBJID, VISITNUM, ord ,VISIT, test_code
     """ % (self.uuid)
       # order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
+    print("findings query", query)
     return query
 
   def convert_str_datetime(self, date_time_str):
