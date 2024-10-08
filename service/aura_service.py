@@ -41,12 +41,12 @@ class AuraService():
       # Need to read node files to get properties
       path = os.getcwd() + "/uploads/" + dir + "/"
 
-      print("--- loading nodes")
+      application_logger.info("loading nodes")
       for file_item in nodes:
         header = self.get_header_from_csv(path+file_item['filename'])
         status = self.load_nodes(file_item['label'], file_item['file_path'], header)
 
-      print("\n--- loading relationships")
+      application_logger.info("loading relationships")
       for file_item in relationships:
         status = self.load_relationships(file_item["type"], file_item["file_path"])
 
@@ -58,7 +58,6 @@ class AuraService():
       raise self.UploadFail
 
   def get_header_from_csv(self, filename):
-      print("-- get header from", filename)
       with open(filename) as f:
           reader = csv.reader(f)
           header = next(reader) 
