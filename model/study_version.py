@@ -35,7 +35,7 @@ class StudyVersion(NodeId):
 
   @classmethod
   def list(cls, uuid, page, size, filter):
-    return cls.base_list("MATCH (m:Study {uuid: '%s'})-[]->(n:StudyVersion)" % (uuid), "ORDER BY n.studyTitle ASC", page, size, filter)
+    return cls.base_list("MATCH (m:Study {uuid: '%s'})-[]->(n:StudyVersion)" % (uuid), "ORDER BY n.versionIdentifier ASC", page, size, filter)
 
   def summary(self):
     db = Neo4jConnection()
