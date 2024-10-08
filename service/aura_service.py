@@ -71,7 +71,6 @@ class AuraService():
         LOAD CSV WITH HEADERS FROM '%s' AS row
         with row
         MERGE (n:%s {uuid:row['uuid:ID']})
-        SET n.fake = "load_usdm"
         %s
         RETURN count(*) as count
     """ % (file_path, label, properties)
