@@ -195,7 +195,7 @@ class Domain(BaseNode):
       , country.code as COUNTRY
       order by USUBJID
     """ % (self.uuid)
-    # print(query)
+    print(query)
     return query
 
   def ds_query(self):

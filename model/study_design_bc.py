@@ -380,7 +380,7 @@ class StudyDesignBC():
               MATCH (source_bcp:BiomedicalConceptProperty {uuid:'%s'})
               with source_bcp
               MERGE (bcp:BiomedicalConceptProperty {uuid:'%s'})
-              SET bcp.datatype     =	source_bcp.datatype
+              SET bcp.datatype     =	'date'
               SET bcp.id           =	'tbd'
               SET bcp.instanceType =	source_bcp.instanceType
               SET bcp.isEnabled    =	source_bcp.isEnabled
@@ -455,7 +455,7 @@ class StudyDesignBC():
           CREATE (bc)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
           return count(*) as count
       """
-      print(query)
+      # print(query)
       results = session.run(query)
 
 
@@ -468,7 +468,7 @@ class StudyDesignBC():
       # bcp_name = "Date of Birth"
 
       var_link_crm = {
-        'BRTHDTC':'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
+        'BRTHDTC':'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
        ,'RFICDTC':'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
        ,'DSDECOD':'https://crm.d4k.dk/dataset/observation/observation_result/result/coding/code'
        ,'DSSTDTC':'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'
