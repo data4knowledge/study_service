@@ -446,7 +446,18 @@ class StudyDesignBC():
         print("result",result.data())
       print("Created link to Activity")
 
-      # Ignoring CODE_REL -> AliasCode
+      # Adding CODE_REL -> AliasCode
+      query = f"""
+          MATCH (bc:BiomedicalConcept {{uuid:"{bc_uuid}"}})
+          with bc
+          CREATE (ac:AliasCode {{uuid: '{str(uuid4())}', instanceType: 'AliasCode', id: 'AliasCode_BD'}})
+          CREATE (c:Code {{code: 'S000001', codeSystem: 'http://www.example.org', codeSystemVersion: '0.1', decode: 'Date of Birth', id: 'Code_436', instanceType: 'Code', uuid: '{str(uuid4())}'}})
+          CREATE (bc)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
+          return count(*) as count
+      """
+      print(query)
+      results = session.run(query)
+
 
   @staticmethod
   def _add_missing_links_to_crm():
