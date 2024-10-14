@@ -19,6 +19,27 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+def write_tmp(name, data):
+    from pathlib import Path
+    TMP_PATH = Path('/Users/johannes/Library/CloudStorage/OneDrive-data4knowledge/shared_mac/debug')
+    OUTPUT_FILE = TMP_PATH / name
+    print("Writing file...",OUTPUT_FILE.name,OUTPUT_FILE, end="")
+    o = []
+    for k in data:
+      if k != "properties":
+        o.append(k)
+    if 'properties' in data:
+      for k in data['properties']:
+        for g in k:
+          o.append("properties->"+str(g))
+    with open(OUTPUT_FILE, 'w') as f:
+        for it in o:
+            f.write(str(it))
+            f.write('\n')
+    # print("\n\n------\nNU SAVEAR JAG\n--------")
+    # print(" ...done")
+
+
 class StudyDefine():
   define_xml: str
 
@@ -122,7 +143,7 @@ def get_define_vlm(domain_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = define_vlm_query(domain_uuid)
-      # print("vlm query"); print(query)
+      print("vlm query"); print(query)
       results = session.run(query)
       data = [r for r in results.data()]
     db.close()
@@ -264,13 +285,15 @@ def get_unique_vars(vars):
       if 'decodes' in v:
         v.pop('decodes')
       unique_vars.append(v)
-  unique_vars = list({v['uuid']:v for v in unique_vars}.values())
+  unique_vars = list({v['var_uuid']:v for v in unique_vars}.values())
   return unique_vars
 
 
 def get_domains_and_variables(uuid):
   domains = []
   raw_domains = get_domains(uuid)
+  raw_domains = [x for x in raw_domains if x['name'] == 'DM']
+  debug = []
   for d in raw_domains:
     item = {}
     for k,v in d._properties.items():
@@ -284,12 +307,18 @@ def get_domains_and_variables(uuid):
       test_codes = get_define_test_codes(d['uuid'])
       item['test_codes'] = test_codes
     vlm_metadata = get_define_vlm(d['uuid'])
+    debug.append("\n----")
+    debug.append(d)
+    print("d getting vlm", d)
     item['vlm'] = vlm_metadata
+    for x in vlm_metadata:
+       debug.append(x)
+    write_tmp('study_define.txt', debug)
 
     item['goc'] = next((x for x,y in DOMAIN_CLASS.items() if d['name'] in y), "Fix")
 
     print(d['name'],"len(vlm_metadata)", len(vlm_metadata))
-    unique_vars = get_unique_vars(copy.deepcopy(vlm_metadata))
+    # unique_vars = get_unique_vars(copy.deepcopy(vlm_metadata))
     # print(unique_vars)
 
     # item['variables'] = unique_vars

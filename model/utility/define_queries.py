@@ -58,24 +58,37 @@ def define_vlm_query(domain_uuid):
       WITH bc, cd, bcp, domain
       MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(domain)
       MATCH (bcp)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
+      where bcp.name = var.name or bcp.label = var.label
       WITH domain, bc, cd, bcp, crm, var, c
       ORDER By bc.name, cd.decode, bcp.name, c.decode
-      WITH domain, bc, cd, bcp, crm, var, collect({code:c.code,decode:c.decode}) as decodes
-      return distinct 
-      domain.name as domain,
-      bc.uuid as bc_uuid,
-      bc.name as bc,
-      cd.decode as testcd,
-      bcp.name as bcp,
-      crm.datatype as datatype,
-      var.uuid as uuid,
-      var.label as label,
-      var.datatype as var_datatype,
-      var.name as name,
-      var.core as core,
-      var.ordinal as ordinal,
-      decodes as decodes
-//        order by bc_uuid, ordinal
+      WITH distinct domain.name as domain
+      , bc.uuid as bc_uuid
+      , bc.name as bc_name
+      , cd.decode as testcd
+      , bcp.name as bcp_name
+      , crm.datatype as datatype
+      , var.uuid as var_uuid
+      , var.label as label
+      , var.data_type as var_datatype
+      , var.name as name
+      , var.core as core
+      , var.ordinal as ordinal
+      , c.code as code
+      , c.decode as decode
+      return 
+      domain,
+      bc_uuid,
+      bc_name,
+      testcd,
+      bcp_name,
+      datatype,
+      var_uuid,
+      label,
+      var_datatype,
+      name,
+      core,
+      ordinal,
+      collect({code:code, decode:decode}) as decodes
     """ % (domain_uuid)
     # limit 100
     # print("vlm query", query)
