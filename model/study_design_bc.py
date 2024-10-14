@@ -243,6 +243,7 @@ class StudyDesignBC():
     db = Neo4jConnection()
     with db.session() as session:
       results = []
+      # Get BCPs without VLM
       query = """
         // Find BC's used
         MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)
@@ -267,24 +268,57 @@ class StudyDesignBC():
         WITH bc, bcp, cd, crm
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
-        return "first" as from, bc, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
-        union
-        MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
-        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
-        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-        MATCH (bcp)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
-        OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
-        OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        WITH distinct bc.name as bc, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
-        return "second" as from, bc, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
+        where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+        return "no code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (study_design.uuid)
+        # return from, bc_raw_name, bc_name, name, data_type, sdtm, terms
       print("bc-prop query", query)
       result = session.run(query)
       for record in result:
         # results.append(record['bc'].data())
         results.append(record.data())
+        print("record.data()", record.data()['bc_raw_name'])
         # results.append(BiomedicalConceptSimple.wrap(record['bc']))
+
+      # Get BCPs with VLM
+      query = """
+        // Find BC's used
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)
+        WITH distinct bc.name as bc_name
+        WITH collect(bc_name) as names
+        unwind names as name
+        // Get only one match per name
+        CALL {
+          WITH name
+          MATCH (bc:BiomedicalConcept)
+          WHERE bc.name = name
+          return bc.uuid as bc_uuid
+          limit 1
+        }
+        WITH bc_uuid
+        MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
+        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+        // OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+        MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+        where bc.uuid = bc_uuid
+        and bcp.name = var.name or bcp.label = var.label
+        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
+        return "second" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
+      """ % (study_design.uuid)
+        # return from, bc_raw_name, bc_name, name, data_type, sdtm, terms
+      print("bc-vlm query", query)
+      result = session.run(query)
+      for record in result:
+        # results.append(record['bc'].data())
+        results.append(record.data())
+        print("record.data()", record.data()['bc_raw_name'])
+        # results.append(BiomedicalConceptSimple.wrap(record['bc']))
+
+
+
       return results
 
   @staticmethod
