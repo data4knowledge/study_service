@@ -123,6 +123,11 @@ class StudyDesignBC():
     cls._add_missing_links_to_crm()
     application_logger.info("Linked specific variables to CRM")
 
+  @classmethod
+  def fix_bc_name_label(cls, name):
+    cls._fix_bc_name_label()
+    application_logger.info("Added alt_sdtm_name to bcp")
+
 
 
   @staticmethod
@@ -517,6 +522,32 @@ class StudyDesignBC():
         else:
           application_logger.info(f"Info: Failed to create link to CRM for {var}")
           print("query",query)
+
+  # Names/Labels of BC properties inconsistent
+  # Introducing alt_sdtm_name to accomodate
+  @staticmethod
+  def _fix_bc_name_label():
+    bcp_alt_name = {
+      'DSSTDTC': 'RFICDTC'
+    }
+    db = Neo4jConnection()
+    with db.session() as session:
+      for bcp,alt_sdtm_name in bcp_alt_name.items():
+        query = """
+          MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
+          SET bcp.alt_sdtm_name = '%s'
+          return bcp.alt_label
+        """ % (bcp,alt_sdtm_name)
+        # print("alt_sdtm_name query",query)
+        results = db.query(query)
+        if results:
+          application_logger.info(f"Added alt_sdtm_name to {alt_sdtm_name} to bc property {bcp}")
+        else:
+          application_logger.info(f"Info: Failed to add alt_sdtm_name to bc property {bcp} ({alt_sdtm_name})")
+          print("query",query)
+    return
+
+
 
   @staticmethod
   def _remove_properties_from_exposure():

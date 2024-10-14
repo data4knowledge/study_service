@@ -158,8 +158,12 @@ class StudyFile(BaseNode):
       result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design.name)
 
       # Add missing links to CRM
-      self.set_status("running", "Link BRTHDTC to CRM", 89)
+      self.set_status("running", "Link BRTHDTC to CRM", 88)
       result = StudyDesignBC.fix_links_to_crm(study_design.name)
+
+      # Fix BC name/label
+      self.set_status("running", "Fix BC name/label", 89)
+      result = StudyDesignBC.fix_bc_name_label(study_design.name)
 
       # Add missing BC links to SDTM (Probably superfluous. E.g. DS does not have a link to BC Exposure, but it shows Exposure information if configured)
       # self.set_status("running", "Link BC to SDTM", 89)
