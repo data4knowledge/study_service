@@ -20,7 +20,7 @@ import traceback
 from datetime import datetime
 # from pathlib import Path
 
-class StudyCrf():
+class StudyForm():
   define_xml: str
   configuration: dict = {}
 

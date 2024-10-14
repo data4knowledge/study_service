@@ -18,7 +18,7 @@ from model.encounter import Encounter
 from model.schedule_timeline import ScheduleTimeline
 from model.population_definition import StudyDesignPopulation, StudyCohort
 from model.study_define import StudyDefine
-from model.study_crf import StudyCrf
+from model.study_form import StudyForm
 #from d4kms_service import Neo4jConnection
 
 class StudyDesign(NodeNameLabelDesc):
@@ -160,8 +160,8 @@ class StudyDesign(NodeNameLabelDesc):
   def sdtm_define(self, page, size, filter):
     return StudyDefine.make_define(self.uuid, page, size, filter)
 
-  def study_crf(self, page, size, filter):
-    return StudyCrf.make_crf(self.uuid, page, size, filter)
+  def study_form(self, page, size, filter):
+    return StudyForm.make_crf(self.uuid, page, size, filter)
 
   def biomedical_concepts_unlinked(self, page, size, filter):
     return StudyDesignBC.unlinked(self.uuid, page, size, filter)
