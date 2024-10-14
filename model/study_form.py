@@ -25,7 +25,7 @@ class StudyForm():
   configuration: dict = {}
 
   @classmethod
-  def make_crf(self, uuid, page, size, filter):
+  def make_form(self, uuid, page, size, filter):
     self._get_configuration(self)
     bcs = StudyDesignBC.get_bcs_and_properties(uuid)
     visits = StudyDesignBC.get_visits(uuid)

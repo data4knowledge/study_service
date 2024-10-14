@@ -161,7 +161,7 @@ class StudyDesign(NodeNameLabelDesc):
     return StudyDefine.make_define(self.uuid, page, size, filter)
 
   def study_form(self, page, size, filter):
-    return StudyForm.make_crf(self.uuid, page, size, filter)
+    return StudyForm.make_form(self.uuid, page, size, filter)
 
   def biomedical_concepts_unlinked(self, page, size, filter):
     return StudyDesignBC.unlinked(self.uuid, page, size, filter)
