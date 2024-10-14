@@ -181,7 +181,7 @@ class Domain(BaseNode):
       MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
       MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
       MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      WHERE  var.label = bcp.label or bcp.name = crm.sdtm or bcp.alt_name = var.name
+      WHERE  var.label = bcp.label or bcp.name = crm.sdtm or bcp.alt_sdtm_name = var.name
       return
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
