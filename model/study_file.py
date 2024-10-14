@@ -154,16 +154,12 @@ class StudyFile(BaseNode):
       result = StudyDesignSDTM.create(study_design.name)
 
       # Add permissable SDTM variables
-      self.set_status("running", "Add permissible SDTM variables", 89)
+      self.set_status("running", "Add permissible SDTM variables", 85)
       result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design.name)
 
       # Add missing links to CRM
       self.set_status("running", "Link BRTHDTC to CRM", 88)
       result = StudyDesignBC.fix_links_to_crm(study_design.name)
-
-      # Fix BC name/label
-      self.set_status("running", "Fix BC name/label", 89)
-      result = StudyDesignBC.fix_bc_name_label(study_design.name)
 
       # Add missing BC links to SDTM (Probably superfluous. E.g. DS does not have a link to BC Exposure, but it shows Exposure information if configured)
       # self.set_status("running", "Link BC to SDTM", 89)
@@ -172,7 +168,11 @@ class StudyFile(BaseNode):
       self.set_status("running", "Linking Biomedical Concepts", 90)
       result = StudyDesignBC.create(study_design.name)
 
-      self.set_status("running", "Linking Biomedical Concepts", 99)
+      # Fix BC name/label
+      self.set_status("running", "Fix BC name/label", 98)
+      result = StudyDesignBC.fix_bc_name_label(study_design.name)
+
+      self.set_status("running", "Create default configuration", 99)
       ConfigurationNode.create_default_configuration()
 
       self.set_status("complete", "Finished", 100)

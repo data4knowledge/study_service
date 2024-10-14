@@ -126,7 +126,8 @@ class StudyDesignBC():
   @classmethod
   def fix_bc_name_label(cls, name):
     cls._fix_bc_name_label()
-    application_logger.info("Added alt_sdtm_name to bcp")
+    cls._add_missing_terminology()
+    application_logger.info("Added alt_sdtm_name and terms")
 
 
 
@@ -524,6 +525,7 @@ class StudyDesignBC():
           print("query",query)
 
   # Names/Labels of BC properties inconsistent
+  # NOTE: This is a workaround
   # Introducing alt_sdtm_name to accomodate
   @staticmethod
   def _fix_bc_name_label():
@@ -547,7 +549,40 @@ class StudyDesignBC():
           print("query",query)
     return
 
+  # Add missing terminology
+  # NOTE: This is a workaround. Sex get's response codes, but not race.
+  @staticmethod
+  def _add_missing_terminology():
+    codes = [
+      {'bcp_name': 'Race', 'code':'C41260', 'decode':	'ASIAN'},
+      {'bcp_name': 'Race', 'code':'C16352', 'decode':	'BLACK OR AFRICAN AMERICAN'},
+      {'bcp_name': 'Race', 'code':'C41219', 'decode':	'NATIVE HAWAIIAN OR OTHER PACIFIC ISLANDER'},
+      {'bcp_name': 'Race', 'code':'C43234', 'decode':	'NOT REPORTED'},
+      {'bcp_name': 'Race', 'code':'C17649', 'decode':	'OTHER'},
+      {'bcp_name': 'Race', 'code':'C17998', 'decode':	'UNKNOWN'},
+      {'bcp_name': 'Race', 'code':'C41261', 'decode':	'WHITE'},
+    ]
 
+    db = Neo4jConnection()
+    with db.session() as session:
+        for c in codes:
+          query = """
+            MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
+            MERGE (r:ResponseCode {id:'rcid_%s', instanceType:'ResponseCode', isEnabled: True, uuid: '%s'})
+            MERGE (c:Code {code:'%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-12-15', decode:	'%s', id: 'cid_%s', instanceType: 'Code'})
+            MERGE (bcp)-[:RESPONSE_CODES_REL]->(r)-[:CODE_REL]->(c)
+            return "done" as done
+          """ % (c['bcp_name'], c['code'], c['code'], c['code'], c['decode'], c['code'])
+          # print('query', query)
+          response = session.run(query)
+          result = [x.data() for x in response]
+          if 'done' in result[0]:
+            application_logger.info(f"BCP {c['bcp_name']}: Added term {c['code']} - {c['decode']}")
+          else:
+            application_logger.info(f"Info: BCP {c['bcp_name']} failed to create term term {c['code']} -{c['decode']}")
+            print("query",query)
+    db.close()
+    return
 
   @staticmethod
   def _remove_properties_from_exposure():
