@@ -127,6 +127,7 @@ class StudyDesignBC():
   def fix_bc_name_label(cls, name):
     cls._fix_bc_name_label()
     cls._add_missing_terminology()
+    cls._add_brthdtc_link_crm()
     application_logger.info("Added alt_sdtm_name and terms")
 
 
@@ -482,8 +483,8 @@ class StudyDesignBC():
       """ % (copy_bc_name, bc_uuid)
       # print(query)
       results = session.run(query)
-      for result in results:
-        print("result",result.data())
+      # for result in results:
+      #   print("result",result.data())
       print("Created link to Activity")
 
       # Adding CODE_REL -> AliasCode
@@ -615,6 +616,25 @@ class StudyDesignBC():
           else:
             application_logger.info(f"Info: BCP {c['bcp_name']} failed to create term term {c['code']} -{c['decode']}")
             print("query",query)
+    db.close()
+    return
+
+  # NOTE: This is a workaround
+  # NOTE: Adding link to CRM for BRTHDTC. https://crm.d4k.dk/dataset/common/period/period_start/date_time/value (--STDTC)
+  @staticmethod
+  def _add_brthdtc_link_crm():
+    db = Neo4jConnection()
+    with db.session() as session:
+      # Add property BRTHDTC IS_A_REL to CRM. I
+      query = f"""
+          MATCH (bcp:BiomedicalConceptProperty {{name:'BRTHDTC'}})
+          MATCH (crm_add:CRMNode {{uri:'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'}})
+          MERGE (bcp)-[:IS_A_REL]->(crm_add)
+          return "done" as result
+      """
+      print(query)
+      results = session.run(query)
+      application_logger.info("Linking BRTHDTC to Start date/time")
     db.close()
     return
 
