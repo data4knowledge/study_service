@@ -149,7 +149,7 @@ def define_codelist_query(domain_uuid):
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(bc_cd:Code)
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(domain)
         MATCH (bcp)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
-        // WITH var.uuid as uuid, var.label as label, var.name as name, var.ordinal as ordinal, c.code as code, c.decode as decode
+        WHERE bcp.name = var.name or bcp.label = var.label
         with distinct var.uuid as uuid, var.label as label, var.name as name, var.ordinal as ordinal, c.code as code, c.decode as decode
         WITH uuid, label, name, ordinal, collect({code:code, decode: decode}) as decodes
         return uuid, label, name, ordinal, decodes
