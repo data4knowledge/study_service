@@ -14,30 +14,10 @@ import json
 import copy
 import traceback
 
-from model.utility.define_queries import define_vlm_query, crm_link_query, _add_missing_links_to_crm_query, study_info_query, domains_query, domain_variables_query, variables_crm_link_query, define_codelist_query, define_test_codes_query, find_ct_query
+from model.utility.define_queries import define_vlm_query, study_info_query, domains_query, domain_variables_query, variables_crm_link_query, define_codelist_query, define_test_codes_query, find_ct_query
 from datetime import datetime
 import xml.etree.ElementTree as ET
 from pathlib import Path
-
-def write_tmp(name, data):
-    from pathlib import Path
-    TMP_PATH = Path('/Users/johannes/Library/CloudStorage/OneDrive-data4knowledge/shared_mac/debug')
-    OUTPUT_FILE = TMP_PATH / name
-    print("Writing file...",OUTPUT_FILE.name,OUTPUT_FILE, end="")
-    o = []
-    for k in data:
-      if k != "properties":
-        o.append(k)
-    if 'properties' in data:
-      for k in data['properties']:
-        for g in k:
-          o.append("properties->"+str(g))
-    with open(OUTPUT_FILE, 'w') as f:
-        for it in o:
-            f.write(str(it))
-            f.write('\n')
-    # print("\n\n------\nNU SAVEAR JAG\n--------")
-    # print(" ...done")
 
 
 class StudyDefine():
@@ -143,7 +123,7 @@ def get_define_vlm(domain_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = define_vlm_query(domain_uuid)
-      print("vlm query"); print(query)
+      # print("vlm query"); print(query)
       results = session.run(query)
       data = [r for r in results.data()]
     db.close()
@@ -275,25 +255,23 @@ def metadata_version(oid = 'Not set', name = 'Not set', description = None):
   metadata.set("def:DefineVersion", "2.1.7")
   return metadata
 
-def get_unique_vars(vars):
-  unique_vars = []
-  for v in vars:
-      if 'bc' in v:
-        v.pop('bc')
-      if 'bc_uuid' in v:
-        v.pop('bc_uuid')
-      if 'decodes' in v:
-        v.pop('decodes')
-      unique_vars.append(v)
-  unique_vars = list({v['var_uuid']:v for v in unique_vars}.values())
-  return unique_vars
+# def get_unique_vars(vars):
+#   unique_vars = []
+#   for v in vars:
+#       if 'bc' in v:
+#         v.pop('bc')
+#       if 'bc_uuid' in v:
+#         v.pop('bc_uuid')
+#       if 'decodes' in v:
+#         v.pop('decodes')
+#       unique_vars.append(v)
+#   unique_vars = list({v['var_uuid']:v for v in unique_vars}.values())
+#   return unique_vars
 
 
 def get_domains_and_variables(uuid):
   domains = []
   raw_domains = get_domains(uuid)
-  raw_domains = [x for x in raw_domains if x['name'] == 'DM']
-  debug = []
   for d in raw_domains:
     item = {}
     for k,v in d._properties.items():
@@ -307,13 +285,7 @@ def get_domains_and_variables(uuid):
       test_codes = get_define_test_codes(d['uuid'])
       item['test_codes'] = test_codes
     vlm_metadata = get_define_vlm(d['uuid'])
-    debug.append("\n----")
-    debug.append(d)
-    print("d getting vlm", d)
     item['vlm'] = vlm_metadata
-    for x in vlm_metadata:
-       debug.append(x)
-    write_tmp('study_define.txt', debug)
 
     item['goc'] = next((x for x,y in DOMAIN_CLASS.items() if d['name'] in y), "Fix")
 
@@ -421,7 +393,7 @@ def item_defs_variable(domains):
           idf.append(description('en',item['label']))
           if d['goc'] in ['FINDINGS','FINDINGS ABOUT']:
             # If variable has vlm
-            if next((x for x in d['vlm'] if x['uuid'] == item['uuid']), None):
+            if next((x for x in d['vlm'] if x['var_uuid'] == item['uuid']), None):
               vl_ref = ET.Element('def:ValueListRef')
               vl_ref.set('ValueListOID', value_list_oid(item))
               idf.append(vl_ref)
@@ -608,7 +580,7 @@ def value_list_defs(domains):
     for d in domains:
         if d['goc'] in ['FINDINGS','FINDINGS ABOUT']:
           for v in d['variables']:
-            vlms  = [x for x in d['vlm'] if x['uuid'] == v['uuid']]
+            vlms  = [x for x in d['vlm'] if x['var_uuid'] == v['uuid']]
             if vlms:
               # NOTE: Make one per test code (VLM)
               vld = ET.Element('def:ValueListDef')
