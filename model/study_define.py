@@ -645,9 +645,19 @@ def where_clause_defs(domains):
 DEFINE_XML = Path.cwd()  / "uploads" / "define.xml"
 
 def main(uuid):
+  # import time
+  # t = time.process_time()
+  # #do some stuff
+  # elapsed_time = time.process_time() - t
+
+  import time
+
+  start = time.time()
   try:
     study_info = get_study_info(uuid)
     domains = get_domains_and_variables(study_info['uuid'])
+    right_now = time.time()
+    print("get_domains_and_variables", right_now - start)
 
     define = {}
     root = ET.Element('ODM')
@@ -726,6 +736,8 @@ def main(uuid):
     for comment in comments:
       metadata.append(comment)
 
+    right_now = time.time()
+    print("def:CommentDef", right_now - start)
 
     # # MethodDef
     # # def:leaf
@@ -734,6 +746,10 @@ def main(uuid):
     # Study <--------
     study.append(metadata)
     root.append(study)
+
+    right_now = time.time()
+    print("root.append(study)", right_now - start)
+    print("generating ODM define")
 
     # Generate ODM define
     tree = ET.ElementTree(root)
@@ -748,6 +764,8 @@ def main(uuid):
          f.write(line)
     with open(DEFINE_XML,'r') as f:
       xml = f.read()
+    right_now = time.time()
+    print("odm define created", right_now - start)
     return xml
 
   except Exception as e:
