@@ -1,17 +1,18 @@
-from typing import List, Union
+# from typing import List, Union
 from uuid import uuid4
 from d4kms_service import Neo4jConnection
-from d4kms_generic import application_logger
-from model.domain import Domain
-from model.variable import Variable
-from service.bc_service import BCService
-from service.sdtm_service import SDTMService
-from model.crm import CRMNode
-from model.biomedical_concept import BiomedicalConceptSimple
+# from d4kms_generic import application_logger
+# from model.domain import Domain
+# from model.variable import Variable
+# from service.bc_service import BCService
+# from service.sdtm_service import SDTMService
+# from model.crm import CRMNode
+# from model.biomedical_concept import BiomedicalConceptSimple
 from service.ct_service import CTService
+from datetime import datetime as dt
 
-import json
-import copy
+# import json
+# import copy
 import traceback
 
 from model.utility.define_queries import define_vlm_query, study_info_query, domains_query, domain_variables_query, variables_crm_link_query, define_codelist_query, define_test_codes_query, find_ct_query
@@ -286,14 +287,7 @@ def get_domains_and_variables(uuid):
       item['test_codes'] = test_codes
     vlm_metadata = get_define_vlm(d['uuid'])
     item['vlm'] = vlm_metadata
-
     item['goc'] = next((x for x,y in DOMAIN_CLASS.items() if d['name'] in y), "Fix")
-
-    print(d['name'],"len(vlm_metadata)", len(vlm_metadata))
-    # unique_vars = get_unique_vars(copy.deepcopy(vlm_metadata))
-    # print(unique_vars)
-
-    # item['variables'] = unique_vars
     item['variables'] = all_variables
     domains.append(item)
 
@@ -645,19 +639,10 @@ def where_clause_defs(domains):
 DEFINE_XML = Path.cwd()  / "uploads" / "define.xml"
 
 def main(uuid):
-  # import time
-  # t = time.process_time()
-  # #do some stuff
-  # elapsed_time = time.process_time() - t
-
-  import time
-
-  start = time.time()
+  print("start:", dt.now())
   try:
     study_info = get_study_info(uuid)
     domains = get_domains_and_variables(study_info['uuid'])
-    right_now = time.time()
-    print("get_domains_and_variables", right_now - start)
 
     define = {}
     root = ET.Element('ODM')
@@ -736,9 +721,6 @@ def main(uuid):
     for comment in comments:
       metadata.append(comment)
 
-    right_now = time.time()
-    print("def:CommentDef", right_now - start)
-
     # # MethodDef
     # # def:leaf
 
@@ -746,10 +728,6 @@ def main(uuid):
     # Study <--------
     study.append(metadata)
     root.append(study)
-
-    right_now = time.time()
-    print("root.append(study)", right_now - start)
-    print("generating ODM define")
 
     # Generate ODM define
     tree = ET.ElementTree(root)
@@ -764,8 +742,7 @@ def main(uuid):
          f.write(line)
     with open(DEFINE_XML,'r') as f:
       xml = f.read()
-    right_now = time.time()
-    print("odm define created", right_now - start)
+    print("end:", dt.now())
     return xml
 
   except Exception as e:
