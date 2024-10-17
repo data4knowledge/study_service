@@ -8,6 +8,7 @@ from service.github_service import GithubService
 from service.aura_service import AuraService
 from service.local_service import LocalService
 from model.utility.raw_data import import_raw_data
+from service.ct_service import CTService
 
 class DataFile(BaseNode):
   uuid: str = ""
@@ -154,6 +155,12 @@ class DataFile(BaseNode):
         return {'status': record['status'], 'percentage': record['percent'], 'stage': record['stage'] }
     return ""
 
+  @classmethod
+  def add_properties_to_ct(cls, uuid):
+    results = cls._add_properties_to_ct(uuid)
+    application_logger.info("Added properties to CT")
+    return results
+
   @staticmethod
   def _create(tx, filename, full_path, uuid):
     query = """
@@ -183,3 +190,39 @@ class DataFile(BaseNode):
     for row in results:
       return DataFile.wrap(row['n'])
     return None
+
+  @staticmethod
+  def _add_properties_to_ct(uuid):
+    ct = CTService()
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[]->(bcp:BiomedicalConceptProperty)-[]->(rc:ResponseCode)-[]->(c:Code)
+        WHERE c.updated is null
+        RETURN DISTINCT c.code as code
+      """ % (uuid)
+      # print("query",query)
+      results = session.run(query)
+      codes_to_update = [it['code'] for it in results.data()]
+      print("CT codes to fix:", len(codes_to_update))
+      items = []
+      count = 0
+      for code in codes_to_update:
+        # print("code",code)
+        response = ct.find_by_identifier(code)
+        first = response[0] if len(response) > 0 else None
+        if first:
+          items.append({'code': code, 'name': first['child']['name'], 'notation': first['child']['notation'], 'pref_label': first['child']['pref_label']})
+      for item in items:
+        query = """
+          MATCH (c:Code {code: '%s'})
+          SET c.pref_label = '%s'
+          SET c.notation = '%s'
+          SET c.updated = True
+          RETURN count(c) as count
+        """ % (item['code'], item['pref_label'], item['notation'])
+        # print("query",query)
+        results = session.run(query)
+        count = count + int(results.data()[0]['count'])
+        print("results.data()", results.data())
+    return {'count': count}
