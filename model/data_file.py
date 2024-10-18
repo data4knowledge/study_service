@@ -227,5 +227,4 @@ class DataFile(BaseNode):
         print("query",query)
         results = session.run(query)
         count = count + int(results.data()[0]['count'])
-        print("results.data()", results.data())
     return {'count': count}
