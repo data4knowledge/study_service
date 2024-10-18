@@ -299,13 +299,13 @@ class StudyDesignBC():
         }
         WITH bc_uuid
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+        where bc.uuid = bc_uuid
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
         MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         // OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
         MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        where bc.uuid = bc_uuid
-        and bcp.name = var.name or bcp.label = var.label
+        where bcp.name = var.name or bcp.label = var.label
         WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
         return "second" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
       """ % (study_design.uuid)
