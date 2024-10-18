@@ -563,14 +563,14 @@ async def create_study_data_file(request: Request, background_tasks: BackgroundT
     background_tasks.add_task(df.execute)
     return df.uuid
   else:
-    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {sf.error}")
+    raise HTTPException(status_code=409, detail=f"Failed to upload the file. {df.error}")
 
-@app.get('/v1/studyDesigns/{uuid}/update_ct', 
+@app.get('/update_ct', 
   summary="Add missing content for CT",
   description="Adds CT content not currently included when loading USDM protocol, e.g. pref_label",
   response_model=dict)
-async def get_study_data_file_status(uuid: str):
-  response = DataFile.add_properties_to_ct(uuid)
+async def get_study_data_file_status(background_tasks: BackgroundTasks):
+  response = DataFile.add_properties_to_ct()
   print("response", response)
   if response:
     return {'status': 'Done ct stuff'}

@@ -156,8 +156,8 @@ class DataFile(BaseNode):
     return ""
 
   @classmethod
-  def add_properties_to_ct(cls, uuid):
-    results = cls._add_properties_to_ct(uuid)
+  def add_properties_to_ct(cls):
+    results = cls._add_properties_to_ct()
     application_logger.info("Added properties to CT")
     return results
 
@@ -192,23 +192,26 @@ class DataFile(BaseNode):
     return None
 
   @staticmethod
-  def _add_properties_to_ct(uuid):
+  def _add_properties_to_ct():
     ct = CTService()
     db = Neo4jConnection()
     with db.session() as session:
       query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[]->(bcp:BiomedicalConceptProperty)-[]->(rc:ResponseCode)-[]->(c:Code)
+        MATCH (sd:StudyDesign {name: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[]->(bcp:BiomedicalConceptProperty)-[]->(rc:ResponseCode)-[]->(c:Code)
         WHERE c.updated is null
         RETURN DISTINCT c.code as code
-      """ % (uuid)
+      """ % ("Study Design 1")
       # print("query",query)
       results = session.run(query)
       codes_to_update = [it['code'] for it in results.data()]
+      if  len(codes_to_update) == 0:
+        print("No need to update:", len(codes_to_update))
+        return {'Message': "No need to update"}
       print("CT codes to fix:", len(codes_to_update))
       items = []
       count = 0
       for code in codes_to_update:
-        # print("code",code)
+        print("code",code)
         response = ct.find_by_identifier(code)
         first = response[0] if len(response) > 0 else None
         if first:
@@ -221,7 +224,7 @@ class DataFile(BaseNode):
           SET c.updated = True
           RETURN count(c) as count
         """ % (item['code'], item['pref_label'], item['notation'])
-        # print("query",query)
+        print("query",query)
         results = session.run(query)
         count = count + int(results.data()[0]['count'])
         print("results.data()", results.data())
