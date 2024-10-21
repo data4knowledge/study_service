@@ -279,7 +279,6 @@ class StudyDesignBC():
       for record in result:
         # results.append(record['bc'].data())
         results.append(record.data())
-        print("record.data()", record.data()['bc_raw_name'])
         # results.append(BiomedicalConceptSimple.wrap(record['bc']))
 
       # Get BCPs with VLM
@@ -315,7 +314,6 @@ class StudyDesignBC():
       for record in result:
         # results.append(record['bc'].data())
         results.append(record.data())
-        print("record.data()", record.data()['bc_raw_name'])
         # results.append(BiomedicalConceptSimple.wrap(record['bc']))
 
 
