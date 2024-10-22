@@ -74,6 +74,8 @@ def define_vlm_query(domain_uuid):
       , var.core as core
       , var.ordinal as ordinal
       , c.code as code
+      , c.notation as notation
+      , c.pref_label as pref_label
       , c.decode as decode
       return 
       domain,
@@ -88,7 +90,7 @@ def define_vlm_query(domain_uuid):
       name,
       core,
       ordinal,
-      collect({code:code, decode:decode}) as decodes
+      collect({code:code, decode:decode, code:code, pref_label:pref_label}) as decodes
     """ % (domain_uuid)
     # limit 100
     # print("vlm query", query)
@@ -150,8 +152,8 @@ def define_codelist_query(domain_uuid):
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(domain)
         MATCH (bcp)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
         WHERE bcp.name = var.name or bcp.label = var.label
-        with distinct var.uuid as uuid, var.label as label, var.name as name, var.ordinal as ordinal, c.code as code, c.decode as decode
-        WITH uuid, label, name, ordinal, collect({code:code, decode: decode}) as decodes
+        with distinct var.uuid as uuid, var.label as label, var.name as name, var.ordinal as ordinal, c.code as code, c.decode as decode, c.notation as notation, c.pref_label as pref_label
+        WITH uuid, label, name, ordinal, collect({code:code, decode: decode, notation: notation, pref_label: pref_label}) as decodes
         return uuid, label, name, ordinal, decodes
     """ % (domain_uuid)
     return query

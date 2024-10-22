@@ -128,6 +128,8 @@ def get_define_vlm(domain_uuid):
       results = session.run(query)
       data = [r for r in results.data()]
     db.close()
+    # for k in data:
+    #    print("def vlm",k)
     return data
 
 def get_define_codelist(domain_uuid):
@@ -138,20 +140,28 @@ def get_define_codelist(domain_uuid):
       results = session.run(query)
       data = [r for r in results.data()]
     db.close()
+    # for k in data:
+    #    print("def codeslist",k)
     return data
 
-def get_concept_info(identifiers):
+def get_concept_info(items):
     data = []
-    for identifier in identifiers:
-      if identifier in define_terms:
-          data.append(define_terms[identifier])
+    for item in items:
+      if item['code'] in define_terms:
+          data.append(define_terms[item['code']])
       else:
-        response = ct.find_by_identifier(identifier)
-        first = response[0] if len(response) > 0 else None
-        if first:
-          cli = {'code': first['child']['identifier'], 'pref_label': first['child']['pref_label'], 'notation': first['child']['notation']}
-          data.append(cli)
-          define_terms[identifier] = cli
+        if 'notation' in item and item['notation'] != None:
+          print("not using ct.find :)")
+          cli = {'code': item['code'], 'pref_label': item['pref_label'], 'notation': item['notation']}        
+          print("cli", cli)
+        else:
+          print("using ct.find :/")
+          response = ct.find_by_identifier(item['code'])
+          first = response[0] if len(response) > 0 else None
+          if first:
+            cli = {'code': first['child']['identifier'], 'pref_label': first['child']['pref_label'], 'notation': first['child']['notation']}
+        data.append(cli)
+        define_terms[item['code']] = cli
     return data
 
 def get_define_test_codes(domain_uuid):
@@ -501,7 +511,13 @@ def codelist_defs(domains):
             print("-- codelist_defs CHECK", item['name'])
           cl.set('DataType', datatype)
           codes = [x['code'] for x in item['decodes']]
-          clis = get_concept_info(codes)
+          # print("--- check decodes")
+          # for c in item['decodes']:
+          #    print("c", c)
+          # print("--- check codes")
+          # for c in codes:
+          #    print("c", c)
+          clis = get_concept_info(item['decodes'])
           for cli in clis:
             # NOTE: Need to care for enumerated item?
             # cl.append(enumerated_item(x['code'], "nci:ExtCodeID",x['decode']))
@@ -537,7 +553,7 @@ def vlm_codelists_defs(domains):
             # cl.append(origin('Collected','Sponsor'))
             codes = [x['code'] for x in item['decodes']]
                
-            clis = get_concept_info(codes)
+            clis = get_concept_info(item['decodes'])
             for cli in clis:
               # NOTE: Need to care for enumerated item?
               # cl.append(enumerated_item(x['code'], "nci:ExtCodeID",x['decode']))

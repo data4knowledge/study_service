@@ -211,7 +211,7 @@ class DataFile(BaseNode):
       items = []
       count = 0
       for code in codes_to_update:
-        print("code",code)
+        print("Updating code",code)
         response = ct.find_by_identifier(code)
         first = response[0] if len(response) > 0 else None
         if first:
@@ -224,7 +224,7 @@ class DataFile(BaseNode):
           SET c.updated = True
           RETURN count(c) as count
         """ % (item['code'], item['pref_label'], item['notation'])
-        print("query",query)
+        # print("query",query)
         results = session.run(query)
         count = count + int(results.data()[0]['count'])
     return {'count': count}
