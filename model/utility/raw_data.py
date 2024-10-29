@@ -108,14 +108,13 @@ def create_enrolment_file(raw_data, OUTPUT_PATH):
     print("\ncreate enrolment file")
     subject_no = set([r['SUBJID'] for r in raw_data])
 
-    # NOTE: Fix so that SUBJID is loaded, not USUBJID
     # Make it look like the previous load file
     subjects = []
     for subjid in subject_no:
         item = {}
         item['STUDY_URI'] = "https://study.d4k.dk/study-cdisc-pilot-lzzt"
         item['SITEID'] = "701"
-        item['USUBJID'] = subjid
+        item['SUBJID'] = subjid
         subjects.append(item)
 
     filename = "enrolment_msg.csv"
@@ -155,7 +154,7 @@ def create_datapoint_file(raw_data, OUTPUT_PATH):
 
         for row in rows:
             item = {}
-            item['USUBJID'] = row['SUBJID']
+            item['SUBJID'] = row['SUBJID']
             fixed_label = row['LABEL'].replace(" ","").replace("-","")
             fixed_variable = row['VARIABLE'].replace(" ","").replace("-","")
             thing = f"{fixed_label}/{fixed_variable}"
