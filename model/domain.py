@@ -308,19 +308,20 @@ class Domain(BaseNode):
       OPTIONAL MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
       OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
       MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-      MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)
+      MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
       MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
-      WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP, tim_ref.decode as tim_ref
-      WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s,apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit, tim_ref
+      WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, site, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP, tim_ref.decode as tim_ref
+      WITH test_code, si,domain, epoch,e_order[0] as e_order,var, bc, dc, d, s, site, apoc.text.join(apoc.coll.remove(keys(TP),apoc.coll.indexOf(keys(TP),'Main Timeline')),',') as timelines, TP, apoc.text.join(vis,',') as visit, tim_ref
       RETURN 
       si.studyIdentifier as STUDYID
       ,domain.name as DOMAIN
-      ,s.identifier as USUBJID
+      ,s.identifier as SUBJID
       ,test_code as test_code
       ,bc.name as test_label
       ,var.name as variable
       ,d.value as value
       ,e_order as VISITNUM
+      ,site.name as SITEID
       ,visit as VISIT
       ,TP['Main Timeline'] as VISITDY
       ,tim_ref as baseline_timing
@@ -328,7 +329,7 @@ class Domain(BaseNode):
       ,TP[timelines] as TPT
       ,epoch[0] as  EPOCH 
       ,bc.uri as uuid
-      order by DOMAIN, USUBJID, VISITNUM, ord ,VISIT, test_code
+      order by DOMAIN, SUBJID, VISITNUM, ord ,VISIT, test_code
     """ % (self.uuid)
       # order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
     return query
