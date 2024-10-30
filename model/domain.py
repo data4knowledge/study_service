@@ -222,7 +222,7 @@ class Domain(BaseNode):
       return
             si.studyIdentifier as STUDYID
             , domain.name as DOMAIN
-            , subj.identifier as USUBJID
+            , subj.identifier as SUBJID
             , c.decode as term
             , bc.name as decod
             , var.name as variable
@@ -564,7 +564,7 @@ class Domain(BaseNode):
       # FIXED: Query is unique for study
       # FIXED: Query is generic. Query uses configuration for exposure BCs and start/end from crm
       query = """
-        MATCH (subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(sd:StudyDesign {uuid: '%s'})
         MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
         WHERE bc.name in %s and crm.sdtm in ['%s']
@@ -576,11 +576,11 @@ class Domain(BaseNode):
         MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)
         MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-        with si, subj, crm, bc, dp, epoch
+        with si, subj, crm, bc, dp, epoch, site
         RETURN
         si.studyIdentifier as STUDYID
         , "DS" as DOMAIN
-        , subj.identifier as USUBJID
+        , site.name + '-' + subj.identifier as USUBJID
         , crm.sdtm as crm
         , bc.name as bc
         , "First Exposure" as term
