@@ -121,7 +121,7 @@ class Domain(BaseNode):
         if '--DTC' in row.keys():
           record[self.name+'DTC'] = row["--DTC"]
         if self.name == "DM":
-          record['SUBJID'] = row["SUBJECT"]
+          record['SUBJID'] = row["SUBJID"]
           record['SITEID'] = row["SITEID"]
           if 'COUNTRY' in row.keys():
             record['COUNTRY'] = row["COUNTRY"] 
@@ -186,7 +186,6 @@ class Domain(BaseNode):
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
       , subj.identifier as SUBJID
-      , right(subj.identifier,4) as SUBJECT
       , var.name as variable
       , dp.value as value
       , site.name as SITEID
