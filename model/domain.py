@@ -192,7 +192,7 @@ class Domain(BaseNode):
       , e.label as VISIT
       , epoch.label as EPOCH
       , country.code as COUNTRY
-      order by SUBJID
+      order by SITEID, SUBJID
     """ % (self.uuid)
     print(query)
     return query
@@ -497,12 +497,8 @@ class Domain(BaseNode):
       variable_name = result["variable"]
       variable_index = [column_names.index(variable_name)][0]
       if not final_results[key][variable_index] == "": # Subject already have a value for variable
-        # print("  variable",variable_name,variable_index)
-        # print("  2.1 has previous value",final_results[key][variable_index])
         if result["value"] != final_results[key][variable_index]:
-          # print("  2.2",result["value"])
           if not variable_name in multiples[key]: # create "multiple"
-            # print("  2.3: variable_name:",variable_name)
             multiples[key][variable_name] = [final_results[key][variable_index]]
             final_results[key][variable_index] = "MULTIPLE"
             if not variable_name in supp_quals:
@@ -511,10 +507,7 @@ class Domain(BaseNode):
           if len(multiples[key][variable_name]) > supp_quals[variable_name]:
             supp_quals[variable_name] = len(multiples[key][variable_name])
       else: # Subject does not have a value for variable
-        # print("  3.1 no previous value",variable_name,"=",result['value'])
         final_results[key][variable_index] = result["value"]
-        # print("  3.9 adding next for SUBJID",final_results[key])
-      # print("[%s] %s -> %s, multiples %s" % (key, result["variable"], final_results[key][variable_index], multiples[key]))
       # Derive --DY
       if result["variable"] == self.name+"DTC":
         ref_date = next((item for item in reference_dates if item["USUBJID"] == result['USUBJID']), None)
