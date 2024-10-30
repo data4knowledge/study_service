@@ -286,7 +286,7 @@ class Domain(BaseNode):
       return
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
-      , subj.identifier as USUBJID
+      , subj.identifier as SUBJID
       , c.decode as trt
       , bc.name as decod
       , var.name as variable
@@ -296,7 +296,7 @@ class Domain(BaseNode):
       , e_order as VISITNUM
       , epoch.label as EPOCH
       , bc.uuid as bc_uuid
-      order by USUBJID, VISIT
+      order by SUBJID, VISIT
     """ % (self.uuid)
     print("intervention query",query)
     return query
