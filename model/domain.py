@@ -242,54 +242,21 @@ class Domain(BaseNode):
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
       MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
       WITH si, domain
-      MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
-      OPTIONAL MATCH (bc)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)
-      MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
-      MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-      MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
-      MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
-      MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
-      MATCH (domain)-[:VARIABLE_REL]->(var:Variable)
-      // MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
-      // MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
-      // MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      // WHERE  var.label = bcp.label
-      WHERE  var.name = bcp.name
-      return
-            si.studyIdentifier as STUDYID
-            , domain.name as DOMAIN
-            , subj.identifier as USUBJID
-            , c.decode as term
-            , bc.name as decod
-            , var.name as variable
-            , dp.value as value
-            , site.name as SITEID
-            // , e.label as VISIT
-            // , epoch.label as EPOCH
-            , bc.uuid as bc_uuid
-    """ % (self.uuid)
-    query = """
-      MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
-      MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
-      WITH si, domain
       MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
       MATCH (bcp)<-[:PROPERTIES_REL]->(dc:DataContract)
       MATCH (dc)<-[:FOR_DC_REL]-(:DataPoint)-[:SOURCE]->(r:Record)
       WITH si, domain, dc, r
-      MATCH (r)<-[:SOURCE]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)
+      MATCH (r)<-[:SOURCE]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj:Subject)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
       MATCH (dp)-[:FOR_DC_REL]->(dc:DataContract)
       MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
       return
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
-      , subj.identifier as USUBJID
+      , subj.identifier as SUBJID
       , r.key as key
       , CASE bcp.name WHEN '--DTC' THEN 'AEDTC' ELSE bcp.name END as variable
       , dp.value as value
-      // , site.name as SITEID
-      // , e.label as VISIT
-      // , epoch.label as EPOCH
+      , site.name as SITEID
       , bc.uuid as bc_uuid
       order by key
     """ % (self.uuid)
