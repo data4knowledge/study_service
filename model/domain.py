@@ -100,7 +100,7 @@ class Domain(BaseNode):
           'value': row["value"], 
           'DOMAIN': row["DOMAIN"], 
           'STUDYID': row["STUDYID"], 
-          'USUBJID': row["USUBJID"],
+          'USUBJID': row["SITEID"]+"-"+row["SUBJID"],
         }
         if 'uuid' in row.keys():
           record['uuid'] = row['uuid']
@@ -185,7 +185,7 @@ class Domain(BaseNode):
       return
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
-      , subj.identifier as USUBJID
+      , subj.identifier as SUBJID
       , right(subj.identifier,4) as SUBJECT
       , var.name as variable
       , dp.value as value
@@ -193,7 +193,7 @@ class Domain(BaseNode):
       , e.label as VISIT
       , epoch.label as EPOCH
       , country.code as COUNTRY
-      order by USUBJID
+      order by SUBJID
     """ % (self.uuid)
     print(query)
     return query
