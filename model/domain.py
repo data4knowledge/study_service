@@ -431,13 +431,13 @@ class Domain(BaseNode):
       # FIX: MAKE QUERY GENERIC USING CONFIGURATION
       # FIX: SHOULD USE REFERENCE START DATE, NOT INFORMED CONSENT
       query = """
-        MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
         WHERE e.label = "Baseline"
         and bcp.name = "--DTC"
-        return distinct s.identifier as USUBJID, dp.value as reference_date
+        return distinct site.name + '-' + s.identifier as USUBJID, dp.value as reference_date
       """ % (self.sd_uuid)
-      # print("reference start date query",query)
+      print("reference start date query",query)
       results = session.run(query)
       return [result.data() for result in results]
 
@@ -450,12 +450,13 @@ class Domain(BaseNode):
       # FIXED: Query is unique for study
       # FIXED: Query uses configuration for exposure BCs and start/end from crm
       query = """
-        MATCH (s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
         MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
         WHERE bc.name in %s and crm.sdtm in ['%s','%s']
-        return s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
+        return site.name + '-' + s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
       """ % (self.sd_uuid, bcs, crm_start, crm_end)
+      print("ex max min", query)
       results = session.run(query)
       return [result.data() for result in results]
 
