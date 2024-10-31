@@ -31,8 +31,6 @@ class StudyForm():
     visits = StudyDesignBC.get_visits(uuid)
     first = next(iter(bcs))
     print(first)
-    # for x in bcs:
-    #   print(x)
     result = {'items': bcs, 'visits': visits, 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 
@@ -40,8 +38,6 @@ class StudyForm():
   def datapoint_form(self, datapoint, page, size, filter):
     self._get_configuration(self)
     bcs = StudyDesignBC.get_datapoint_stuff(datapoint)
-    # for x in bcs:
-    #   print(x)
     result = {'items': bcs, 'visits': [], 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 
@@ -55,9 +51,3 @@ class StudyForm():
       ConfigurationNode.create_default_configuration()
     
     self.configuration = configuration
-    # for parameter in self.configuration:
-    #   print(parameter)
-    # print("self.configuration", self.configuration)
-
-  # def get_bcs(cls):
-  #   print("Getting bcs")
