@@ -865,7 +865,6 @@ class Domain(BaseNode):
             record[index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
 
       variable_index = [column_names.index(result["variable"])][0]
-      print("result['variable']", result['variable'])
       record[variable_index] = result["value"]
       if 'dp_uri' in result and result['variable'] == result_var:
         dp_uri_index = column_names.index('dp_uri')

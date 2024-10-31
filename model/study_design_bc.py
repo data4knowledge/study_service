@@ -36,6 +36,12 @@ class StudyDesignBC():
     return visits
 
   @classmethod
+  def get_datapoint_stuff(cls, dp_uri):
+    # study_design = cls._get_study_design_by_uuid(uuid)
+    data = cls._get_datapoint_stuff(dp_uri)
+    return data
+
+  @classmethod
   def create(cls, name):
     results = {}
     study_design = cls._get_study_design(name)
@@ -340,6 +346,70 @@ class StudyDesignBC():
         results.append(record.data())
         # results.append(BiomedicalConceptSimple.wrap(record['bc']))
       return results
+
+  @staticmethod
+  def _get_datapoint_stuff(dp_uri):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      query = """
+        match (dp:DataPoint {uri:'%s'})
+        match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+        match (dp)-[:FOR_DC_REL]->(dc:DataContract)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        with dp, subj, dc, bcp, bc
+        match (dc)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
+        match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
+        match (dc)-[:INSTANCES_REL]->(sub_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(x:ScheduleTimeline {mainTimeline: 'False'})
+        match (sub_sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(timing:Timing)
+        return bc.uuid as bc_uuid, dc.uri as dc_uri, enc.uuid as enc_uuid, timing.uuid as timing_uuid
+      """ % (dp_uri)
+      print("get_datapoint_stuff query", query)
+      result = session.run(query)
+      data = [x['bc_uuid'] for x in result]
+      print("data", data)
+      bc_uuid = data[0]
+      print("bc_uuid", bc_uuid)
+
+      if not bc_uuid:
+        return {'error': 'Failed to find BC attached to datapoint'}
+
+      # Get bcp without response codes
+      query = """
+        MATCH (bc {uuid:'%s'})-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        WHERE NOT EXISTS { 
+          (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
+        }
+        WITH bc, bcp, cd, crm
+        OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+        OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+        where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+        return "no code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
+      """ % (bc_uuid)
+      print("get_datapoint_vlm1  query", query)
+      result = session.run(query)
+      for record in result:
+        results.append(record.data())
+
+      # Get bcp with response codes
+      query = """
+        MATCH (bc {uuid:'%s'})-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
+        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+        MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+        where bcp.name = var.name or bcp.label = var.label
+        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
+        return "code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
+      """ % (bc_uuid)
+      print("get_datapoint_vlm1  query", query)
+      result = session.run(query)
+      for record in result:
+        results.append(record.data())
+    db.close()
+    return results
     
   @staticmethod
   def _add_property(bc):

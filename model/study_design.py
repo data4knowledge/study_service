@@ -163,6 +163,11 @@ class StudyDesign(NodeNameLabelDesc):
   def study_form(self, page, size, filter):
     return StudyForm.make_form(self.uuid, page, size, filter)
 
+  @staticmethod
+  def datapoint_form(datapoint, page, size, filter):
+    return StudyForm.datapoint_form(datapoint, page, size, filter)
+
+
   def biomedical_concepts_unlinked(self, page, size, filter):
     return StudyDesignBC.unlinked(self.uuid, page, size, filter)
 
