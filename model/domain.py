@@ -92,7 +92,7 @@ class Domain(BaseNode):
         query = self.intervention_query()
       else:
         query = self.findings_query()
-      # print(query)
+      print("sdtm", query)
       rows = session.run(query)
       for row in rows:
         record = { 
@@ -120,6 +120,8 @@ class Domain(BaseNode):
           record['term'] = row["term"]
         if '--DTC' in row.keys():
           record[self.name+'DTC'] = row["--DTC"]
+        if 'dp_uri' in row.keys():
+          record['dp_uri'] = row["dp_uri"]
         if self.name == "DM":
           record['SUBJID'] = row["SUBJID"]
           record['SITEID'] = row["SITEID"]
@@ -188,6 +190,7 @@ class Domain(BaseNode):
       , subj.identifier as SUBJID
       , var.name as variable
       , dp.value as value
+      , dp.uri as dp_uri
       , site.name as SITEID
       , e.label as VISIT
       , epoch.label as EPOCH
@@ -319,6 +322,7 @@ class Domain(BaseNode):
       ,bc.name as test_label
       ,var.name as variable
       ,d.value as value
+      ,d.uri as dp_uri
       ,e_order as VISITNUM
       ,site.name as SITEID
       ,visit as VISIT
@@ -436,7 +440,7 @@ class Domain(BaseNode):
         and bcp.name = "--DTC"
         return distinct site.name + '-' + s.identifier as USUBJID, dp.value as reference_date
       """ % (self.sd_uuid)
-      print("reference start date query",query)
+      # print("reference start date query",query)
       results = session.run(query)
       return [result.data() for result in results]
 
@@ -455,7 +459,7 @@ class Domain(BaseNode):
         WHERE bc.name in %s and crm.sdtm in ['%s','%s']
         return site.name + '-' + s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
       """ % (self.sd_uuid, bcs, crm_start, crm_end)
-      print("ex max min", query)
+      # print("ex max min", query)
       results = session.run(query)
       return [result.data() for result in results]
 
@@ -804,11 +808,12 @@ class Domain(BaseNode):
     # topic = self.topic()
     topic = self.name+"TESTCD"
     topic_label = self.name+"TEST"
+    result_var = self.name+"ORRES"
     seq_var = self.name+"SEQ"
     baseline_var = self.name+"BLFL"
     column_names = self.variable_list()
     column_names = [c for c in column_names if not c in ['VSCAT','VSSCAT','VSSTAT','VSREASND','VSLAT']]
-    # print('column_names',column_names)
+    column_names.append('dp_uri')
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
 
@@ -860,7 +865,11 @@ class Domain(BaseNode):
             record[index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
 
       variable_index = [column_names.index(result["variable"])][0]
+      print("result['variable']", result['variable'])
       record[variable_index] = result["value"]
+      if 'dp_uri' in result and result['variable'] == result_var:
+        dp_uri_index = column_names.index('dp_uri')
+        record[dp_uri_index] = result["dp_uri"]
     self.add_seq(final_results, column_names.index(seq_var), column_names.index("USUBJID"))
     df = pd.DataFrame(columns=column_names)
     for key, result in final_results.items():
