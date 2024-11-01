@@ -352,85 +352,62 @@ class StudyDesignBC():
     db = Neo4jConnection()
     with db.session() as session:
       results = []
+      # Get bcp when on sub-timeline
       query = """
         match (dp:DataPoint {uri:'%s'})
         match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
-        match (dp)-[:FOR_DC_REL]->(dc:DataContract)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
-        with dp, subj, dc, bcp, bc
-        match (dc)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
+        match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+        with dc0, bc, subj, cd
+        match (dc0)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
         match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
-        match (dc)-[:INSTANCES_REL]->(sub_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(x:ScheduleTimeline {mainTimeline: 'False'})
+        match (dc0)-[:INSTANCES_REL]->(sub_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(x:ScheduleTimeline {mainTimeline: 'False'})
         match (sub_sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(timing:Timing)
-        return bc.uuid as bc_uuid, dc.uri as dc_uri, enc.uuid as enc_uuid, timing.uuid as timing_uuid
+        match (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc)
+        match (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
+        match (dc)-[:INSTANCES_REL]->(main_sai)
+        match (dc)-[:INSTANCES_REL]->(sub_sai)
+        optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
+        OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+        OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+        where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+        WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+        return "sub" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, data_type, collect(value) as values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (dp_uri)
-      print("get_datapoint_stuff query", query)
-      result = session.run(query)
-      data = [x['bc_uuid'] for x in result]
-      print("data", data)
-      bc_uuid = data[0]
-      print("bc_uuid", bc_uuid)
-
-      if not bc_uuid:
-        return {'error': 'Failed to find BC attached to datapoint'}
-
-      # Get bcp without response codes
-      query = """
-        match (dp:DataPoint {uri:'%s'})
-        match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
-        match (dp)-[:FOR_DC_REL]->(dc:DataContract)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
-        with dc, bc, subj, cd
-        match (dc)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
-        match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
-        match (dc)-[:INSTANCES_REL]->(sub_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(x:ScheduleTimeline {mainTimeline: 'False'})
-        match (sub_sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(timing:Timing)
-        match (bc)-[:PROPERTIES_REL]->(bcp2:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc2)
-        match (bcp2)-[:IS_A_REL]->(crm:CRMNode)
-        match (dc2)-[:INSTANCES_REL]->(main_sai)
-        match (dc2)-[:INSTANCES_REL]->(sub_sai)
-        optional match (dc2)<-[:FOR_DC_REL]-(dp2:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
-        return bc.name as bc_raw_name, cd.decode as bc_name, bcp2.name as name, crm.datatype as data_type, collect(dp2.value) as values, [] as sdtm
-      """ % (dp_uri)
-      print("get_datapoint_vlm1  query", query)
+      # print("get_datapoint sub-timeline  query", query)
       result = session.run(query)
       for record in result:
         results.append(record.data())
 
-      # # Get bcp without response codes
-      # query = """
-      #   MATCH (bc {uuid:'%s'})-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
-      #   MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:PROPERTIES_REL]
-      #   MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-      #   WHERE NOT EXISTS { 
-      #     (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
-      #   }
-      #   WITH bc, bcp, cd, crm
-      #   OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
-      #   OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-      #   where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
-      #   WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
-      #   return "no code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
-      # """ % (bc_uuid)
-      # print("get_datapoint_vlm1  query", query)
-      # result = session.run(query)
-      # for record in result:
-      #   results.append(record.data())
+      # Result will be empty, if it is not on sub-timeline. Try main-timeline
+      if not results:
+        # Get bcp when on main-timeline
+        query = """
+          match (dp:DataPoint {uri:'%s'})
+          match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+          match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+          with dc0, bc, subj, cd
+          match (dc0)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
+          match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
+          match (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc)
+          match (bcp)-[:IS_A_REL]->(crm:CRMNode)
+          optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
+          match (dc)-[:INSTANCES_REL]->(main_sai)
+          optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
+          OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+          OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+          where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+          WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+          return "main" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, data_type, collect(value) as values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
+        """ % (dp_uri)
+        # print("get_datapoint main-timeline  query", query)
+        result = session.run(query)
+        for record in result:
+          results.append(record.data())
 
-      # # Get bcp with response codes
-      # query = """
-      #   MATCH (bc {uuid:'%s'})-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
-      #   MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
-      #   MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-      #   MATCH (d:Domain)-[:USING_BC_REL]->(bc)
-      #   MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-      #   where bcp.name = var.name or bcp.label = var.label
-      #   WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
-      #   return "code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
-      # """ % (bc_uuid)
-      # print("get_datapoint_vlm1  query", query)
-      # result = session.run(query)
-      # for record in result:
-      #   results.append(record.data())
     db.close()
+    if not results:
+      return {'error': 'Failed to find BC attached to datapoint'}
     return results
     
   @staticmethod
@@ -535,6 +512,7 @@ class StudyDesignBC():
           # print("query",query)
           results = session.run(query)
           print("Created link between BC and BCP",[result.data() for result in results])
+    db.close()
     return bcp_uuids
       
   @staticmethod
@@ -549,8 +527,8 @@ class StudyDesignBC():
       """ % (copy_bc_name, bc_uuid)
       # print(query)
       results = session.run(query)
-      for result in results:
-        print("result",result.data())
+      # for result in results:
+      #   print("result",result.data())
       print("Created link to Study Design")
 
       # Copy relationship to domain
@@ -588,6 +566,7 @@ class StudyDesignBC():
       """
       # print(query)
       results = session.run(query)
+    db.close()
 
 
   @staticmethod
@@ -648,6 +627,7 @@ class StudyDesignBC():
         else:
           application_logger.info(f"Info: Failed to create link to CRM for {var}")
           print("query",query)
+    db.close()
 
   # Names/Labels of BC properties inconsistent
   # NOTE: This is a workaround
@@ -672,6 +652,7 @@ class StudyDesignBC():
         else:
           application_logger.info(f"Info: Failed to add alt_sdtm_name to bc property {bcp} ({alt_sdtm_name})")
           print("query",query)
+    db.close()
     return
 
   # Add missing terminology
@@ -794,3 +775,4 @@ class StudyDesignBC():
           for row in result:
             p_uuid = [r['uuid'] for r in result]
           application_logger.info(f"Added AE property '{p['name']}' {p_uuid}")
+    db.close()
