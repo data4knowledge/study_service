@@ -269,15 +269,16 @@ class StudyDesignBC():
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
         WHERE NOT EXISTS { 
           (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
         }
-        WITH bc, bcp, cd, crm
+        WITH bc, bcp, cd, crm, dec
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
         where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
-        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
-        return "no code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
+        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, dec.question_text as question_text, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+        return "no code" as from, bc_raw_name, bc_name, name, question_text, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (study_design.uuid)
         # return from, bc_raw_name, bc_name, name, data_type, sdtm, terms
       print("bc-prop query", query)
@@ -307,12 +308,13 @@ class StudyDesignBC():
         where bc.uuid = bc_uuid
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+        optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
         MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         // OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
         MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
         where bcp.name = var.name or bcp.label = var.label
-        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
-        return "second" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
+        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, dec.question_text as question_text, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
+        return "second" as from, bc_raw_name, bc_name, name, question_text, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
       """ % (study_design.uuid)
         # return from, bc_raw_name, bc_name, name, data_type, sdtm, terms
       print("bc-vlm query", query)
