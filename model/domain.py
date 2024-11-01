@@ -298,7 +298,7 @@ class Domain(BaseNode):
       , e_order as VISITNUM
       , epoch.label as EPOCH
       , bc.uuid as bc_uuid
-      order by SUBJID, VISIT
+      order by SITEID, SUBJID, VISIT
     """ % (self.uuid)
     print("intervention query",query)
     return query
@@ -332,9 +332,8 @@ class Domain(BaseNode):
       ,TP[timelines] as TPT
       ,epoch[0] as  EPOCH 
       ,bc.uri as uuid
-      order by DOMAIN, SUBJID, VISITNUM, ord ,VISIT, test_code
+      order by SITEID, SUBJID, VISITNUM, ord ,VISIT, test_code
     """ % (self.uuid)
-      # order by DOMAIN, USUBJID, test_code, e_order,ord ,VISIT, TPT
     return query
 
   def convert_str_datetime(self, date_time_str):
