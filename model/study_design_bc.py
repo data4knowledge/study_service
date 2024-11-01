@@ -375,39 +375,61 @@ class StudyDesignBC():
 
       # Get bcp without response codes
       query = """
-        MATCH (bc {uuid:'%s'})-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
-        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
-        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-        WHERE NOT EXISTS { 
-          (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
-        }
-        WITH bc, bcp, cd, crm
-        OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
-        OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
-        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
-        return "no code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
-      """ % (bc_uuid)
+        match (dp:DataPoint {uri:'%s'})
+        match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+        match (dp)-[:FOR_DC_REL]->(dc:DataContract)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+        with dc, bc, subj, cd
+        match (dc)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
+        match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
+        match (dc)-[:INSTANCES_REL]->(sub_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(x:ScheduleTimeline {mainTimeline: 'False'})
+        match (sub_sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(timing:Timing)
+        match (bc)-[:PROPERTIES_REL]->(bcp2:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc2)
+        match (bcp2)-[:IS_A_REL]->(crm:CRMNode)
+        match (dc2)-[:INSTANCES_REL]->(main_sai)
+        match (dc2)-[:INSTANCES_REL]->(sub_sai)
+        optional match (dc2)<-[:FOR_DC_REL]-(dp2:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
+        return bc.name as bc_raw_name, cd.decode as bc_name, bcp2.name as name, crm.datatype as data_type, collect(dp2.value) as values, [] as sdtm
+      """ % (dp_uri)
       print("get_datapoint_vlm1  query", query)
       result = session.run(query)
       for record in result:
         results.append(record.data())
 
-      # Get bcp with response codes
-      query = """
-        MATCH (bc {uuid:'%s'})-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
-        MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
-        MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-        MATCH (d:Domain)-[:USING_BC_REL]->(bc)
-        MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        where bcp.name = var.name or bcp.label = var.label
-        WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
-        return "code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
-      """ % (bc_uuid)
-      print("get_datapoint_vlm1  query", query)
-      result = session.run(query)
-      for record in result:
-        results.append(record.data())
+      # # Get bcp without response codes
+      # query = """
+      #   MATCH (bc {uuid:'%s'})-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+      #   MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:PROPERTIES_REL]
+      #   MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+      #   WHERE NOT EXISTS { 
+      #     (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
+      #   }
+      #   WITH bc, bcp, cd, crm
+      #   OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+      #   OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+      #   where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+      #   WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+      #   return "no code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
+      # """ % (bc_uuid)
+      # print("get_datapoint_vlm1  query", query)
+      # result = session.run(query)
+      # for record in result:
+      #   results.append(record.data())
+
+      # # Get bcp with response codes
+      # query = """
+      #   MATCH (bc {uuid:'%s'})-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+      #   MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
+      #   MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
+      #   MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+      #   MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+      #   where bcp.name = var.name or bcp.label = var.label
+      #   WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, c.code as code, c.decode as pref_label, c.decode as notation
+      #   return "code" as from, bc_raw_name, bc_name, name, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
+      # """ % (bc_uuid)
+      # print("get_datapoint_vlm1  query", query)
+      # result = session.run(query)
+      # for record in result:
+      #   results.append(record.data())
     db.close()
     return results
     
