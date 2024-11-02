@@ -542,12 +542,10 @@ async def get_study_bc_forms(uuid: str, page: int=0, size: int=0, filter: str=""
   description="Provides the forms from BCs for a given study design.",
   response_model=dict)
 async def datapoint_form(datapoint: str, page: int=0, size: int=0, filter: str=""):
-  print("latjar i study service")
-  # study_design = StudyDesign.find(uuid)
   if datapoint:
     return StudyDesign.datapoint_form(datapoint, page, size, filter)
   else:
-    raise HTTPException(status_code=404, detail="Datapoint not found sent")
+    raise HTTPException(status_code=404, detail="No datapoint provided with api call")
 
 @app.get("/v1/studyDesigns/{uuid}/subjectData", 
   summary="Get the subject data for a study design",
