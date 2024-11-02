@@ -167,6 +167,7 @@ class Domain(BaseNode):
 
   def dm_query(self):
     # FIX: REMOVE HARD CODING OF ELI LILLY
+    # Removed "or bcp.name = crm.sdtm" from query. Only to get DMDTC which is not needed
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
@@ -183,7 +184,7 @@ class Domain(BaseNode):
       MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
       MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
       MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      WHERE  var.label = bcp.label or bcp.name = crm.sdtm or bcp.alt_sdtm_name = var.name
+      WHERE  var.label = bcp.label or bcp.alt_sdtm_name = var.name
       return
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
@@ -456,19 +457,32 @@ class Domain(BaseNode):
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
         MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
         WHERE bc.name in %s and crm.sdtm in ['%s','%s']
-        return site.name + '-' + s.identifier as identifier, min(dp.value) as min, max(dp.value) as max
+        WITH site.name + '-' + s.identifier as identifier, apoc.agg.minItems(dp, dp.value) as minData, apoc.agg.maxItems(dp, dp.value) as maxData
+        WITH identifier, {value: minData.value, uri: minData.items[0].uri} as min, {value: maxData.value, uri: maxData.items[0].uri} as max
+        return identifier, min, max
       """ % (self.sd_uuid, bcs, crm_start, crm_end)
-      # print("ex max min", query)
+      print("ex max min", query)
       results = session.run(query)
       return [result.data() for result in results]
+
+  @staticmethod
+  def create_uri_var(variable):
+    return 'dp_uri_'+variable
 
   def construct_dm_dataframe(self, results):
     multiples = {}
     supp_quals = {}
     column_names = self.variable_list()
+    variables_with_uri = list(set([x['variable'] for x in results]))
+    for x in variables_with_uri:
+      column_names.append(self.create_uri_var(x))
+      print("variable x", x)
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
     dose_dates = self.get_exposure_max_min_dates()
+    column_names.append('dp_uri_RFXSTDTC')
+    column_names.append('dp_uri_RFXENDTC')
+
     # Check if age can be derived
     if all(key in column_names for key in ('RFICDTC','BRTHDTC')):
       derive_age = True
@@ -494,10 +508,18 @@ class Domain(BaseNode):
         if "RFXSTDTC" in column_names and "RFXENDTC" in column_names :
           dose_start_end = next((item for item in dose_dates if item["identifier"] == result['USUBJID']), None)
           if dose_start_end:
-            final_results[key][column_names.index("RFXSTDTC")] = dose_start_end['min']
-            final_results[key][column_names.index("RFXENDTC")] = dose_start_end['max']
+            final_results[key][column_names.index("RFXSTDTC")] = dose_start_end['min']['value']
+            final_results[key][column_names.index("dp_uri_RFXSTDTC")] = dose_start_end['min']['uri']
+            final_results[key][column_names.index("RFXENDTC")] = dose_start_end['max']['value']
+            final_results[key][column_names.index("dp_uri_RFXENDTC")] = dose_start_end['max']['uri']
+
 
       variable_name = result["variable"]
+      if 'dp_uri' in result:
+        uri_var = self.create_uri_var(result['variable'])
+        final_results[key][column_names.index(uri_var)] = result['dp_uri']
+        # print("has uri variable_name", variable_name)
+
       variable_index = [column_names.index(variable_name)][0]
       if not final_results[key][variable_index] == "": # Subject already have a value for variable
         if result["value"] != final_results[key][variable_index]:
