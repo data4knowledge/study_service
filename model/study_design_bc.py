@@ -381,7 +381,7 @@ class StudyDesignBC():
       for record in result:
         results.append(record.data())
 
-      # Result will be empty, if it is not on sub-timeline. Try main-timeline
+      # Result will be empty if it is not on sub-timeline. Get from main-timeline
       if not results:
         # Get bcp when on main-timeline
         query = """
@@ -406,6 +406,9 @@ class StudyDesignBC():
         result = session.run(query)
         for record in result:
           results.append(record.data())
+
+    for record in results:
+      record['values'] = list(set(record['values']))
 
     db.close()
     if not results:
@@ -588,7 +591,7 @@ class StudyDesignBC():
        ,'DSTERM' :'https://crm.d4k.dk/dataset/observation/observation_result/result/quantity/value'
        ,'VSPOS'  :'https://crm.d4k.dk/dataset/observation/position/coding/code'
        ,'VSLOC'  :'https://crm.d4k.dk/dataset/common/location/coding/code'
-       ,'DMDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
+      #  ,'DMDTC'  :'https://crm.d4k.dk/dataset/common/date_time/date_time/value'
        ,'EXDOSFRQ': 'https://crm.d4k.dk/dataset/therapeutic_intervention/frequency/coding/code'
        ,'EXROUTE': 'https://crm.d4k.dk/dataset/therapeutic_intervention/route/coding/code'
        ,'EXTRT': 'https://crm.d4k.dk/dataset/therapeutic_intervention/description/coding/code'
