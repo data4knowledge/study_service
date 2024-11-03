@@ -373,8 +373,8 @@ class StudyDesignBC():
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
         where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
-        WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
-        return "sub" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, data_type, collect(value) as values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
+        WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+        return "sub" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, data_type, collect(value) as values, collect(dp_uri) as dp_uris, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (dp_uri)
       # print("get_datapoint sub-timeline  query", query)
       result = session.run(query)
@@ -399,8 +399,8 @@ class StudyDesignBC():
           OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
           OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
           where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
-          WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
-          return "main" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, data_type, collect(value) as values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
+          WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+          return "main" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, data_type, collect(value) as values, collect(dp_uri) as dp_uris, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
         """ % (dp_uri)
         # print("get_datapoint main-timeline  query", query)
         result = session.run(query)
