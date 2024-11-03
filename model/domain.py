@@ -179,7 +179,8 @@ class Domain(BaseNode):
       MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
       MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
       MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
-      OPTIONAL MATCH (site)<-[:MANAGES_REL]-(:ResearchOrganization)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country:Code)
+      OPTIONAL MATCH (site)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country1:Code)
+      OPTIONAL MATCH (site)<-[:MANAGES_REL]-(:ResearchOrganization)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country2:Code)
       MATCH (domain)-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm)
       MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
       MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
@@ -195,7 +196,7 @@ class Domain(BaseNode):
       , site.name as SITEID
       , e.label as VISIT
       , epoch.label as EPOCH
-      , country.code as COUNTRY
+      , coalesce(country1.code, country2.code) as COUNTRY
       order by SITEID, SUBJID
     """ % (self.uuid)
     print(query)
