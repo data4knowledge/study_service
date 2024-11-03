@@ -269,11 +269,11 @@ class StudyDesignBC():
         MATCH (bc)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
         MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
         MATCH (bcp)-[:IS_A_REL]->(crm:CRMNode)
-        optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
         WHERE NOT EXISTS { 
           (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(:Code)
         }
-        WITH bc, bcp, cd, crm, dec
+        WITH bc, bcp, cd, crm
+        optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
         where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
