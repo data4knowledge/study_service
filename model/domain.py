@@ -506,6 +506,7 @@ class Domain(BaseNode):
 
   def construct_dm_dataframe(self, results):
     multiples = {}
+    multiples_uri = {}
     supp_quals = {}
     column_names = self.variable_list()
     variables_with_uri = list(set([x['variable'] for x in results]))
@@ -552,22 +553,32 @@ class Domain(BaseNode):
       variable_name = result["variable"]
       if 'dp_uri' in result:
         uri_var = self.create_uri_var(result['variable'])
-        final_results[key][column_names.index(uri_var)] = result['dp_uri']
-        # print("has uri variable_name", variable_name)
+        uri_index = column_names.index(uri_var)
+
 
       variable_index = [column_names.index(variable_name)][0]
       if not final_results[key][variable_index] == "": # Subject already have a value for variable
-        if result["value"] != final_results[key][variable_index]:
+        if result["value"] != final_results[key][variable_index]: # Is it the same value? Skip
           if not variable_name in multiples[key]: # create "multiple"
             multiples[key][variable_name] = [final_results[key][variable_index]]
+            print("sdfsdf")
+            multiples_uri[key][variable_name] = [final_results[key][uri_index]]
             final_results[key][variable_index] = "MULTIPLE"
+            print("supp_quals", supp_quals)
             if not variable_name in supp_quals:
               supp_quals[variable_name] = 1
+              print("adding supp_quals", supp_quals)
           multiples[key][variable_name].append(result["value"])
+          multiples_uri[key][variable_name].append(result['dp_uri'])
           if len(multiples[key][variable_name]) > supp_quals[variable_name]:
             supp_quals[variable_name] = len(multiples[key][variable_name])
+
       else: # Subject does not have a value for variable
         final_results[key][variable_index] = result["value"]
+        if 'dp_uri' in result:
+          uri_var = self.create_uri_var(result['variable'])
+          final_results[key][column_names.index(uri_var)] = result['dp_uri']
+          # print("has uri variable_name", variable_name)
       # Derive --DY
       if result["variable"] == self.name+"DTC":
         ref_date = next((item for item in reference_dates if item["USUBJID"] == result['USUBJID']), None)
@@ -576,6 +587,27 @@ class Domain(BaseNode):
             index_dy = [column_names.index(self.name+'DY')][0]
             final_results[key][index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
 
+    print("supp_quals", supp_quals)
+    print("multiples", multiples)
+
+    # for subject, item in multiples.items():
+    #   if item.values():
+    #     print("x", subject)
+    #     for k, v in item.items():
+    #       print("k", k)
+    #       for i, value in enumerate(v):
+    #         name = "%s%s" % (k, i+1)
+    #         column_names.append(name)
+    #         final_results[subject].append("")
+    #         print("name", name)
+    #         final_results[subject][column_names.index(name)] = value
+    #         print("value", value)
+
+    # print("column_names", column_names)
+    # for x, y in final_results.items():
+    #   print("x", x, y)
+    #   print("x", x, y)
+
     for supp_name, count in supp_quals.items():
       # print("Count: ", count)
       for i in range(1, count + 1):
@@ -583,6 +615,23 @@ class Domain(BaseNode):
         column_names.append(name)
         # print("Index: ", column_names.index(name))
         for subject, items in multiples.items():
+          final_results[subject].append("")
+          if supp_name in items:
+            # print("I: ", i)
+            # print("Items: ", items[supp_name])
+            if i <= len(items[supp_name]):
+              final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
+              #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
+
+    for supp_name, count in supp_quals.items():
+      print("Count: ", supp_name, count)
+      for i in range(1, count + 1):
+        name = "%s%s" % (supp_name, i)
+        uri_var = self.create_uri_var(name)
+        column_names.append(uri_var)
+        # print("Index: ", column_names.index(name))
+        for subject, items in multiples_uri.items():
+          print("--", subject, items)
           final_results[subject].append("")
           if supp_name in items:
             # print("I: ", i)
@@ -600,7 +649,7 @@ class Domain(BaseNode):
         # vars[index_age] = derive_age(vars[index_rficdtc],vars[index_brthdtc])
 
     df = pd.DataFrame(columns=column_names)
-    # print(df.head())
+    print(df.head())
     for subject, result in final_results.items():
       df.loc[len(df.index)] = result
     # print(df.head())
