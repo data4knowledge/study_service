@@ -449,22 +449,56 @@ class Domain(BaseNode):
     bcs = self.configuration.study_product_bcs
     crm_start = self.configuration.crm_start
     crm_end = self.configuration.crm_end
+    data = []
     db = Neo4jConnection()
     with db.session() as session:
       # FIXED: Query is unique for study
       # FIXED: Query uses configuration for exposure BCs and start/end from crm
+      # NOTE: Fix just because SDTM makes things complicated: Splitting up in two questions so that I always get the start and end datapoint (if EXSTDTC = EXENDTC it might be any of them)
+      # query = """
+      #   MATCH (site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+      #   MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
+      #   MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
+      #   WHERE bc.name in %s and crm.sdtm in ['%s','%s']
+      #   WITH site.name + '-' + s.identifier as identifier, apoc.agg.minItems(dp, dp.value) as minData, apoc.agg.maxItems(dp, dp.value) as maxData
+      #   WITH identifier, {value: minData.value, uri: minData.items[0].uri} as min, {value: maxData.value, uri: maxData.items[0].uri} as max
+      #   return identifier, min, max
+      # """ % (self.sd_uuid, bcs, crm_start, crm_end)
+      # print("ex min", query)
+      # results = session.run(query)
       query = """
         MATCH (site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
         MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
         MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
-        WHERE bc.name in %s and crm.sdtm in ['%s','%s']
-        WITH site.name + '-' + s.identifier as identifier, apoc.agg.minItems(dp, dp.value) as minData, apoc.agg.maxItems(dp, dp.value) as maxData
-        WITH identifier, {value: minData.value, uri: minData.items[0].uri} as min, {value: maxData.value, uri: maxData.items[0].uri} as max
-        return identifier, min, max
-      """ % (self.sd_uuid, bcs, crm_start, crm_end)
-      print("ex max min", query)
+        WHERE bc.name in %s and crm.sdtm = '%s'
+        WITH site.name + '-' + s.identifier as identifier, apoc.agg.minItems(dp, dp.value) as minData
+        WITH identifier, {value: minData.value, uri: minData.items[0].uri} as min
+        return identifier, min
+      """ % (self.sd_uuid, bcs, crm_start)
+      # print("ex min", query)
       results = session.run(query)
-      return [result.data() for result in results]
+      min_data = [result.data() for result in results]
+      query = """
+        MATCH (site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(s:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)<-[:BIOMEDICAL_CONCEPTS_REL]-(:StudyDesign {uuid: '%s'})
+        MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
+        WHERE bc.name in %s and crm.sdtm = '%s'
+        WITH site.name + '-' + s.identifier as identifier, apoc.agg.minItems(dp, dp.value) as minData, apoc.agg.maxItems(dp, dp.value) as maxData
+        WITH identifier, {value: maxData.value, uri: maxData.items[0].uri} as max
+        return identifier, max
+      """ % (self.sd_uuid, bcs, crm_end)
+      # print("ex max", query)
+      results = session.run(query)
+      max_data = [result.data() for result in results]
+      for item in min_data:
+        min_max = {}
+        min_max['identifier'] = item['identifier']
+        min_max['min'] = item['min']
+        max = next((x['max'] for x in max_data if x['identifier'] == item['identifier']), None)
+        min_max['max'] = max
+        data.append(min_max)
+    db.close()
+    return data
 
   @staticmethod
   def create_uri_var(variable):
