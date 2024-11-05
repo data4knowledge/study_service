@@ -402,7 +402,7 @@ return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
         // return bc_name, collect({label:label, visit:visit, description:description, visitnum:visitnum}) as visits
         return bc_name, collect(label) as visits
       """ % (uuid)
-      print("get-visits query", query)
+      # print("get-visits query", query)
       result = session.run(query)
       for record in result:
         # results.append(record['bc'].data())

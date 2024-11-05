@@ -151,9 +151,9 @@ def get_concept_info(items):
           data.append(define_terms[item['code']])
       else:
         if 'notation' in item and item['notation'] != None:
-          print("not using ct.find :)")
+          # print("not using ct.find :)")
           cli = {'code': item['code'], 'pref_label': item['pref_label'], 'notation': item['notation']}        
-          print("cli", cli)
+          # print("cli", cli)
         else:
           print("using ct.find :/")
           response = ct.find_by_identifier(item['code'])
