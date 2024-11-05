@@ -23,4 +23,4 @@ primary_region = "ams"
 [[vm]]
   cpu_kind = "performance"
   cpus = 2
-  memory_mb = '4gb'
+  memory = "4gb"
