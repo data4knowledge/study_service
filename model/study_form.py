@@ -38,7 +38,8 @@ class StudyForm():
   def datapoint_form(self, datapoint, page, size, filter):
     self._get_configuration(self)
     bcs = StudyDesignBC.get_datapoint_stuff(datapoint)
-    result = {'items': bcs, 'source_datapoint': datapoint, 'visits': [], 'page': page, 'size': size, 'filter': filter, 'count': 1 }
+    valid_values = StudyDesignBC.get_datapoint_valid_values(datapoint)
+    result = {'items': bcs, 'source_datapoint': datapoint, 'valid_values': valid_values, 'visits': [], 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 
 

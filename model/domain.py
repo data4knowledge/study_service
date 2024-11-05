@@ -556,7 +556,6 @@ class Domain(BaseNode):
       if 'dp_uri' in result:
         uri_var = self.create_uri_var(result['variable'])
         uri_index = [column_names.index(uri_var)][0]
-        print("has uri variable_name", uri_var, uri_index)
 
       if not final_results[key][variable_index] == "": # Subject already have a value for variable
         if result["value"] != final_results[key][variable_index]:
@@ -574,7 +573,6 @@ class Domain(BaseNode):
       else: # Subject does not have a value for variable
         final_results[key][variable_index] = result["value"]
         final_results[key][column_names.index(uri_var)] = result['dp_uri']
-        print("have set initial value", final_results[key][column_names.index(uri_var)])
 
       # Derive --DY
       if result["variable"] == self.name+"DTC":

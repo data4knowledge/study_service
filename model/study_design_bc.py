@@ -42,6 +42,11 @@ class StudyDesignBC():
     return data
 
   @classmethod
+  def get_datapoint_valid_values(cls, dp_uri):
+    valid_values = cls._get_bc_properties(dp_uri)
+    return valid_values
+
+  @classmethod
   def create(cls, name):
     results = {}
     study_design = cls._get_study_design(name)
@@ -281,7 +286,7 @@ class StudyDesignBC():
         return "no code" as from, bc_raw_name, bc_name, name, question_text, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (study_design.uuid)
         # return from, bc_raw_name, bc_name, name, data_type, sdtm, terms
-      print("bc-prop query", query)
+      # print("bc-prop query", query)
       result = session.run(query)
       for record in result:
         # results.append(record['bc'].data())
@@ -317,16 +322,72 @@ class StudyDesignBC():
         return "second" as from, bc_raw_name, bc_name, name, question_text, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, collect({code:code,pref_label:pref_label,notation:notation}) as terms
       """ % (study_design.uuid)
         # return from, bc_raw_name, bc_name, name, data_type, sdtm, terms
-      print("bc-vlm query", query)
+      # print("bc-vlm query", query)
       result = session.run(query)
       for record in result:
         # results.append(record['bc'].data())
         results.append(record.data())
         # results.append(BiomedicalConceptSimple.wrap(record['bc']))
 
+    db.close()
+    return results
+
+  @staticmethod
+  def _get_bc_properties(datapoint):
+    db = Neo4jConnection()
+    with db.session() as session:
+      # results = []
+      results = {}
+      # Get BCPs without VLM
+      # query = """
+      #   match (dp:DataPoint {uri:'%s'})
+      #   match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+      #   match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+      #   with dc0, bc, subj, cd
+      #   match (dc0)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
+      #   match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
+      #   match (dc0)-[:INSTANCES_REL]->(sub_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(x:ScheduleTimeline {mainTimeline: 'False'})
+      #   match (sub_sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(timing:Timing)
+      #   match (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc)
+      #   match (bcp)-[:IS_A_REL]->(crm:CRMNode)
+      #   optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
+      #   match (dc)-[:INSTANCES_REL]->(main_sai)
+      #   match (dc)-[:INSTANCES_REL]->(sub_sai)
+      #   optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
+      #   OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+      #   OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+      #   where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+      #   WITH distinct subj.identifier as subj_id, enc.label as visit, timing.value as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+      #   return "sub" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
+      # """ % (datapoint)
+      # print("get_bc valid sub-timeline  query", query)
+      # result = session.run(query)
+      # for record in result:
+      #   results.append(record.data())
 
 
-      return results
+      # Get BCPs with VLM
+      query = """
+          match (dp:DataPoint {uri:'%s'})
+match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+with dc0, bc, cd
+match (dc0)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
+match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
+match (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc)
+MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
+match (bcp)-[:IS_A_REL]->(crm:CRMNode)
+match (dc)-[:INSTANCES_REL]->(main_sai)
+WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, c.code as code, c.pref_label as pref_label, c.notation as notation
+return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
+        """ % (datapoint)
+      print("get_bc valid main-timeline  query", query)
+      result = session.run(query)
+      for record in result:
+        # results.append(record.data())
+        results[record['name']] = record['terms']
+    db.close()
+    return results
 
   @staticmethod
   def _get_visits(uuid):
@@ -376,7 +437,7 @@ class StudyDesignBC():
         WITH distinct subj.identifier as subj_id, enc.label as visit, timing.value as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
         return "sub" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (dp_uri)
-      print("get_datapoint sub-timeline  query", query)
+      # print("get_datapoint sub-timeline  query", query)
       result = session.run(query)
       for record in result:
         results.append(record.data())
@@ -402,7 +463,7 @@ class StudyDesignBC():
           WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
           return "main" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
         """ % (dp_uri)
-        print("get_datapoint main-timeline  query", query)
+        # print("get_datapoint main-timeline  query", query)
         result = session.run(query)
         for record in result:
           results.append(record.data())
