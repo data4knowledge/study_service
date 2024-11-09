@@ -295,6 +295,7 @@ class Domain(BaseNode):
       , bc.name as decod
       , var.name as variable
       , dp.value as value
+      , dp.uri as dp_uri
       , site.name as SITEID
       , e.label as VISIT
       , e_order as VISITNUM
@@ -949,15 +950,15 @@ class Domain(BaseNode):
     # topic_label = self.name+"TEST"
     seq_var = self.name+"SEQ"
     # baseline_var = self.name+"BLFL"
+    result_var = self.name+"DOSE"
     column_names = self.variable_list()
-    print('1 column_names',column_names)
     # Fix order of VISIT, VISITNUM
     column_names = [c for c in column_names if not c in ['EXLOC','EXTPT','EXLOT','EXLAT','EXDIR','EXSCAT','EXLNKGRP','EXLNKID','EXDOSTXT','EXDOSRGM','EXFAST','EXADJ','EXCAT']]
     column_names.remove('VISITNUM')
     column_names.insert(column_names.index('EPOCH'),'VISITNUM')
     column_names.remove('VISIT')
     column_names.insert(column_names.index('EPOCH'),'VISIT')
-    print('2 column_names',column_names)
+    column_names.append('dp_uri')
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
 
@@ -1009,6 +1010,10 @@ class Domain(BaseNode):
           if self.name+'STDY' in column_names:
             index_dy = [column_names.index(self.name+'ENDY')][0]
             record[index_dy] = self.sdtm_derive_dy(ref_date['reference_date'],result['value'])
+
+      if 'dp_uri' in result and result['variable'] == result_var:
+        dp_uri_index = column_names.index('dp_uri')
+        record[dp_uri_index] = result["dp_uri"]
 
       variable_index = [column_names.index(result["variable"])][0]
       record[variable_index] = result["value"]
