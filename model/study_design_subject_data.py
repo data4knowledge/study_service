@@ -27,7 +27,7 @@ class StudyDesignSubjectData():
       dp.value as value, 
       site.name as site, 
       dp.uri as data_uri, 
-      prop.decode as property, 
+      coalesce(prop.decode, bc_prop.generic_name) as property, 
       bc_prop.datatype as data_type, 
       bc_prop.name as item, 
       bc.name as bc,
