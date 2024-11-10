@@ -84,11 +84,11 @@ class StudyDesignDataContract():
             e.label as visit,
             tpt.value as timepoint,
             bc.name as bc_name,
-            bc_prop.name as property,
+            bc_prop.generic_name as property,
             tl.name as timeline,
             dc.uri as uri order by toInteger(substring(e.name,1)), activity, bc_name, property %s 
         """ % (uuid, skip_offset_clause)
-      #print(f"QUERY 2: {query}")
+      # print(f"QUERY 2: {query}")
       result = session.run(query)
       results = []
       for record in result:
