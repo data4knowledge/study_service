@@ -369,19 +369,19 @@ class StudyDesignBC():
       # Get BCPs with VLM
       query = """
           match (dp:DataPoint {uri:'%s'})
-match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
-match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
-with dc0, bc, cd
-match (dc0)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
-match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
-match (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc)
-MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
-match (bcp)-[:IS_A_REL]->(crm:CRMNode)
-match (dc)-[:INSTANCES_REL]->(main_sai)
-WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, c.code as code, c.pref_label as pref_label, c.notation as notation
-return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
+          match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+          match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+          with dc0, bc, cd
+          match (dc0)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
+          match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
+          match (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc)
+          MATCH (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)-[:RESPONSE_CODES_REL]->(rc:ResponseCode)-[:CODE_REL]->(c:Code)
+          match (bcp)-[:IS_A_REL]->(crm:CRMNode)
+          match (dc)-[:INSTANCES_REL]->(main_sai)
+          WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, c.code as code, c.pref_label as pref_label, c.notation as notation
+          return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
         """ % (datapoint)
-      print("get_bc valid main-timeline  query", query)
+      # print("get_bc valid main-timeline  query", query)
       result = session.run(query)
       for record in result:
         # results.append(record.data())
@@ -769,7 +769,7 @@ return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
           MERGE (bcp)-[:IS_A_REL]->(crm_add)
           return "done" as result
       """
-      print(query)
+      # print(query)
       results = session.run(query)
       application_logger.info("Linking BRTHDTC to Start date/time")
     db.close()
@@ -779,7 +779,7 @@ return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
   def _remove_properties_from_exposure():
     db = Neo4jConnection()
     with db.session() as session:
-      # Just for simplifying life
+      # NOTE: Just for simplifying life
       properties = ["EXREFID","EXLOC","EXFAST","EXDOSTXT","EXDOSRGM","EXDIR","EXLAT"]
       query = """
         MATCH (bc:BiomedicalConcept {name:'Exposure Unblinded'})-[:PROPERTIES_REL]->(p:BiomedicalConceptProperty)
@@ -811,12 +811,12 @@ return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
   @staticmethod
   def _add_properties_to_ae(bcs):
     for bc in bcs:
-      print("bc",bc)
+      # print("bc",bc)
       properties = [
         {'name': 'AELLT','label': 'MedDRA Lowest Level Term','datatype': 'integer','isRequired': True, 'isEnabled': True},
         {'name': 'AEBODSYS','label': 'Body System','datatype': 'string','isRequired': True, 'isEnabled': True}
       ]
-      print("properties",properties)
+      # print("properties",properties)
 
 
       db = Neo4jConnection()
@@ -832,7 +832,7 @@ return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
             CREATE (bc)-[:PROPERTIES_REL]->(p)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
             RETURN p.uuid as uuid
           """ % (bc.uuid, p['name'], p['label'], p['isRequired'], p['isEnabled'], p['datatype'])
-          print("query",query)
+          # print("query",query)
           result = session.run(query, 
             s_uuid1=str(uuid4()), 
             s_uuid2=str(uuid4()), 

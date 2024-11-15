@@ -92,7 +92,7 @@ class Domain(BaseNode):
         query = self.intervention_query()
       else:
         query = self.findings_query()
-      print("sdtm", query)
+      # print("sdtm", query)
       rows = session.run(query)
       for row in rows:
         record = { 
@@ -149,15 +149,15 @@ class Domain(BaseNode):
       if self.name == "DM":
         df = self.construct_dm_dataframe(results)
       elif self.name == "DS":
-        print("Creating DS dataframe")
+        # print("Creating DS dataframe")
         df = self.construct_ds_dataframe(results)
       elif self.name == "AE":
-        print("Creating AE dataframe")
+        # print("Creating AE dataframe")
         # for x in results:
         #   print(x)
         df = self.construct_ae_dataframe(results)
       elif self.name == "EX":
-        print("Creating EX dataframe")
+        # print("Creating EX dataframe")
         df = self.construct_intervention_dataframe(results)
       else:
         df = self.construct_findings_dataframe(results)
@@ -199,7 +199,7 @@ class Domain(BaseNode):
       , coalesce(country1.code, country2.code) as COUNTRY
       order by SITEID, SUBJID
     """ % (self.uuid)
-    print(query)
+    # print(query)
     return query
 
   def ds_query(self):
@@ -236,7 +236,7 @@ class Domain(BaseNode):
             , epoch.label as EPOCH
             , bc.uuid as bc_uuid
     """ % (self.uuid)
-    print("ds_query",query)
+    # print("ds_query",query)
     return query
 
   def ae_query(self):
@@ -264,7 +264,7 @@ class Domain(BaseNode):
       , bc.uuid as bc_uuid
       order by key
     """ % (self.uuid)
-    print("ae query",query)
+    # print("ae query",query)
     return query
 
   def intervention_query(self):
@@ -303,7 +303,7 @@ class Domain(BaseNode):
       , bc.uuid as bc_uuid
       order by SITEID, SUBJID, VISIT
     """ % (self.uuid)
-    print("intervention query",query)
+    # print("intervention query",query)
     return query
 
   def findings_query(self):
@@ -374,7 +374,7 @@ class Domain(BaseNode):
   def add_seq_dict(self, results, seq_index, usubjid_index):
     assert seq_index, "add_seq_dict: parameter 'seq_index' missing"
     assert usubjid_index, "add_seq_dict: parameter 'usubjid_index' missing"
-    print("adding seq dict",seq_index,usubjid_index)
+    # print("adding seq dict",seq_index,usubjid_index)
     current_usubjid = ""
     seq = 0
     for key, result in results.items():
@@ -389,7 +389,7 @@ class Domain(BaseNode):
     # results = sorted(results, key=lambda key: key)
 
   def add_seq_list_of_dict(self, results, seq_var):
-    print("adding seq list of dict", seq_var)
+    # print("adding seq list of dict", seq_var)
     current_usubjid = ""
     seq = 0
     for result in results:
@@ -513,7 +513,6 @@ class Domain(BaseNode):
     variables_with_uri = list(set([x['variable'] for x in results]))
     for x in variables_with_uri:
       column_names.append(self.create_uri_var(x))
-      print("variable x", x)
     # Get reference dates
     reference_dates = self.get_reference_start_dates()
     dose_dates = self.get_exposure_max_min_dates()
@@ -596,12 +595,12 @@ class Domain(BaseNode):
           final_results[subject].append("") # Add dp supp
           if supp_name in items:
             # print("I: ", i)
-            print("Items: ", items[supp_name])
+            # print("Items: ", items[supp_name])
             if i <= len(items[supp_name]):
-              print("c", items)
+              # print("c", items)
               final_results[subject][column_names.index(name)] = items[supp_name][i - 1]
               final_results[subject][column_names.index(uri_var)] = multiples_uri[subject][supp_name][i - 1]
-              print("adding", multiples_uri[subject][supp_name][i - 1])
+              # print("adding", multiples_uri[subject][supp_name][i - 1])
               #print("[%s] %s -> %s" % (subject, name, items[supp_name][i - 1]))
 
     if derive_age:
