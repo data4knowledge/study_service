@@ -163,6 +163,9 @@ class StudyDesign(NodeNameLabelDesc):
   def study_form(self, page, size, filter):
     return StudyForm.make_form(self.uuid, page, size, filter)
 
+  def lab_transfer_spec(self, page, size, filter):
+    return StudyForm.make_lab_transfer_spec(self.uuid, page, size, filter)
+
   @staticmethod
   def datapoint_form(datapoint, page, size, filter):
     return StudyForm.datapoint_form(datapoint, page, size, filter)
