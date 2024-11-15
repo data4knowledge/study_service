@@ -154,6 +154,9 @@ class StudyDesign(NodeNameLabelDesc):
   def subject_data(self, page, size, filter):
     return StudyDesignSubjectData.read(self.uuid, page, size, filter)
 
+  def subjects(self, page, size, filter):
+    return StudyDesignSubjectData.subjects(self.uuid, page, size, filter)
+
   def sdtm_domains(self, page, size, filter):
     return StudyDesignSDTM.domains(self.uuid, page, size, filter)
 

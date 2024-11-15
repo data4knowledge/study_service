@@ -558,6 +558,17 @@ async def get_study_design_soa(uuid: str, page: int=0, size: int=0, filter: str=
   else:
     return study_design.subject_data(page, size, filter)
 
+@app.get("/v1/studyDesigns/{uuid}/subjects", 
+  summary="Get the subjects for a study design",
+  description="Provides the subjecta for a given study design.",
+  response_model=dict)
+async def get_study_design_subjects(uuid: str, page: int=0, size: int=0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.subjects(page, size, filter)
+
 @app.post('/v1/studyDesigns/{uuid}/dataFiles', 
   summary="Load study design data",
   description="Upload and process a CSV file loading the data into the database", 
