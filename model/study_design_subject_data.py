@@ -61,19 +61,27 @@ class StudyDesignSubjectData():
       skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
     db = Neo4jConnection()
     with db.session() as session:
-      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)
+      # NOTE: Only matching example site subjects
+      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite {name: '101'})<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)
       RETURN COUNT(subj) AS count
       """ % (uuid)
       result = session.run(query)
       count = 0
       for record in result:
         count = record['count']
+      # NOTE: Only matching example site subjects
       query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)
-        RETURN distinct
-        subj.identifier as subject, 
-        site.name as site
-        ORDER BY site, subject %s
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite {name: '101'})<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)
+        with
+          site.name as site,
+          subj.identifier as subject,
+          toInteger(subj.identifier) as n_subject
+        return
+          site,
+          subject,
+          n_subject,
+          case n_subject when is null then 0 else 1 end as num
+        ORDER BY site, num, n_subject %s
       """ % (uuid, skip_offset_clause)
       # print(query)
       result = session.run(query)
