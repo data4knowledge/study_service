@@ -189,6 +189,8 @@ class Domain(BaseNode):
       return
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
+      , toInteger(subj.identifier) as n_subject
+      , case toInteger(subj.identifier) when is null then 0 else 1 end as n_order
       , subj.identifier as SUBJID
       , var.name as variable
       , dp.value as value
@@ -197,7 +199,7 @@ class Domain(BaseNode):
       , e.label as VISIT
       , epoch.label as EPOCH
       , coalesce(country1.code, country2.code) as COUNTRY
-      order by SITEID, SUBJID
+      order by SITEID, n_order, SUBJID
     """ % (self.uuid)
     # print(query)
     return query
