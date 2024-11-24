@@ -19,6 +19,7 @@ from model.schedule_timeline import ScheduleTimeline
 from model.population_definition import StudyDesignPopulation, StudyCohort
 from model.study_define import StudyDefine
 from model.study_form import StudyForm
+from model.domains_trial_design import TrialDesignDomain
 #from d4kms_service import Neo4jConnection
 
 class StudyDesign(NodeNameLabelDesc):
@@ -159,6 +160,9 @@ class StudyDesign(NodeNameLabelDesc):
 
   def sdtm_domains(self, page, size, filter):
     return StudyDesignSDTM.domains(self.uuid, page, size, filter)
+
+  def sdtm_trial_design_domain(self, domain_name, page, size, filter):
+    return TrialDesignDomain.create(self.uuid, domain_name, page, size, filter)
 
   def sdtm_define(self, page, size, filter):
     return StudyDefine.make_define(self.uuid, page, size, filter)

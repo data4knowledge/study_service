@@ -853,6 +853,16 @@ async def find_domain(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested domain cannot be found")
 
+@app.get("/v1/trial_design_domain/{uuid}/data", 
+  summary="Returns an SDTM Trial Design domain",
+  description="Returns the SDTM Trial Design domain.")
+async def sdtm_trials_design_domain(uuid: str, domain_name: str, page: int = 0, size: int = 0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  if study_design == None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.sdtm_trial_design_domain(domain_name, page, size, filter)
+
 @app.get("/v1/domains/{uuid}/biomedicalConcepts/linked", 
   summary="Returns BCs for a domain",
   description="Returns the Biomedical Concepts linked to a specific SDTM domain.")
