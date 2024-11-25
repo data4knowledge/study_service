@@ -1,20 +1,13 @@
+import re
 import pandas as pd
-# from typing import List, Optional
-# from model.base_node import BaseNode
-# from model.variable import Variable
-# from model.biomedical_concept import BiomedicalConceptSimple
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
-# from dateutil import parser 
-# from model.utility.configuration import ConfigurationNode, Configuration
+from bs4 import BeautifulSoup
 
 class TrialDesignDomain():
 
   @classmethod
   def create(self, uuid, domain_name, page, size, filter):
-    # self.configuration = ConfigurationNode.get()
-    print('self', self)
-    members = [attr for attr in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")]
     results = []
     if domain_name == 'TA':
       results = self.trial_arms(uuid)
@@ -62,6 +55,11 @@ class TrialDesignDomain():
     try:
       study_id = cls._study_id(sd_uuid)
       response = cls._trial_inclusion_exclusion(sd_uuid, study_id)
+      for item in response:
+        usdm_tags = re.findall(r'(<usdm:tag name=.+?/>)', item['IETEST'])
+        for usdm_tag in usdm_tags:
+          reference_text = cls._get_tag_text(usdm_tag)
+          item['IETEST'] = item['IETEST'].replace(usdm_tag, reference_text)
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
@@ -107,7 +105,35 @@ class TrialDesignDomain():
     except Exception as e:
       return {'error': 'Could not create TS dataframe'}
 
+  @staticmethod
+  def _get_tag_text(usdm_tag):
+    db = Neo4jConnection()
+    results = re.search(r'"(.+?)"', usdm_tag)
+    reference_txt = "(linked text not found)"
+    if results:
+      tag_name = results.group(1)
+      with db.session() as session:
 
+        # Get tag node which contains the xml reference
+        query = """
+          match (n {tag: '%s'}) return n['reference'] as reference
+        """ % (tag_name)
+        # print("tag query", query)
+        results = session.run(query)
+        for result in results.data():
+          reference_xml = result['reference']
+
+        # Get reference node from the xml reference
+        soup = BeautifulSoup(reference_xml, "html.parser")
+        reference = soup.find("usdm:ref")
+        query = """match (n:%s {id:'%s'}) return n.%s as txt""" % (reference.attrs['klass'], reference.attrs['id'], reference.attrs['attribute'])
+        # print("reference query", query)
+        results = session.run(query)
+        for result in results.data():
+          reference_txt = result['txt']
+      db.close()
+    # print("reference_txt", reference_txt)
+    return reference_txt
 
   @staticmethod
   def _study_id(sd_uuid):
