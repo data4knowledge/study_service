@@ -17,6 +17,8 @@ class TrialDesignDomain():
       results = self.trial_elements(uuid)
     elif domain_name == 'TI':
       results = self.trial_inclusion_exclusion(uuid)
+    elif domain_name == 'TV':
+      results = self.trial_visits(uuid)
     else:
       print("Got unknown trial design domain", domain_name)
       results = {}
@@ -35,7 +37,7 @@ class TrialDesignDomain():
       return {'table': table}
     except Exception as e:
       print("Error: creating TA dataframe", e)
-      return {f'error': 'Could not create TA dataframe ({e})'}
+      return {f'error': f"Could not create TA dataframe ({e})"}
 
   @classmethod
   def trial_elements(cls, sd_uuid):
@@ -49,6 +51,20 @@ class TrialDesignDomain():
     except Exception as e:
       print("Error: creating TE dataframe", e)
       return {f'error': 'Could not create TE dataframe ({e})'}
+
+  @classmethod
+  def trial_visits(cls, sd_uuid):
+    try:
+      study_id = cls._study_id(sd_uuid)
+      response = cls._trial_visits(sd_uuid, study_id)
+      df = pd.DataFrame(columns=response[0].keys())
+      for item in response:
+        df.loc[str(len(df.index))] = item
+      table = df.to_dict('index')
+      return {'table': table}
+    except Exception as e:
+      print("Error: creating TV dataframe", e)
+      return {f'error': 'Could not create TV dataframe ({e})'}
 
   @classmethod
   def trial_inclusion_exclusion(cls, sd_uuid):
@@ -281,6 +297,48 @@ class TrialDesignDomain():
         order by IETESTCD
       """ % (sd_uuid, study_id)
       # print("trial arms query", query)
+      results = session.run(query)
+      data = [x.data() for x in results]
+    db.close()
+    return data
+
+  @staticmethod
+  def _trial_visits(sd_uuid, study_id):
+    db = Neo4jConnection()
+    data = []
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:SCHEDULE_TIMELINES_REL]->(stl:ScheduleTimeline {mainTimeline: 'True'})-[:ENTRY_REL]-(sai1:ScheduledActivityInstance)
+        WITH sai1
+        MATCH path=(sai1)-[:DEFAULT_CONDITION_REL *0..]->(sai)
+        WITH sai, LENGTH(path) as a_ord
+        MATCH (sai)-[:ENCOUNTER_REL]->(e:Encounter)
+        MATCH (sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]->(t:Timing)
+        OPTIONAL MATCH (t)-[:RELATIVE_TO_SCHEDULED_INSTANCE_REL]-(sai_to:ScheduledActivityInstance)
+        OPTIONAL MATCH (t)-[:RELATIVE_TO_FROM_REL]-(from_rel:Code)
+        OPTIONAL MATCH (t)-[:TYPE_REL]-(type_rel:Code)
+        return 
+        '%s' as STUDYID
+        , 'TV' as DOMAIN
+        // , toInteger(split(e.id,'_')[1]) as VISITNUM
+        , toInteger(split(t.name,'TIM')[1]) as VISITNUM
+        // , e.name as e_name
+        , e.label+" - "+t.label as VISIT
+        // , sai.name as sai_name
+        // , sai.label as sai_label
+        // , t.label as t_label
+        // , t.value as t_value
+        // , t.valueLabel as t_valueLabel
+        // , from_rel.decode as from_rel
+        // , type_rel.decode as type_rel
+        // , sai_to.label as rel_to_sai
+        // , t.label as VISITDY
+        , '' as ARMCD
+        , t.valueLabel+" "+type_rel.decode+" "+sai_to.label as TVSTRL
+        , '' as TVENRL
+        ORDER BY VISITNUM
+      """ % (sd_uuid, study_id)
+      # print("trial visits query", query)
       results = session.run(query)
       data = [x.data() for x in results]
     db.close()
