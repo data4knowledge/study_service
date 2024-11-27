@@ -80,7 +80,7 @@ class StudyDesignSubjectData():
           site,
           subject,
           n_subject,
-          case n_subject when is null then 0 else 1 end as num
+          case n_subject when null then 0 else 1 end as num
         ORDER BY site, num, n_subject %s
       """ % (uuid, skip_offset_clause)
       # print(query)
