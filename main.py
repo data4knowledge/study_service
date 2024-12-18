@@ -20,8 +20,8 @@ from model.domain import Domain
 # from model.study_epoch import StudyEpoch, StudyEpochIn
 # from model.study_arm import StudyArm, StudyArmIn
 # from model.study_data import StudyData, StudyDataIn
-# from model.encounter import Encounter, EncounterIn, EncounterLink
-# from typing import List
+from model.encounter import Encounter #, EncounterIn, EncounterLink
+from typing import List
 from model.population_definition import StudyDesignPopulation, StudyCohort
 from model.template.template_manager import template_manager
 from d4kms_generic import ServiceEnvironment
@@ -742,8 +742,21 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return epoch.update(data.name, data.description)
 
-# # Encounters
-# # ==========
+# Encounters
+# ==========
+
+@app.get("/v1/studyDesigns/{uuid}/encounters",
+  summary="Get the encounters for a study design",
+  description="Provides a list of uuids for the encounters that exisit for a specified study.",
+  response_model=List[Encounter])
+async def get_study_design_encounters(uuid: str, page: int = 0, size: int = 0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  print("study_design", study_design)
+  print("tjena")
+  if study_design is None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.study_design_encounters(page=page, size=size, filter=filter)
 
 # @app.post("/v1/studyDesigns/{uuid}/encounters", 
 #   summary="Creates a new encounter within a study design",
