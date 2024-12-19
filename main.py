@@ -370,16 +370,18 @@ async def get_study_design(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
-@app.get("/v1/studyDesigns/{uuid}/summary", 
-  summary="Get the study design summary",
-  description="Provides the summary for a given study design.",
-  response_model=dict)
-async def get_study_design_summary(uuid: str):
-  study_design = StudyDesign.find(uuid)
-  if study_design:
-    return study_design.summary()
+@app.post("/v1/studyDesigns", 
+  summary="Create a new study design",
+  description="Creates a study design. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_study_design(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
+  result = StudyDesign.create(name, description, label, template)
+  print("result", result)
+  if not 'error' in result:
+    return result
   else:
-    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+    raise HTTPException(status_code=409, detail=result['error'])
 
 @app.get("/v1/studyDesigns/{uuid}/design", 
   summary="Get the study design design (arms and epochs)",
@@ -655,6 +657,20 @@ async def get_cohort_summary(request: Request, uuid: str):
 async def list_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
   return ScheduleTimeline.list(uuid, page, size, filter)
+
+@app.post("/v1/timelines", 
+  summary="Create a new timeline",
+  description="Creates a timeline. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_timeline(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
+  result = ScheduleTimeline.create(name, description, label, template)
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
 
 @app.get("/v1/timelines/{uuid}", 
   summary="Get a timeline",

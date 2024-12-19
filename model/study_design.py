@@ -1,3 +1,5 @@
+import traceback
+import logging
 from typing import List, Union
 from pydantic import BaseModel
 from .base_node import *
@@ -21,6 +23,7 @@ from model.study_define import StudyDefine
 from model.study_form import StudyForm
 from model.domains_trial_design import TrialDesignDomain
 #from d4kms_service import Neo4jConnection
+from uuid import uuid4
 
 class StudyDesign(NodeNameLabelDesc):
   trialIntentTypes: List[Code] = []
@@ -47,6 +50,20 @@ class StudyDesign(NodeNameLabelDesc):
   # documentVersion: Union[StudyProtocolDocumentVersion, None] = None
   # studyEligibilityCritieria: List[EligibilityCriteria] = []    
   # dictionaries: List[SyntaxTemplateDictionary] = []
+
+  @classmethod
+  def create(cls, name, description, label, template_uuid):
+    try:
+      db = Neo4jConnection()
+      with db.session() as session:
+        result = session.execute_write(cls._create_study_design, name, description, label, template_uuid)
+        if not result:
+          return {'error': "Failed to create study, operation failed"}
+        return result 
+    except Exception as e:
+      logging.error(f"Exception raised while creating study")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to create study"}
 
   @classmethod
   def list(cls, uuid, page, size, filter):
@@ -175,10 +192,10 @@ class StudyDesign(NodeNameLabelDesc):
     return ScheduleTimeline.list(self.uuid, page, size, filter)
     # return Encounter.list(self.uuid, page, size, filter)
 
-  def study_design_encounters(self, page, size, filter):
-    print("Hejsan svejsan study design encounters")
-    return Encounter.list(self.uuid, page, size, filter)
-    # return Encounter.list(self.uuid, page, size, filter)
+  # def study_design_encounters(self, page, size, filter):
+  #   print("Hejsan svejsan study design encounters")
+  #   return Encounter.list(self.uuid, page, size, filter)
+  #   # return Encounter.list(self.uuid, page, size, filter)
 
   @staticmethod
   def datapoint_form(datapoint, page, size, filter):
@@ -282,3 +299,21 @@ class StudyDesign(NodeNameLabelDesc):
 #     else:
 #       return True
 
+  @staticmethod
+  def _create_study_design(tx, name, description, label, template_uuid):
+    uuids = {'StudyDesign': str(uuid4())}
+    query = """
+      CREATE (s:StudyDesign {id: $s_id, name: $s_name, description: $s_description, label: $s_label, uuid: $s_uuid1, instanceType: 'Study'})
+
+      RETURN s.uuid as uuid
+    """
+    result = tx.run(query, 
+      s_id='ADDED_STUDY_DESIGN',
+      s_name=name, 
+      s_description=description, 
+      s_label=label, 
+      s_uuid1=uuids['StudyDesign']
+    )
+    for row in result:
+      return uuids['StudyDesign']
+    return None
