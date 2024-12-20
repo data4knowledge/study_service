@@ -17,7 +17,7 @@ from model.study_protocol_document_version import StudyProtocolDocumentVersion, 
 # from model.study_design import StudyDesign
 from model.domain import Domain
 # from model.activity import Activity, ActivityIn
-# from model.study_epoch import StudyEpoch, StudyEpochIn
+from model.study_epoch import StudyEpoch #, StudyEpochIn
 # from model.study_arm import StudyArm, StudyArmIn
 # from model.study_data import StudyData, StudyDataIn
 from model.encounter import Encounter #, EncounterIn, EncounterLink
@@ -650,13 +650,16 @@ async def get_cohort_summary(request: Request, uuid: str):
 # Timelines
 # =========
 
+# JOHANNES JOBBAR
 @app.get("/v1/studyDesigns/{uuid}/timelines", 
   summary="Get the timelines for a study design",
   description="Gets a list of timeliens for a study design.",
   response_model=dict)
 async def list_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
-  return ScheduleTimeline.list(uuid, page, size, filter)
+  timelines = ScheduleTimeline.list(uuid, page, size, filter)
+  epochs = StudyEpoch.list(uuid, page, size, filter)
+  return {'timelines': timelines, 'epochs': epochs}
 
 @app.post("/v1/timelines", 
   summary="Create a new timeline",
