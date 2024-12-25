@@ -1,6 +1,9 @@
+import traceback
+import logging
 from typing import Literal, Union
 from .base_node import *
 from .code import Code
+from uuid import uuid4
 
 # class StudyEpochIn(BaseModel):
 #   name: str
@@ -16,15 +19,29 @@ class StudyEpoch(NodeNameLabelDesc):
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:StudyDesign {uuid: '%s'})-[]->(n:StudyEpoch)" % (uuid), "ORDER BY n.id ASC", page, size, filter)
 
-#   @classmethod
-#   def create(cls, uuid, name, description):
-#     db = Neo4jConnection()
-#     with db.session() as session:
-#       if not session.execute_read(cls._exists, uuid, name):
-#         arms = session.execute_read(cls._arms, uuid)
-#         return session.execute_write(cls._create_epoch, uuid, name, description, arms)
-#       else:
-#         return None
+  @classmethod
+  def create(cls, name, description, label):
+    try:
+      db = Neo4jConnection()
+      with db.session() as session:
+        result = session.execute_write(cls._create_study_epoch, name, description, label)
+        if not result:
+          return {'error': "Failed to create study epoch, operation failed"}
+        return result 
+    except Exception as e:
+      logging.error(f"Exception raised while creating study epoch")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to create study epoch"}
+
+  # @classmethod
+  # def create(cls, uuid, name, description):
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     if not session.execute_read(cls._exists, uuid, name):
+  #       arms = session.execute_read(cls._arms, uuid)
+  #       return session.execute_write(cls._create_epoch, uuid, name, description, arms)
+  #     else:
+  #       return None
 
 #   def update(self, name, description):
 #     db = Neo4jConnection()
@@ -35,6 +52,27 @@ class StudyEpoch(NodeNameLabelDesc):
 #     db = Neo4jConnection()
 #     with db.session() as session:
 #       return session.execute_write(self._add_encounter, str(self.uuid), uuid)
+
+  @staticmethod
+  def _create_study_epoch(tx, name, description, label):
+    print("NU ÄR JAG JU I CREATE STUDY EPOCH")
+    uuids = {'StudyEpoch': str(uuid4())}
+    query = """
+      CREATE (s:StudyEpoch {id: $s_id, uuid: $s_uuid1, name: $s_name, description: $s_description, label: $s_label, instanceType: 'StudyEpoch'})
+      set s.delete = 'me'
+      RETURN s.uuid as uuid
+    """
+    print("query",query)
+    result = tx.run(query, 
+      s_id='ADDED_STUDY_EPOCH',
+      s_name=name, 
+      s_description=description, 
+      s_label=label, 
+      s_uuid1=uuids['StudyEpoch']
+    )
+    for row in result:
+      return uuids['StudyEpoch']
+    return None
 
 #   @staticmethod
 #   def _create_epoch(tx, uuid, name, description, arms):

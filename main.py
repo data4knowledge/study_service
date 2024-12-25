@@ -726,6 +726,20 @@ async def get_timeline_soa(uuid: str):
 # # Epochs
 # # ======
 
+@app.post("/v1/studyEpochs", 
+  summary="Create a new epoch",
+  description="Creates a epoch. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_epoch(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = StudyEpoch.create(name, description, label)
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
+
 # @app.get("/v1/studyDesigns/{uuid}/studyEpochs", 
 #   summary="Get the epochs for a study design.",
 #   description="Provides a list of uuids for the epochs that exisit for a specified study.",
@@ -749,6 +763,7 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return result
 
+# JOHANNES
 # @app.put("/v1/studyEpochs/{uuid}", 
 #   summary="Update an epoch",
 #   description="Update the simple fields of an epoch.",

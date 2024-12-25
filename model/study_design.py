@@ -304,7 +304,7 @@ class StudyDesign(NodeNameLabelDesc):
     uuids = {'StudyDesign': str(uuid4())}
     query = """
       CREATE (s:StudyDesign {id: $s_id, name: $s_name, description: $s_description, label: $s_label, uuid: $s_uuid1, instanceType: 'Study'})
-
+      set s.delete = 'me'
       RETURN s.uuid as uuid
     """
     result = tx.run(query, 

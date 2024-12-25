@@ -129,7 +129,7 @@ class ScheduleTimeline(NodeNameLabelDesc):
     uuids = {'ScheduleTimeline': str(uuid4())}
     query = """
       CREATE (s:ScheduleTimeline {id: $s_id, uuid: $s_uuid1, name: $s_name, description: $s_description, label: $s_label, mainTimeline: 'true', instanceType: 'ScheduleTimeline'})
-
+      set s.delete = 'me'
       RETURN s.uuid as uuid
     """
     print("query",query)
