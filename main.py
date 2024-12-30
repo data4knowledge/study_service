@@ -657,6 +657,14 @@ async def get_cohort_summary(request: Request, uuid: str):
   response_model=dict)
 async def list_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
+  return ScheduleTimeline.list(uuid, page, size, filter)
+
+@app.get("/v1/studyDesigns/{uuid}/timelines_soa", 
+  summary="Get the timelines and epochs for a study design",
+  description="Gets a list of timelines and epochs for a study design.",
+  response_model=dict)
+async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
   timelines = ScheduleTimeline.list(uuid, page, size, filter)
   epochs = StudyEpoch.list(uuid, page, size, filter)
   return {'timelines': timelines, 'epochs': epochs}
