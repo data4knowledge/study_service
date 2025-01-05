@@ -13,6 +13,10 @@ class StudyArm(NodeNameLabelDesc):
   populationIds: List[str] = []
   instanceType: Literal['StudyArm']
 
+  @classmethod
+  def list(cls, uuid, page, size, filter):
+    return cls.base_list("MATCH (m:StudyDesign {uuid: '%s'})-[]->(n:StudyArm)" % (uuid), "ORDER BY n.id ASC", page, size, filter)
+
 #   @classmethod
 #   def create(cls, uuid, name, description):
 #     db = Neo4jConnection()

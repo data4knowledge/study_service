@@ -11,6 +11,7 @@ from model.study_version import StudyVersion
 from model.study_design import StudyDesign
 from d4kms_service import Neo4jConnection
 from model.schedule_timeline import ScheduleTimeline
+from model.study_arm import StudyArm
 from model.activity import Activity
 from model.study_protocol_document_version import StudyProtocolDocumentVersion, SPDVBackground
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
@@ -667,7 +668,8 @@ async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, fil
   uuid = request.path_params['uuid']
   timelines = ScheduleTimeline.list(uuid, page, size, filter)
   epochs = StudyEpoch.list(uuid, page, size, filter)
-  return {'timelines': timelines, 'epochs': epochs}
+  arms = StudyArm.list(uuid, page, size, filter)
+  return {'timelines': timelines, 'epochs': epochs, 'arms': arms}
 
 @app.post("/v1/timelines", 
   summary="Create a new timeline",
