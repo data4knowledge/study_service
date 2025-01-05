@@ -1,6 +1,9 @@
+import traceback
+import logging
 from typing import List, Literal
 from .base_node import *
 from .code import Code
+from uuid import uuid4
 
 # class StudyArmIn(BaseModel):
 #   name: str
@@ -18,14 +21,28 @@ class StudyArm(NodeNameLabelDesc):
     return cls.base_list("MATCH (m:StudyDesign {uuid: '%s'})-[]->(n:StudyArm)" % (uuid), "ORDER BY n.id ASC", page, size, filter)
 
   @classmethod
-  def create(cls, uuid, name, description):
-    db = Neo4jConnection()
-    with db.session() as session:
-      if not session.execute_read(cls._exists, uuid, name):
-        arms = session.execute_read(cls._epochs, uuid)
-        return session.execute_write(cls._create_arm, uuid, name, description, arms)
-      else:
-        return None
+  def create(cls, name, description, label):
+    try:
+      db = Neo4jConnection()
+      with db.session() as session:
+        result = session.execute_write(cls._create_study_arm, name, description, label)
+        if not result:
+          return {'error': "Failed to create study arm, operation failed"}
+        return result 
+    except Exception as e:
+      logging.error(f"Exception raised while creating study arm")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to create study arm"}
+
+  # @classmethod
+  # def create(cls, uuid, name, description):
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     if not session.execute_read(cls._exists, uuid, name):
+  #       arms = session.execute_read(cls._epochs, uuid)
+  #       return session.execute_write(cls._create_arm, uuid, name, description, arms)
+  #     else:
+  #       return None
 
 #   @staticmethod
 #   def _create_arm(tx, uuid, name, description, epochs):
@@ -76,4 +93,23 @@ class StudyArm(NodeNameLabelDesc):
 #     else:
 #       return True
 
+  @staticmethod
+  def _create_study_arm(tx, name, description, label):
+    uuids = {'StudyArm': str(uuid4())}
+    query = """
+      CREATE (s:StudyArm {id: $s_id, uuid: $s_uuid1, name: $s_name, description: $s_description, label: $s_label, instanceType: 'StudyArm'})
+      set s.delete = 'me'
+      RETURN s.uuid as uuid
+    """
+    print("query",query)
+    result = tx.run(query, 
+      s_id='ADDED_STUDY_ARM',
+      s_name=name, 
+      s_description=description, 
+      s_label=label, 
+      s_uuid1=uuids['StudyArm']
+    )
+    for row in result:
+      return uuids['StudyArm']
+    return None
 

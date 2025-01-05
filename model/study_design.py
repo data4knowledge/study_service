@@ -52,11 +52,11 @@ class StudyDesign(NodeNameLabelDesc):
   # dictionaries: List[SyntaxTemplateDictionary] = []
 
   @classmethod
-  def create(cls, name, description, label, template_uuid):
+  def create(cls, name, description, label):
     try:
       db = Neo4jConnection()
       with db.session() as session:
-        result = session.execute_write(cls._create_study_design, name, description, label, template_uuid)
+        result = session.execute_write(cls._create_study_design, name, description, label)
         if not result:
           return {'error': "Failed to create study, operation failed"}
         return result 
@@ -300,7 +300,7 @@ class StudyDesign(NodeNameLabelDesc):
 #       return True
 
   @staticmethod
-  def _create_study_design(tx, name, description, label, template_uuid):
+  def _create_study_design(tx, name, description, label):
     uuids = {'StudyDesign': str(uuid4())}
     query = """
       CREATE (s:StudyDesign {id: $s_id, name: $s_name, description: $s_description, label: $s_label, uuid: $s_uuid1, instanceType: 'Study'})

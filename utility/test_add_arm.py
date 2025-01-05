@@ -10,6 +10,16 @@ from d4kms_generic import ServiceEnvironment
 def clear_db():
     db = Neo4jConnection()
     with db.session() as session:
+        # query = """
+        #     match (a:Study)-[]-(b)
+        #     where a.name = "CDISC_Pilot_Study-compressed.pdf"
+        #     optional match (b)-[]-(c)
+        #     optional match (c)-[]-(d)
+        #     optional match (d)-[]-(e)
+        #     detach delete a, b, c, d, e
+        # """
+        # session.run(query)
+
         query = """
             match (a:Study)-[]-(b)
             where a.name = "DELETE_ME"
@@ -21,16 +31,12 @@ def clear_db():
         session.run(query)
 
         query = """
-            match (a:Study)-[]-(b)
-            where a.name = "CDISC_Pilot_Study-compressed.pdf"
-            optional match (b)-[]-(c)
-            optional match (c)-[]-(d)
-            optional match (d)-[]-(e)
-            detach delete a, b, c, d, e
+            MATCH (n:PdfFile) detach delete n
         """
         session.run(query)
+
         query = """
-            MATCH (n:PdfFile) detach delete n
+            MATCH (n:StudyFile) where n.filename = "CDISC_Pilot_Study-compressed.pdf" detach delete n
         """
         session.run(query)
         query = """MATCH (n) where n.delete = "me" detach delete n"""
@@ -43,8 +49,19 @@ def main():
     study = Study.create("DELETE_ME", "test", "test", "test")
     print('study',study)
     sv = StudyVersion.find(study['StudyVersion'])
-    print('sv',sv.uuid)
+    print('sv',sv)
 
+    sd_uuid = StudyDesign.create("DELETE_ME", "test", "test")
+    sd = StudyDesign.find(sd_uuid)
+    print('sd',sd)
+
+    sv.relationship(sd, "STUDY_DESIGNS_REL")
+
+    study_arm_uuid = StudyArm.create("DELETE_ME", "test", "test")
+    print('study_arm_uuid', study_arm_uuid)
+    # study_arm = StudyArm.find(study_arm_uuid)
+    study_arm = StudyArm.find(study_arm_uuid, raw = True)
+    print('study_arm', study_arm)
 
     # studies = Study.list(page = 0, size = 10, filter = "")
     # # for x in studies['items']:
@@ -63,5 +80,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # print(StudyArm.find("2c3d3e1f-3d5c-4b9c-8d4c-0d8c2d7b3f1a"))
     print("done")

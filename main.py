@@ -371,13 +371,14 @@ async def get_study_design(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
+# JOHANNES
 @app.post("/v1/studyDesigns", 
   summary="Create a new study design",
   description="Creates a study design. If succesful the uuid of the created resource is returned.",
   status_code=201,
   response_model=str)
-async def create_study_design(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
-  result = StudyDesign.create(name, description, label, template)
+async def create_study_design(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = StudyDesign.create(name, description, label)
   print("result", result)
   if not 'error' in result:
     return result
@@ -727,8 +728,8 @@ async def get_timeline_soa(uuid: str):
   description="Creates an arm.",
   status_code=201,
   response_model=str)
-async def create_arm(uuid: str):
-  result = StudyArm.create(uuid, arm.name, arm.description)
+async def create_arm(uuid: str, name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = StudyArm.create(name, description, label)
   if result == None:
     raise HTTPException(status_code=409, detail="Trying to create a duplicate arm within the study")
   else:

@@ -55,7 +55,6 @@ class StudyEpoch(NodeNameLabelDesc):
 
   @staticmethod
   def _create_study_epoch(tx, name, description, label):
-    print("NU ÄR JAG JU I CREATE STUDY EPOCH")
     uuids = {'StudyEpoch': str(uuid4())}
     query = """
       CREATE (s:StudyEpoch {id: $s_id, uuid: $s_uuid1, name: $s_name, description: $s_description, label: $s_label, instanceType: 'StudyEpoch'})
