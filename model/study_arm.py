@@ -17,15 +17,15 @@ class StudyArm(NodeNameLabelDesc):
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:StudyDesign {uuid: '%s'})-[]->(n:StudyArm)" % (uuid), "ORDER BY n.id ASC", page, size, filter)
 
-#   @classmethod
-#   def create(cls, uuid, name, description):
-#     db = Neo4jConnection()
-#     with db.session() as session:
-#       if not session.execute_read(cls._exists, uuid, name):
-#         arms = session.execute_read(cls._epochs, uuid)
-#         return session.execute_write(cls._create_arm, uuid, name, description, arms)
-#       else:
-#         return None
+  @classmethod
+  def create(cls, uuid, name, description):
+    db = Neo4jConnection()
+    with db.session() as session:
+      if not session.execute_read(cls._exists, uuid, name):
+        arms = session.execute_read(cls._epochs, uuid)
+        return session.execute_write(cls._create_arm, uuid, name, description, arms)
+      else:
+        return None
 
 #   @staticmethod
 #   def _create_arm(tx, uuid, name, description, epochs):

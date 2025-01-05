@@ -721,17 +721,18 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return study_design.arms()
 
-# @app.post("/v1/studyDesigns/{uuid}/studyArms", 
-#   summary="Create a new arm within a study design.",
-#   description="Creates an arm.",
-#   status_code=201,
-#   response_model=str)
-# async def create_arm(uuid: str, arm: StudyArmIn):
-#   result = StudyArm.create(uuid, arm.name, arm.description)
-#   if result == None:
-#     raise HTTPException(status_code=409, detail="Trying to create a duplicate arm within the study")
-#   else:
-#     return result
+# Johannes
+@app.post("/v1/studyDesigns/{uuid}/studyArms", 
+  summary="Create a new arm within a study design.",
+  description="Creates an arm.",
+  status_code=201,
+  response_model=str)
+async def create_arm(uuid: str):
+  result = StudyArm.create(uuid, arm.name, arm.description)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate arm within the study")
+  else:
+    return result
 
 # # Epochs
 # # ======
