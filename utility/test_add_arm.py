@@ -59,9 +59,12 @@ def main():
 
     study_arm_uuid = StudyArm.create("DELETE_ME", "test", "test")
     print('study_arm_uuid', study_arm_uuid)
-    # study_arm = StudyArm.find(study_arm_uuid)
-    study_arm = StudyArm.find(study_arm_uuid, raw = True)
+    study_arm = StudyArm.find(study_arm_uuid)
+    # study_arm = StudyArm.find(study_arm_uuid, raw = True)
     print('study_arm', study_arm)
+    print('study_arm.__class__', study_arm.__class__)
+    # x = 
+
 
     # studies = Study.list(page = 0, size = 10, filter = "")
     # # for x in studies['items']:

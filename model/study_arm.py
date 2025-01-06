@@ -10,9 +10,11 @@ from uuid import uuid4
 #   description: str
 
 class StudyArm(NodeNameLabelDesc):
-  type: Code
+  # type: Code
+  type: str
   dataOriginDescription: str
-  dataOriginType: Code
+  # dataOriginType: Code
+  dataOriginType: str
   populationIds: List[str] = []
   instanceType: Literal['StudyArm']
 
@@ -94,11 +96,18 @@ class StudyArm(NodeNameLabelDesc):
 #       return True
 
   @staticmethod
-  def _create_study_arm(tx, name, description, label):
+  def _create_study_arm(tx, name, description, label, dataOriginDescription = "tbd", dataOriginType = "tbd"):
     uuids = {'StudyArm': str(uuid4())}
     query = """
-      CREATE (s:StudyArm {id: $s_id, uuid: $s_uuid1, name: $s_name, description: $s_description, label: $s_label, instanceType: 'StudyArm'})
+      CREATE (s:StudyArm {id: $s_id, uuid: $s_uuid1})
+      set s.name = $s_name
+      set s.description = $s_description
+      set s.label = $s_label
+      set s.instanceType = 'StudyArm'
+      set s.dataOriginDescription = $s_dataOriginDescription
+      set s.dataOriginType = $s_dataOriginType
       set s.delete = 'me'
+      set s.type = "tbd"
       RETURN s.uuid as uuid
     """
     print("query",query)
@@ -107,6 +116,8 @@ class StudyArm(NodeNameLabelDesc):
       s_name=name, 
       s_description=description, 
       s_label=label, 
+      s_dataOriginDescription=dataOriginDescription,
+      s_dataOriginType=dataOriginType,
       s_uuid1=uuids['StudyArm']
     )
     for row in result:
