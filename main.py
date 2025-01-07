@@ -672,7 +672,8 @@ async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, fil
   timelines = ScheduleTimeline.list(uuid, page, size, filter)
   epochs = StudyEpoch.list(uuid, page, size, filter)
   arms = StudyArm.list(uuid, page, size, filter)
-  return {'timelines': timelines, 'epochs': epochs, 'arms': arms}
+  encounters = Encounter.list(uuid, page, size, filter)
+  return {'timelines': timelines, 'epochs': epochs, 'arms': arms, 'encounters': encounters}
 
 @app.post("/v1/timelines", 
   summary="Create a new timeline",

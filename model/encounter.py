@@ -17,6 +17,11 @@ class Encounter(NodeNameLabelDesc):
   instanceType: Literal['Encounter']
 
   @classmethod
+  def list(cls, uuid, page, size, filter):
+    return cls.base_list("MATCH (m:StudyDesign {uuid: '%s'})-[]->(n:Encounter)" % (uuid), "ORDER BY n.id ASC", page, size, filter)
+
+
+  @classmethod
   def create(cls, uuid, name, description):
     db = Neo4jConnection()
     with db.session() as session:
@@ -87,30 +92,30 @@ class Encounter(NodeNameLabelDesc):
 #     else:
 #       return True
 
-  @classmethod
-  def list(cls, uuid, page, size, filter):
-    skip_offset_clause = ""
-    if page != 0:
-      offset = (page - 1) * size
-      skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[]->(e:Encounter) RETURN COUNT(e) AS count
-      """ % (uuid)
-      result = session.run(query)
-      count = 0
-      for record in result:
-        count = record['count']
-      query = """
-        MATCH (sd:StudyDesign {uuid: '%s'})-[]->(e:Encounter) RETURN e
-        ORDER BY e.name %s
-      """ % (uuid, skip_offset_clause)
-      print(query)
-      result = session.run(query)
-      results = []
-      for record in result:
-        print(record['e'])
-        results.append(Encounter.wrap(record['e']).__dict__)
-    result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
-    return result
+  # @classmethod
+  # def list(cls, uuid, page, size, filter):
+  #   skip_offset_clause = ""
+  #   if page != 0:
+  #     offset = (page - 1) * size
+  #     skip_offset_clause = "SKIP %s LIMIT %s" % (offset, size)
+  #   db = Neo4jConnection()
+  #   with db.session() as session:
+  #     query = """
+  #       MATCH (sd:StudyDesign {uuid: '%s'})-[]->(e:Encounter) RETURN COUNT(e) AS count
+  #     """ % (uuid)
+  #     result = session.run(query)
+  #     count = 0
+  #     for record in result:
+  #       count = record['count']
+  #     query = """
+  #       MATCH (sd:StudyDesign {uuid: '%s'})-[]->(e:Encounter) RETURN e
+  #       ORDER BY e.name %s
+  #     """ % (uuid, skip_offset_clause)
+  #     print(query)
+  #     result = session.run(query)
+  #     results = []
+  #     for record in result:
+  #       print(record['e'])
+  #       results.append(Encounter.wrap(record['e']).__dict__)
+  #   result = {'items': results, 'page': page, 'size': size, 'filter': filter, 'count': count }
+  #   return result
