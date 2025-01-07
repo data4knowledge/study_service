@@ -23,11 +23,21 @@ class StudyArm(NodeNameLabelDesc):
     return cls.base_list("MATCH (m:StudyDesign {uuid: '%s'})-[]->(n:StudyArm)" % (uuid), "ORDER BY n.id ASC", page, size, filter)
 
   @classmethod
+  def next_id(cls):
+    study_arms = cls.base_list("MATCH (n:StudyArm)", "ORDER BY n.id ASC", page = 0, size = 1, filter = "")
+    ids = [item['id'] for item in study_arms['items']]
+    nums = [int(id.split('_')[-1]) for id in ids]
+    m = max(nums)
+    return "StudyArm_"+str(m+1) if m > 0 else "StudyArm_1" 
+
+
+  @classmethod
   def create(cls, name, description, label):
     try:
       db = Neo4jConnection()
       with db.session() as session:
-        result = session.execute_write(cls._create_study_arm, name, description, label)
+        next_id = cls.next_id()
+        result = session.execute_write(cls._create_study_arm, next_id, name, description, label)
         if not result:
           return {'error': "Failed to create study arm, operation failed"}
         return result 
@@ -40,6 +50,8 @@ class StudyArm(NodeNameLabelDesc):
   # def create(cls, uuid, name, description):
   #   db = Neo4jConnection()
   #   with db.session() as session:
+  #     x = session.execute_read(cls._exists, uuid, name)
+  #     print("x---", x)
   #     if not session.execute_read(cls._exists, uuid, name):
   #       arms = session.execute_read(cls._epochs, uuid)
   #       return session.execute_write(cls._create_arm, uuid, name, description, arms)
@@ -96,7 +108,7 @@ class StudyArm(NodeNameLabelDesc):
 #       return True
 
   @staticmethod
-  def _create_study_arm(tx, name, description, label, dataOriginDescription = "tbd", dataOriginType = "tbd"):
+  def _create_study_arm(tx, next_id, name, description, label, dataOriginDescription = "tbd", dataOriginType = "tbd"):
     uuids = {'StudyArm': str(uuid4())}
     query = """
       CREATE (s:StudyArm {id: $s_id, uuid: $s_uuid1})
@@ -112,7 +124,7 @@ class StudyArm(NodeNameLabelDesc):
     """
     print("query",query)
     result = tx.run(query, 
-      s_id='ADDED_STUDY_ARM',
+      s_id=next_id,
       s_name=name, 
       s_description=description, 
       s_label=label, 

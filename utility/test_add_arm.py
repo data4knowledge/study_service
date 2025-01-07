@@ -2,6 +2,8 @@ from model.study import Study
 from model.study_design import StudyDesign
 from model.study_version import StudyVersion
 from model.study_arm import StudyArm
+from model.study_element import StudyElement
+from model.study_cell import StudyCell
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
 from d4kms_generic import ServiceEnvironment
@@ -39,7 +41,11 @@ def clear_db():
             MATCH (n:StudyFile) where n.filename = "CDISC_Pilot_Study-compressed.pdf" detach delete n
         """
         session.run(query)
+
         query = """MATCH (n) where n.delete = "me" detach delete n"""
+        session.run(query)
+
+        query = """MATCH (n) where n.name = "DELETE_ME" detach delete n"""
         session.run(query)
     db.close()
     print("Cleared db")
@@ -63,14 +69,19 @@ def main():
     # study_arm = StudyArm.find(study_arm_uuid, raw = True)
     print('study_arm', study_arm)
     print('study_arm.__class__', study_arm.__class__)
-    # x = 
 
+    study_element_uuid = StudyElement.create("DELETE_ME", "test", "test")
+    print('study_element_uuid', study_element_uuid)
+    study_element = StudyElement.find(study_element_uuid)
+    print('study_element', study_element)
+    print('study_element.__class__', study_element.__class__)
 
-    # studies = Study.list(page = 0, size = 10, filter = "")
-    # # for x in studies['items']:
-    # #     print(x['name'])
-    # cdisc = next((x['uuid'] for x in studies['items'] if x['name'] == "Study_CDISC PILOT - LZZT"), None)
-    # print(cdisc)
+    study_cell_uuid = StudyCell.create()
+    print('study_cell_uuid', study_cell_uuid)
+    study_cell = StudyCell.find(study_cell_uuid)
+    print('study_cell', study_cell)
+    print('study_cell.__class__', study_cell.__class__)
+
 
 
     # study = Study.find("test")

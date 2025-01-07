@@ -56,7 +56,8 @@ class StudyDesign(NodeNameLabelDesc):
     try:
       db = Neo4jConnection()
       with db.session() as session:
-        result = session.execute_write(cls._create_study_design, name, description, label)
+        next_id = cls.next_id()
+        result = session.execute_write(cls._create_study_design, next_id, name, description, label)
         if not result:
           return {'error': "Failed to create study, operation failed"}
         return result 
@@ -68,6 +69,14 @@ class StudyDesign(NodeNameLabelDesc):
   @classmethod
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:StudyVersion {uuid: '%s'})-[]->(n:StudyDesign)" % (uuid), "ORDER BY n.name ASC", page, size, filter)
+
+  @classmethod
+  def next_id(cls):
+    study_designs = cls.base_list("MATCH (n:StudyDesign)", "ORDER BY n.id ASC", page = 0, size = 1, filter = "")
+    ids = [item['id'] for item in study_designs['items']]
+    nums = [int(id.split('_')[-1]) for id in ids]
+    m = max(nums)
+    return "StudyDesign_"+str(m+1) if m > 0 else "StudyDesign_1" 
 
 #   def arms(self):
 #     db = Neo4jConnection()
@@ -193,7 +202,6 @@ class StudyDesign(NodeNameLabelDesc):
     # return Encounter.list(self.uuid, page, size, filter)
 
   # def study_design_encounters(self, page, size, filter):
-  #   print("Hejsan svejsan study design encounters")
   #   return Encounter.list(self.uuid, page, size, filter)
   #   # return Encounter.list(self.uuid, page, size, filter)
 
@@ -300,7 +308,7 @@ class StudyDesign(NodeNameLabelDesc):
 #       return True
 
   @staticmethod
-  def _create_study_design(tx, name, description, label):
+  def _create_study_design(tx, next_id, name, description, label):
     uuids = {'StudyDesign': str(uuid4())}
     query = """
       CREATE (s:StudyDesign {id: $s_id, name: $s_name, description: $s_description, label: $s_label, uuid: $s_uuid1, instanceType: 'Study'})
@@ -308,7 +316,7 @@ class StudyDesign(NodeNameLabelDesc):
       RETURN s.uuid as uuid
     """
     result = tx.run(query, 
-      s_id='ADDED_STUDY_DESIGN',
+      s_id=next_id,
       s_name=name, 
       s_description=description, 
       s_label=label, 
