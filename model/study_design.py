@@ -197,7 +197,6 @@ class StudyDesign(NodeNameLabelDesc):
     return StudyForm.make_form(self.uuid, page, size, filter)
 
   def study_design_timelines(self, page, size, filter):
-    print("Hejsan svejsan study design timelines")
     return ScheduleTimeline.list(self.uuid, page, size, filter)
     # return Encounter.list(self.uuid, page, size, filter)
 

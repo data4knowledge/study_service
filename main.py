@@ -19,7 +19,9 @@ from model.study_protocol_document_version import StudyProtocolDocumentVersion, 
 from model.domain import Domain
 # from model.activity import Activity, ActivityIn
 from model.study_epoch import StudyEpoch #, StudyEpochIn
-# from model.study_arm import StudyArm, StudyArmIn
+from model.study_arm import StudyArm #, StudyArmIn
+from model.study_cell import StudyCell
+from model.study_element import StudyElement
 # from model.study_data import StudyData, StudyDataIn
 from model.encounter import Encounter #, EncounterIn, EncounterLink
 from typing import List
@@ -750,6 +752,39 @@ async def create_epoch(name: str, background_tasks: BackgroundTasks, description
     return result
   else:
     raise HTTPException(status_code=409, detail=result['error'])
+
+# # Elements
+# # ======
+
+@app.post("/v1/studyElements", 
+  summary="Create a new element",
+  description="Creates a element. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_element(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = StudyElement.create(name, description, label)
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
+# # Cells
+# # ======
+
+@app.post("/v1/studyCells", 
+  summary="Create a new cell",
+  description="Creates a cell. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_cell(background_tasks: BackgroundTasks):
+  result = StudyCell.create()
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
 
 
 # @app.get("/v1/studyDesigns/{uuid}/studyEpochs", 
