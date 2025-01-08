@@ -20,6 +20,10 @@ class Encounter(NodeNameLabelDesc):
   def list(cls, uuid, page, size, filter):
     return cls.base_list("MATCH (m:StudyDesign {uuid: '%s'})-[]->(n:Encounter)" % (uuid), "ORDER BY n.id ASC", page, size, filter)
 
+  @classmethod
+  def list_with_timing(cls, uuid):
+    return cls._list_with_timing(uuid)
+
 
   @classmethod
   def create(cls, uuid, name, description):
@@ -54,6 +58,32 @@ class Encounter(NodeNameLabelDesc):
 #        logging.error("{query} raised an error: \n {exception}".format(
 #          query=query, exception=exception))
 #        raise
+
+  @staticmethod
+  def _list_with_timing(uuid):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign { uuid: $uuid1 })-[:ENCOUNTERS_REL]->(e)
+        OPTIONAL MATCH (e)-[:SCHEDULED_AT_REL]->(t:Timing)-[:TYPE_REL]->(c:Code)
+        return
+        e.uuid as uuid
+        , e.name as name
+        , e.description as description
+        , e.label as label
+        , t.value as value
+        , t.valueLabel as valueLabel
+        , c.decode as tim_ref
+        order by e.name
+      """
+      print("query",query, uuid)
+      print("uuid", uuid)
+      response = session.run(query, uuid1=uuid)
+      results = []
+      for row in response.data():
+        results.append(row)
+    db.close()
+    return { "items": results}
 
 #   @staticmethod
 #   def _create_first_encounter(tx, uuid, name, description):
