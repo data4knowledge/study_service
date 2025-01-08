@@ -4,6 +4,7 @@ from model.study_version import StudyVersion
 from model.study_arm import StudyArm
 from model.study_element import StudyElement
 from model.study_cell import StudyCell
+from model.study_epoch import StudyEpoch
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
 from d4kms_generic import ServiceEnvironment
@@ -81,6 +82,12 @@ def main():
     study_cell = StudyCell.find(study_cell_uuid)
     print('study_cell', study_cell)
     print('study_cell.__class__', study_cell.__class__)
+
+    study_epoch_uuid = StudyEpoch.create("DELETE_ME", "test", "test")
+    print('study_epoch_uuid', study_epoch_uuid)
+    study_epoch = StudyEpoch.find(study_epoch_uuid)
+    print('study_epoch', study_epoch)
+    print('study_epoch.__class__', study_epoch.__class__)
 
 
 

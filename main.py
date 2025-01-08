@@ -670,10 +670,11 @@ async def list_timelines(request: Request, page: int = 0, size: int = 0, filter:
 async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
   timelines = ScheduleTimeline.list(uuid, page, size, filter)
-  epochs = StudyEpoch.list(uuid, page, size, filter)
+  epochs = StudyEpoch.list_with_elements(uuid)
+  for e in epochs['items']:
+    print("e", e)
   arms = StudyArm.list(uuid, page, size, filter)
   encounters = Encounter.list_with_timing(uuid)
-  print("encounters", encounters)
   return {'timelines': timelines, 'epochs': epochs, 'arms': arms, 'encounters': encounters}
 
 @app.post("/v1/timelines", 

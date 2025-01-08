@@ -122,7 +122,7 @@ class StudyArm(NodeNameLabelDesc):
       set s.type = "tbd"
       RETURN s.uuid as uuid
     """
-    print("query",query)
+    # print("query",query)
     result = tx.run(query, 
       s_id=next_id,
       s_name=name, 

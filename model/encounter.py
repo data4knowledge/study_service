@@ -76,7 +76,7 @@ class Encounter(NodeNameLabelDesc):
         , c.decode as tim_ref
         order by e.name
       """
-      print("query",query, uuid)
+      # print("query",query, uuid)
       print("uuid", uuid)
       response = session.run(query, uuid1=uuid)
       results = []
