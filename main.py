@@ -669,13 +669,14 @@ async def list_timelines(request: Request, page: int = 0, size: int = 0, filter:
   response_model=dict)
 async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
+  arms = StudyArm.list(uuid, page, size, filter)
   timelines = ScheduleTimeline.list(uuid, page, size, filter)
-  epochs = StudyEpoch.list_with_elements(uuid)
+  epochs = StudyEpoch.list(uuid, page, size, filter)
+  stuff = StudyEpoch.list_with_elements(uuid)
   for e in epochs['items']:
     print("e", e)
-  arms = StudyArm.list(uuid, page, size, filter)
   encounters = Encounter.list_with_timing(uuid)
-  return {'timelines': timelines, 'epochs': epochs, 'arms': arms, 'encounters': encounters}
+  return {'timelines': timelines, 'epochs': epochs, 'arms': arms, 'encounters': encounters, 'stuff': stuff}
 
 @app.post("/v1/timelines", 
   summary="Create a new timeline",
