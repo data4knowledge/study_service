@@ -672,7 +672,6 @@ async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, fil
   uuid = request.path_params['uuid']
   arms = StudyArm.list(uuid, page, size, filter)
   print("arms", uuid, arms)
-  # JOHANNES JOHANNES ----- Make ScheduledActivityInstance
   arm_timepoints = StudyEpoch.list_with_timepoints(uuid)
   timelines = ScheduleTimeline.list(uuid, page, size, filter)
   epochs = StudyEpoch.list(uuid, page, size, filter)
