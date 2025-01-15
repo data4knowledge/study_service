@@ -53,7 +53,7 @@ class StudyCell(NodeId):
       set s.delete = 'me'
       RETURN s.uuid as uuid
     """
-    print("query",query)
+    # print("query",query)
     result = tx.run(query, 
       s_id=next_id,
       s_uuid1=uuids['StudyCell']

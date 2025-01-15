@@ -77,7 +77,6 @@ class Encounter(NodeNameLabelDesc):
         order by e.name
       """
       # print("query",query, uuid)
-      print("uuid", uuid)
       response = session.run(query, uuid1=uuid)
       results = []
       for row in response.data():

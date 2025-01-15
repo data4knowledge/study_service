@@ -132,7 +132,7 @@ class ScheduleTimeline(NodeNameLabelDesc):
       set s.delete = 'me'
       RETURN s.uuid as uuid
     """
-    print("query",query)
+    # print("query",query)
     result = tx.run(query, 
       s_id='ADDED_SCHEDULE_TIMELINE',
       s_name=name, 

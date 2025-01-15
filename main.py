@@ -24,6 +24,7 @@ from model.study_cell import StudyCell
 from model.study_element import StudyElement
 # from model.study_data import StudyData, StudyDataIn
 from model.encounter import Encounter #, EncounterIn, EncounterLink
+from model.scheduled_instance import ScheduledActivityInstance
 from typing import List
 from model.population_definition import StudyDesignPopulation, StudyCohort
 from model.template.template_manager import template_manager
@@ -670,12 +671,14 @@ async def list_timelines(request: Request, page: int = 0, size: int = 0, filter:
 async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
   arms = StudyArm.list(uuid, page, size, filter)
-  arm_encounters = StudyEpoch.list_with_encounters(uuid)
+  print("arms", uuid, arms)
+  # JOHANNES JOHANNES ----- Make ScheduledActivityInstance
+  arm_timepoints = StudyEpoch.list_with_timepoints(uuid)
   timelines = ScheduleTimeline.list(uuid, page, size, filter)
   epochs = StudyEpoch.list(uuid, page, size, filter)
   stuff = StudyEpoch.list_with_elements(uuid)
   encounters = Encounter.list_with_timing(uuid)
-  return {'timelines': timelines, 'epochs': epochs, 'arms': arms, 'encounters': encounters, 'arm_encounters': arm_encounters, 'stuff': stuff}
+  return {'timelines': timelines, 'epochs': epochs, 'arms': arms, 'encounters': encounters, 'arm_timepoints': arm_timepoints, 'stuff': stuff}
 
 @app.post("/v1/timelines", 
   summary="Create a new timeline",
@@ -684,6 +687,19 @@ async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, fil
   response_model=str)
 async def create_timeline(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
   result = ScheduleTimeline.create(name, description, label, template)
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
+@app.post("/v1/scheduledactivityinstances", 
+  summary="Create a new scheduled activity instance",
+  description="Creates a scheduled activity instance for a epoch. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_scheduled_activity_instance(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = ScheduledActivityInstance.create(name, description, label)
   print("result", result)
   if not 'error' in result:
     return result

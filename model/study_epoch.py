@@ -24,8 +24,8 @@ class StudyEpoch(NodeNameLabelDesc):
     return cls._list_with_elements(uuid)
 
   @classmethod
-  def list_with_encounters(cls, uuid):
-    return cls._list_with_encounters(uuid)
+  def list_with_timepoints(cls, uuid):
+    return cls._list_with_timepoints(uuid)
 
   @classmethod
   def next_id(cls):
@@ -83,7 +83,7 @@ class StudyEpoch(NodeNameLabelDesc):
       set s.delete = 'me'
       RETURN s.uuid as uuid
     """
-    print("query",query)
+    # print("query",query)
     result = tx.run(query, 
       s_id=next_id,
       s_name=name, 
@@ -120,8 +120,8 @@ class StudyEpoch(NodeNameLabelDesc):
         ,element.uuid as element_uuid
         order by arm_name, epoch_id, element_name
       """
-      print("query",query, uuid)
-      print("uuid", uuid)
+      # print("query",query)
+      # print("uuid", uuid)
       response = session.run(query, uuid1=uuid)
       results = []
       for row in response.data():
@@ -130,14 +130,14 @@ class StudyEpoch(NodeNameLabelDesc):
     return { "items": results}
 
   @staticmethod
-  def _list_with_encounters(uuid):
+  def _list_with_timepoints(uuid):
     db = Neo4jConnection()
     with db.session() as session:
       query = """
         MATCH (sd:StudyDesign { uuid: $uuid1 })-[:ARMS_REL]->(arm:StudyArm)
         match (arm)<-[:ARM_REL]-(cell:StudyCell)-[:EPOCH_REL]->(epoch:StudyEpoch)<-[:EPOCH_REL]-(sai:ScheduledActivityInstance)
         match (sai)-[:ENCOUNTER_REL]-(e:Encounter)
-        optional match (e)-[:SCHEDULED_AT_REL]->(timing:Timing)
+        match (e)-[:SCHEDULED_AT_REL]->(timing:Timing)
         return distinct
         arm.id as arm_id
         ,arm.name as arm_name
@@ -148,8 +148,8 @@ class StudyEpoch(NodeNameLabelDesc):
         ,timing.name as timing_name
         order by arm_id, epoch_id
       """
-      print("query",query, uuid)
-      print("uuid", uuid)
+      # print("query",query, uuid)
+      # print("uuid", uuid)
       response = session.run(query, uuid1=uuid)
       results = []
       for row in response.data():

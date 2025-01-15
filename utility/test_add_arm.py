@@ -5,6 +5,7 @@ from model.study_arm import StudyArm
 from model.study_element import StudyElement
 from model.study_cell import StudyCell
 from model.study_epoch import StudyEpoch
+from model.scheduled_instance import ScheduledActivityInstance
 from d4kms_service import Neo4jConnection
 from d4kms_generic import application_logger
 from d4kms_generic import ServiceEnvironment
@@ -88,6 +89,18 @@ def main():
     study_epoch = StudyEpoch.find(study_epoch_uuid)
     print('study_epoch', study_epoch)
     print('study_epoch.__class__', study_epoch.__class__)
+
+    study_epoch_uuid = StudyEpoch.create("DELETE_ME", "test", "test")
+    print('study_epoch_uuid', study_epoch_uuid)
+    study_epoch = StudyEpoch.find(study_epoch_uuid)
+    print('study_epoch', study_epoch)
+    print('study_epoch.__class__', study_epoch.__class__)
+
+    sai_uuid = ScheduledActivityInstance.create("DELETE_ME", "test", "test")
+    print('sai_uuid', sai_uuid)
+    scheduled_activity_instance = ScheduledActivityInstance.find(sai_uuid)
+    print('scheduled_activity_instance.__class__', scheduled_activity_instance.__class__)
+    print('scheduled_activity_instance', scheduled_activity_instance)
 
 
 
