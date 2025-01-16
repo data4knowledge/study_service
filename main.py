@@ -628,6 +628,14 @@ async def get_unlinked_bcs(uuid: str, page: int=0, size: int=0, filter: str=""):
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
+@app.delete("/v1/studyDesigns/{uuid}", 
+  summary="Delete a study design",
+  description="Deletes the specified study design.",
+  status_code=204)
+async def delete_study_design(uuid: str):
+  return StudyDesign.delete(uuid)
+
+
 # Populations & Cohorts
 # =====================
 @app.get("/v1/studyDesignPopulations/{uuid}", 

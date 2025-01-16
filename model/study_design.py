@@ -71,6 +71,11 @@ class StudyDesign(NodeNameLabelDesc):
     return cls.base_list("MATCH (m:StudyVersion {uuid: '%s'})-[]->(n:StudyDesign)" % (uuid), "ORDER BY n.name ASC", page, size, filter)
 
   @classmethod
+  def delete(cls, uuid):
+    count = cls._delete_study_design(uuid)
+    return {'message':'Deleted study design '+uuid, 'count': count}
+
+  @classmethod
   def next_id(cls):
     study_designs = cls.base_list("MATCH (n:StudyDesign)", "ORDER BY n.id ASC", page = 0, size = 1, filter = "")
     ids = [item['id'] for item in study_designs['items']]
@@ -324,3 +329,24 @@ class StudyDesign(NodeNameLabelDesc):
     for row in result:
       return uuids['StudyDesign']
     return None
+
+  @staticmethod
+  def _delete_study_design(uuid):
+    count = 0
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """
+        MATCH (sd:StudyDesign { uuid: '%s' })
+        OPTIONAL MATCH (sd)-[]->(a)
+        WHERE a.delete = 'me'
+        OPTIONAL MATCH (a)-[]-(b)
+        WHERE b.delete = 'me'
+        detach delete sd, a, b
+        RETURN count(*) as count
+      """ % (uuid)
+      # print("query",query)
+      result = session.run(query)
+      for record in result.data():
+        count = record['count']
+    db.close()
+    return count
