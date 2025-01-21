@@ -409,7 +409,7 @@ return bc_raw_name, bc_name, name, data_type, collect(notation) as terms
         WITH e, LENGTH(path) as order
         MATCH (e)<-[:ENCOUNTER_REL]-(sai:ScheduledActivityInstance)
         MATCH (sai)<-[:INSTANCES_REL]-(dc:DataContract)-[PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
-        MATCH (bc)-[source_rel]->(:Source {name:'lab'})
+        MATCH (bc)<-[:USING_BC_REL]->(:Domain {name:'LB'})
         MATCH (bcp)-[:CODE_REL]-(ac:AliasCode)-[:STANDARD_CODE_REL]-(sc:Code)
         MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
         MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
