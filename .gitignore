@@ -130,9 +130,13 @@ dmypy.json
 .development_env
 .production_env
 **/.DS_Store
+.vscode
 
 # Uploads folder
 /uploads/*
 !/uploads/placeholder.txt
 test.py
 /tmp/*
+
+# Python test programs, prefix with 'xxx_'
+xxx_*.*
