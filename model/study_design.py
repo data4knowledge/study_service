@@ -118,7 +118,7 @@ class StudyDesign(NodeNameLabelDesc):
       query = """
         MATCH (m:StudyVersion {uuid: '%s'})-[]->(sd:StudyDesign)
         OPTIONAL MATCH (sd)-->(pdf:PdfFile)
-        RETURN sd.name as name, sd.uuid as uuid, pdf.chat_json is not null as chat_json, pdf.usdm_json is not null as usdm_json
+        RETURN sd.name as name, sd.uuid as uuid, pdf.uuid as pdf_uuid, pdf.chat_json is not null as chat_json, pdf.usdm_json is not null as usdm_json
         ORDER BY sd.name ASC
         SKIP 0 LIMIT 10
       """ % (uuid)
