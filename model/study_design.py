@@ -71,6 +71,10 @@ class StudyDesign(NodeNameLabelDesc):
     return cls.base_list("MATCH (m:StudyVersion {uuid: '%s'})-[]->(n:StudyDesign)" % (uuid), "ORDER BY n.name ASC", page, size, filter)
 
   @classmethod
+  def list_with_source(cls, uuid, page, size, filter):
+    return cls._list_with_pdf_source(cls, uuid, page, size, filter)
+
+  @classmethod
   def delete(cls, uuid):
     count = cls._delete_study_design(uuid)
     return {'message':'Deleted study design '+uuid, 'count': count}
@@ -97,6 +101,32 @@ class StudyDesign(NodeNameLabelDesc):
 #     db = Neo4jConnection()
 #     with db.session() as session:
 #       return session.execute_read(self._workflows, self.uuid)
+
+  def _list_with_pdf_source(self, uuid, page, size, filter):
+    db = Neo4jConnection()
+    with db.session() as session:
+      result = {}
+      query = """
+        MATCH (m:StudyVersion {uuid: '%s'})-[]->(sd:StudyDesign)
+        RETURN count(sd) as count
+      """ % (uuid)
+      records = session.run(query)
+      for record in records.data():
+        result['count'] = record['count']
+
+      result['items'] = []
+      query = """
+        MATCH (m:StudyVersion {uuid: '%s'})-[]->(sd:StudyDesign)
+        OPTIONAL MATCH (sd)-->(pdf:PdfFile)
+        RETURN sd.name as name, sd.uuid as uuid, pdf.chat_json is not null as chat_json, pdf.usdm_json is not null as usdm_json
+        ORDER BY sd.name ASC
+        SKIP 0 LIMIT 10
+      """ % (uuid)
+      # print(f"QUERY: {query}")
+      records = session.run(query)
+      for record in records.data():
+        result['items'].append(record)
+    return result
 
   def summary(self):
     db = Neo4jConnection()

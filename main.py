@@ -363,6 +363,19 @@ async def list_study_designs(request: Request, page: int = 0, size: int = 0, fil
   uuid = request.path_params['uuid']
   return StudyDesign.list(uuid, page, size, filter)
 
+@app.get("/v1/studyVersions/{uuid}/studyDesigns_with_source", 
+  summary="Get the study designs for a study version",
+  description="Provides the basic data for the study designs for a study version (currently limited to one design only).",
+  response_model=dict)
+async def list_study_designs(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  results = {}
+  results = StudyDesign.list_with_source(uuid, page, size, filter)
+  results['page'] = page
+  results['size'] = size
+  results['filter'] = filter
+  return results
+
 @app.get("/v1/studyDesigns/{uuid}", 
   summary="Get the study design",
   description="Provides the details for a given study design.",
