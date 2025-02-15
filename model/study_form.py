@@ -35,6 +35,12 @@ class StudyForm():
     return result
 
   @classmethod
+  def make_lab_transfer_spec(self, uuid, page, size, filter):
+    bcs = StudyDesignBC.get_lab_transfer_spec(uuid)
+    result = {'items': bcs, 'page': page, 'size': size, 'filter': filter, 'count': 1 }
+    return result
+
+  @classmethod
   def datapoint_form(self, datapoint, page, size, filter):
     self._get_configuration(self)
     bcs = StudyDesignBC.get_datapoint_stuff(datapoint)

@@ -556,6 +556,17 @@ async def get_study_bc_forms(uuid: str, page: int=0, size: int=0, filter: str=""
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
+@app.get("/v1/studyDesigns/{uuid}/lab_transfer_spec",
+  summary="Get a draft lab transfer spec for a study design",
+  description="Provides the BCs that have their source = lab for a given study design.",
+  response_model=dict)
+async def get_study_lab_transfer(uuid: str, page: int=0, size: int=0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design.lab_transfer_spec(page, size, filter)
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
 # @app.get("/v1/{uuid}/datapoint",
 @app.get("/v1/datapoint_form",
   summary="Get the BC collection forms for a study design",
