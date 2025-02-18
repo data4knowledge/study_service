@@ -407,7 +407,8 @@ class StudyDesign(NodeNameLabelDesc):
         match (t_from)-[:TYPE_REL]->(type:Code)
         // optional match (sai)-[:RELATIVE_TO_SCHEDULED_INSTANCE_REL]-(t_to:Timing)
         optional match (t_from)<-[:SCHEDULED_AT_REL]-(e:Encounter)
-        return bc.name as bc_name, bcp.generic_name as bcp_name, dc.uri as uri, t_from.valueLabel as timing_valueLabel, t_from.label as timing_label, e.label as encounter_label
+        optional match (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(term:Code)
+        return bc.name as bc_name, bcp.generic_name as bcp_name, dc.uri as uri, t_from.valueLabel as timing_valueLabel, t_from.label as timing_label, e.label as encounter_label, collect(term.pref_label) as terms
       """ % (uri)
       print("dc context query",query)
       result = session.run(query)
