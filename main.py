@@ -567,7 +567,6 @@ async def get_study_lab_transfer(uuid: str, page: int=0, size: int=0, filter: st
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
-# @app.get("/v1/{uuid}/datapoint",
 @app.get("/v1/datapoint_form",
   summary="Get the BC collection forms for a study design",
   description="Provides the forms from BCs for a given study design.",
