@@ -14,6 +14,7 @@ from model.study_design_data_contract import StudyDesignDataContract
 from model.study_design_sdtm import StudyDesignSDTM
 from model.study_design_bc import StudyDesignBC
 from model.utility.configuration import ConfigurationNode
+from model.data_file import DataFile
 
 import os
 import yaml
@@ -129,7 +130,7 @@ class StudyFile(BaseNode):
         files = dropbox.upload_file_list(self.uuid)
 
       # application_logger.info(f"Files: {files}") 
-      self.set_status("running", "Loading database", 65)
+      self.set_status("running", "Loading database", 20)
       aura = AuraService()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
@@ -138,42 +139,45 @@ class StudyFile(BaseNode):
 
 
       # Fix surrogates. Replace CDISC BC's with d4k
-      self.set_status("running", "Fix Biomedical Concepts Surrogates", 70)
+      self.set_status("running", "Fix Biomedical Concepts Surrogates", 30)
       result = StudyDesignBC.make_dob_surrogate_as_bc(study_design.name)
       result = StudyDesignBC.pretty_properties_for_bc(study_design.name)
 
-      self.set_status("running", "Fix Biomedical Concepts", 70)
+      self.set_status("running", "Fix Biomedical Concepts", 40)
       result = StudyDesignBC.fix(study_design.name)
 
-      self.set_status("running", "Creating data contract", 75)
+      self.set_status("running", "Creating data contract", 50)
       name = study.name
       ns = RAService().namespace_by_name('d4k Study namespace')
       StudyDesignDataContract.create(name, ns['value'])
 
-      self.set_status("running", "Adding SDTM domains", 80)
+      self.set_status("running", "Adding SDTM domains", 60)
       result = StudyDesignSDTM.create(study_design.name)
 
       # Add permissable SDTM variables
-      self.set_status("running", "Add permissible SDTM variables", 85)
+      self.set_status("running", "Add permissible SDTM variables", 70)
       result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design.name)
 
       # Add missing links to CRM
-      self.set_status("running", "Link BRTHDTC to CRM", 88)
+      self.set_status("running", "Link BRTHDTC to CRM", 75)
       result = StudyDesignBC.fix_links_to_crm(study_design.name)
 
       # Add missing BC links to SDTM (Probably superfluous. E.g. DS does not have a link to BC Exposure, but it shows Exposure information if configured)
       # self.set_status("running", "Link BC to SDTM", 89)
       # result = StudyDesignSDTM.add_links_to_sdtm(study_design.name)
 
-      self.set_status("running", "Linking Biomedical Concepts", 90)
+      self.set_status("running", "Linking Biomedical Concepts", 80)
       result = StudyDesignBC.create(study_design.name)
 
       # Fix BC name/label
-      self.set_status("running", "Fix BC name/label", 98)
+      self.set_status("running", "Fix BC name/label", 85)
       result = StudyDesignBC.fix_bc_name_label(study_design.name)
 
-      self.set_status("running", "Create default configuration", 99)
+      self.set_status("running", "Create default configuration", 90)
       ConfigurationNode.create_default_configuration()
+
+      self.set_status("running", "Add properties to CT", 90)
+      DataFile.add_properties_to_ct()
 
       self.set_status("complete", "Finished", 100)
       return True
