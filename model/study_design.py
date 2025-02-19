@@ -246,6 +246,11 @@ class StudyDesign(NodeNameLabelDesc):
   def datapoint_form(datapoint, page, size, filter):
     return StudyForm.datapoint_form(datapoint, page, size, filter)
 
+  @staticmethod
+  def data_contract_specification(uri, page, size, filter):
+    items = StudyDesign._data_contract_specification(uri, page, size, filter)
+    result = {'items': items, 'source_data_contract': uri, 'page': page, 'size': size, 'filter': filter, 'count': 1 }
+    return result
 
   def biomedical_concepts_unlinked(self, page, size, filter):
     return StudyDesignBC.unlinked(self.uuid, page, size, filter)
@@ -383,3 +388,31 @@ class StudyDesign(NodeNameLabelDesc):
         count = record['count']
     db.close()
     return count
+
+  @staticmethod
+  def _data_contract_specification(uri, page, size, filter):
+    db = Neo4jConnection()
+    results = []
+    with db.session() as session:
+      query = """
+        // Get data contract context
+        MATCH (dc:DataContract { uri: '%s' })
+        with dc
+        match (dc)-->(bcp:BiomedicalConceptProperty)<--(bc:BiomedicalConcept)
+        match (dc)-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)
+        match (sai)-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(t_from:Timing)
+        match (t_from)-[:RELATIVE_TO_FROM_REL]->()
+        match (t_from)<-[:TIMINGS_REL]-(tl:ScheduleTimeline)
+        match (t_from)-[:RELATIVE_TO_FROM_REL]->(rel:Code)
+        match (t_from)-[:TYPE_REL]->(type:Code)
+        // optional match (sai)-[:RELATIVE_TO_SCHEDULED_INSTANCE_REL]-(t_to:Timing)
+        optional match (t_from)<-[:SCHEDULED_AT_REL]-(e:Encounter)
+        optional match (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(term:Code)
+        return bc.name as bc_name, bcp.generic_name as bcp_name, dc.uri as uri, t_from.valueLabel as timing_valueLabel, t_from.label as timing_label, e.label as encounter_label, collect(term.pref_label) as terms
+      """ % (uri)
+      print("dc context query",query)
+      result = session.run(query)
+      for record in result.data():
+        results.append(record)
+    db.close()
+    return results
