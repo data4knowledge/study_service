@@ -36,14 +36,19 @@ class StudyDesignBC():
     return bcs
 
   @classmethod
+  def get_activities_by_visit(cls, uuid, page, size, filter):
+    study_design = cls._get_study_design_by_uuid(uuid)
+    bcs = cls._get_activities_by_visit(study_design, page, size, filter)
+    result = {'items': bcs, 'page': page, 'size': size, 'filter': filter, 'count': 1 }
+    return result
+
+  @classmethod
   def get_visits(cls, uuid):
-    # study_design = cls._get_study_design_by_uuid(uuid)
     visits = cls._get_visits(uuid)
     return visits
 
   @classmethod
   def get_datapoint_stuff(cls, dp_uri):
-    # study_design = cls._get_study_design_by_uuid(uuid)
     data = cls._get_datapoint_stuff(dp_uri)
     return data
 
@@ -419,6 +424,35 @@ class StudyDesignBC():
         order by order, name, bcp_name
       """ % (study_design.uuid)
       # print("lab transfer query", query)
+      result = session.run(query)
+      for record in result:
+        results.append(record.data())
+
+
+    db.close()
+    return results
+
+  @staticmethod
+  def _get_activities_by_visit(study_design, page, size, filter):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      # Get BCs with source 'lab'
+      query = """
+        MATCH (st:ScheduleTimeline)<-[]-(sd:StudyDesign {uuid: '%s'})-[]->(e1:Encounter)
+        WHERE NOT (e1)-[:PREVIOUS_REL]->()
+        WITH e1
+        MATCH path=(e1)-[:NEXT_REL *0..]->(e)
+        WITH e, LENGTH(path) as order
+        MATCH (e)<-[:ENCOUNTER_REL]-(sai:ScheduledActivityInstance)
+        MATCH (sai)-[:ACTIVITY_REL]->(act:Activity)
+        MATCH (act)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
+        where d.name <> "LB"
+        with distinct order, e.label as visit, act.label as activity, bc.name as bc_name
+        return order, visit, activity, collect(bc_name) as bcs
+        order by order, activity 
+      """ % (study_design.uuid)
+      print("activity by visit query", query)
       result = session.run(query)
       for record in result:
         results.append(record.data())

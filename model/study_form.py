@@ -48,7 +48,6 @@ class StudyForm():
     result = {'items': bcs, 'source_datapoint': datapoint, 'valid_values': valid_values, 'visits': [], 'page': page, 'size': size, 'filter': filter, 'count': 1 }
     return result
 
-
   @staticmethod
   def _get_configuration(self):
     configuration = ConfigurationNode.get()
