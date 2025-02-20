@@ -1,8 +1,11 @@
+import traceback
+import logging
 from typing import List, Literal, Union
 from .base_node import *
 from .schedule_timeline_exit import ScheduleTimelineExit
 from .scheduled_instance import ScheduledActivityInstance, ScheduledDecisionInstance
 from .timing import Timing
+from uuid import uuid4
 
 class ScheduleTimeline(NodeNameLabelDesc):
   mainTimeline: bool
@@ -12,6 +15,20 @@ class ScheduleTimeline(NodeNameLabelDesc):
   timings: List[Timing] = []
   instances: List[Union[ScheduledActivityInstance, ScheduledDecisionInstance]] = []
   instanceType: Literal['ScheduleTimeline']
+
+  @classmethod
+  def create(cls, name, description, label, template_uuid):
+    try:
+      db = Neo4jConnection()
+      with db.session() as session:
+        result = session.execute_write(cls._create_scheduled_timeline, name, description, label, template_uuid)
+        if not result:
+          return {'error': "Failed to create timeline, operation failed"}
+        return result 
+    except Exception as e:
+      logging.error(f"Exception raised while creating timeline")
+      logging.error(f"Exception {e}\n{traceback.format_exc()}")
+      return {'error': f"Exception. Failed to create timeline"}
 
   @classmethod
   def list(cls, uuid, page, size, filter):
@@ -106,3 +123,23 @@ class ScheduleTimeline(NodeNameLabelDesc):
           label = activity['label'] if activity['label'] else activity['name'] 
           results.append([{'name': label, 'uuid': activity['uuid']}] + list(data.values()))
     return results
+
+  @staticmethod
+  def _create_scheduled_timeline(tx, name, description, label, template_uuid):
+    uuids = {'ScheduleTimeline': str(uuid4())}
+    query = """
+      CREATE (s:ScheduleTimeline {id: $s_id, uuid: $s_uuid1, name: $s_name, description: $s_description, label: $s_label, mainTimeline: 'true', instanceType: 'ScheduleTimeline'})
+      set s.delete = 'me'
+      RETURN s.uuid as uuid
+    """
+    # print("query",query)
+    result = tx.run(query, 
+      s_id='ADDED_SCHEDULE_TIMELINE',
+      s_name=name, 
+      s_description=description, 
+      s_label=label, 
+      s_uuid1=uuids['ScheduleTimeline']
+    )
+    for row in result:
+      return uuids['ScheduleTimeline']
+    return None

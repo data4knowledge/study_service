@@ -30,6 +30,12 @@ class StudyDesignBC():
     return bcs
 
   @classmethod
+  def get_lab_transfer_spec(cls, uuid):
+    study_design = cls._get_study_design_by_uuid(uuid)
+    bcs = cls._get_lab_transfer_spec(study_design)
+    return bcs
+
+  @classmethod
   def get_visits(cls, uuid):
     # study_design = cls._get_study_design_by_uuid(uuid)
     visits = cls._get_visits(uuid)
@@ -386,6 +392,38 @@ class StudyDesignBC():
       for record in result:
         # results.append(record.data())
         results[record['name']] = record['terms']
+    db.close()
+    return results
+
+  @staticmethod
+  def _get_lab_transfer_spec(study_design):
+    db = Neo4jConnection()
+    with db.session() as session:
+      results = []
+      # Get BCs with source 'lab'
+      query = """
+        MATCH (st:ScheduleTimeline)<-[]-(sd:StudyDesign {uuid: '%s'})-[]->(e1:Encounter)
+        WHERE NOT (e1)-[:PREVIOUS_REL]->()
+        WITH e1
+        MATCH path=(e1)-[:NEXT_REL *0..]->(e)
+        WITH e, LENGTH(path) as order
+        MATCH (e)<-[:ENCOUNTER_REL]-(sai:ScheduledActivityInstance)
+        MATCH (sai)<-[:INSTANCES_REL]-(dc:DataContract)-[PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
+        MATCH (bc)<-[:USING_BC_REL]->(:Domain {name:'LB'})
+        MATCH (bcp)-[:CODE_REL]-(ac:AliasCode)-[:STANDARD_CODE_REL]-(sc:Code)
+        MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
+        MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
+        optional MATCH (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(c:Code)
+        with distinct order, e.label as encounter, bc.name as name, {id: sc.code, decode: sc.decode} as coded_name, bcp.generic_name as bcp_name, c.decode as term, dc.uri as dc
+        return order, encounter, name, coded_name, bcp_name, collect(term) as terms, dc
+        order by order, name, bcp_name
+      """ % (study_design.uuid)
+      # print("lab transfer query", query)
+      result = session.run(query)
+      for record in result:
+        results.append(record.data())
+
+
     db.close()
     return results
 

@@ -190,7 +190,7 @@ class Domain(BaseNode):
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
       , toInteger(subj.identifier) as n_subject
-      , case toInteger(subj.identifier) when is null then 0 else 1 end as n_order
+      , case toInteger(subj.identifier) when subj.identifier is null then 0 else 1 end as n_order
       , subj.identifier as SUBJID
       , var.name as variable
       , dp.value as value
@@ -201,7 +201,7 @@ class Domain(BaseNode):
       , coalesce(country1.code, country2.code) as COUNTRY
       order by SITEID, n_order, SUBJID
     """ % (self.uuid)
-    # print(query)
+    print(query)
     return query
 
   def ds_query(self):

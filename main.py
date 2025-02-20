@@ -11,17 +11,21 @@ from model.study_version import StudyVersion
 from model.study_design import StudyDesign
 from d4kms_service import Neo4jConnection
 from model.schedule_timeline import ScheduleTimeline
+from model.study_arm import StudyArm
 from model.activity import Activity
 from model.study_protocol_document_version import StudyProtocolDocumentVersion, SPDVBackground
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
 # from model.study_design import StudyDesign
 from model.domain import Domain
 # from model.activity import Activity, ActivityIn
-# from model.study_epoch import StudyEpoch, StudyEpochIn
-# from model.study_arm import StudyArm, StudyArmIn
+from model.study_epoch import StudyEpoch #, StudyEpochIn
+from model.study_arm import StudyArm #, StudyArmIn
+from model.study_cell import StudyCell
+from model.study_element import StudyElement
 # from model.study_data import StudyData, StudyDataIn
-# from model.encounter import Encounter, EncounterIn, EncounterLink
-# from typing import List
+from model.encounter import Encounter #, EncounterIn, EncounterLink
+from model.scheduled_instance import ScheduledActivityInstance
+from typing import List
 from model.population_definition import StudyDesignPopulation, StudyCohort
 from model.template.template_manager import template_manager
 from d4kms_generic import ServiceEnvironment
@@ -359,6 +363,19 @@ async def list_study_designs(request: Request, page: int = 0, size: int = 0, fil
   uuid = request.path_params['uuid']
   return StudyDesign.list(uuid, page, size, filter)
 
+@app.get("/v1/studyVersions/{uuid}/studyDesigns_with_source", 
+  summary="Get the study designs for a study version",
+  description="Provides the basic data for the study designs for a study version (currently limited to one design only).",
+  response_model=dict)
+async def list_study_designs(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  results = {}
+  results = StudyDesign.list_with_source(uuid, page, size, filter)
+  results['page'] = page
+  results['size'] = size
+  results['filter'] = filter
+  return results
+
 @app.get("/v1/studyDesigns/{uuid}", 
   summary="Get the study design",
   description="Provides the details for a given study design.",
@@ -370,16 +387,19 @@ async def get_study_design(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
-@app.get("/v1/studyDesigns/{uuid}/summary", 
-  summary="Get the study design summary",
-  description="Provides the summary for a given study design.",
-  response_model=dict)
-async def get_study_design_summary(uuid: str):
-  study_design = StudyDesign.find(uuid)
-  if study_design:
-    return study_design.summary()
+# JOHANNES
+@app.post("/v1/studyDesigns", 
+  summary="Create a new study design",
+  description="Creates a study design. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_study_design(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = StudyDesign.create(name, description, label)
+  print("result", result)
+  if not 'error' in result:
+    return result
   else:
-    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+    raise HTTPException(status_code=409, detail=result['error'])
 
 @app.get("/v1/studyDesigns/{uuid}/design", 
   summary="Get the study design design (arms and epochs)",
@@ -536,7 +556,27 @@ async def get_study_bc_forms(uuid: str, page: int=0, size: int=0, filter: str=""
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
-# @app.get("/v1/{uuid}/datapoint",
+@app.get("/v1/studyDesigns/{uuid}/lab_transfer_spec",
+  summary="Get a draft lab transfer spec for a study design",
+  description="Provides the BCs that have their source = lab for a given study design.",
+  response_model=dict)
+async def get_study_lab_transfer(uuid: str, page: int=0, size: int=0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  if study_design:
+    return study_design.lab_transfer_spec(page, size, filter)
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
+@app.get("/v1/dataContract_context",
+  summary="Get the BC and timing for a data contract",
+  description="Provides the forms from BCs for a given study design.",
+  response_model=dict)
+async def data_contract_uri(uri: str, page: int=0, size: int=0, filter: str=""):
+  if uri:
+    return StudyDesign.data_contract_specification(uri, page, size, filter)
+  else:
+    raise HTTPException(status_code=404, detail="No uri provided with api call")
+
 @app.get("/v1/datapoint_form",
   summary="Get the BC collection forms for a study design",
   description="Provides the forms from BCs for a given study design.",
@@ -621,6 +661,14 @@ async def get_unlinked_bcs(uuid: str, page: int=0, size: int=0, filter: str=""):
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
+@app.delete("/v1/studyDesigns/{uuid}", 
+  summary="Delete a study design",
+  description="Deletes the specified study design.",
+  status_code=204)
+async def delete_study_design(uuid: str):
+  return StudyDesign.delete(uuid)
+
+
 # Populations & Cohorts
 # =====================
 @app.get("/v1/studyDesignPopulations/{uuid}", 
@@ -648,6 +696,7 @@ async def get_cohort_summary(request: Request, uuid: str):
 # Timelines
 # =========
 
+# JOHANNES JOBBAR
 @app.get("/v1/studyDesigns/{uuid}/timelines", 
   summary="Get the timelines for a study design",
   description="Gets a list of timeliens for a study design.",
@@ -655,6 +704,48 @@ async def get_cohort_summary(request: Request, uuid: str):
 async def list_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
   return ScheduleTimeline.list(uuid, page, size, filter)
+
+@app.get("/v1/studyDesigns/{uuid}/timelines_soa", 
+  summary="Get the timelines and epochs for a study design",
+  description="Gets a list of timelines and epochs for a study design.",
+  response_model=dict)
+async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, filter: str=""):
+  uuid = request.path_params['uuid']
+  arms = StudyArm.list(uuid, page, size, filter)
+  print("arms", uuid, arms)
+  arm_timepoints = StudyEpoch.list_with_timepoints(uuid)
+  timelines = ScheduleTimeline.list(uuid, page, size, filter)
+  epochs = StudyEpoch.list(uuid, page, size, filter)
+  stuff = StudyEpoch.list_with_elements(uuid)
+  encounters = Encounter.list_with_timing(uuid)
+  return {'timelines': timelines, 'epochs': epochs, 'arms': arms, 'encounters': encounters, 'arm_timepoints': arm_timepoints, 'stuff': stuff}
+
+@app.post("/v1/timelines", 
+  summary="Create a new timeline",
+  description="Creates a timeline. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_timeline(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
+  result = ScheduleTimeline.create(name, description, label, template)
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
+@app.post("/v1/scheduledactivityinstances", 
+  summary="Create a new scheduled activity instance",
+  description="Creates a scheduled activity instance for a epoch. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_scheduled_activity_instance(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = ScheduledActivityInstance.create(name, description, label)
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
 
 @app.get("/v1/timelines/{uuid}", 
   summary="Get a timeline",
@@ -692,20 +783,68 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return study_design.arms()
 
-# @app.post("/v1/studyDesigns/{uuid}/studyArms", 
-#   summary="Create a new arm within a study design.",
-#   description="Creates an arm.",
-#   status_code=201,
-#   response_model=str)
-# async def create_arm(uuid: str, arm: StudyArmIn):
-#   result = StudyArm.create(uuid, arm.name, arm.description)
-#   if result == None:
-#     raise HTTPException(status_code=409, detail="Trying to create a duplicate arm within the study")
-#   else:
-#     return result
+# Johannes
+@app.post("/v1/studyDesigns/{uuid}/studyArms", 
+  summary="Create a new arm within a study design.",
+  description="Creates an arm.",
+  status_code=201,
+  response_model=str)
+async def create_arm(uuid: str, name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = StudyArm.create(name, description, label)
+  if result == None:
+    raise HTTPException(status_code=409, detail="Trying to create a duplicate arm within the study")
+  else:
+    return result
 
 # # Epochs
 # # ======
+
+@app.post("/v1/studyEpochs", 
+  summary="Create a new epoch",
+  description="Creates a epoch. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_epoch(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = StudyEpoch.create(name, description, label)
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
+# # Elements
+# # ======
+
+@app.post("/v1/studyElements", 
+  summary="Create a new element",
+  description="Creates a element. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_element(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
+  result = StudyElement.create(name, description, label)
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
+# # Cells
+# # ======
+
+@app.post("/v1/studyCells", 
+  summary="Create a new cell",
+  description="Creates a cell. If succesful the uuid of the created resource is returned.",
+  status_code=201,
+  response_model=str)
+async def create_cell(background_tasks: BackgroundTasks):
+  result = StudyCell.create()
+  print("result", result)
+  if not 'error' in result:
+    return result
+  else:
+    raise HTTPException(status_code=409, detail=result['error'])
+
+
 
 # @app.get("/v1/studyDesigns/{uuid}/studyEpochs", 
 #   summary="Get the epochs for a study design.",
@@ -730,6 +869,7 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return result
 
+# JOHANNES
 # @app.put("/v1/studyEpochs/{uuid}", 
 #   summary="Update an epoch",
 #   description="Update the simple fields of an epoch.",
@@ -742,8 +882,21 @@ async def get_timeline_soa(uuid: str):
 #   else:
 #     return epoch.update(data.name, data.description)
 
-# # Encounters
-# # ==========
+# Encounters
+# ==========
+
+@app.get("/v1/studyDesigns/{uuid}/encounters",
+  summary="Get the encounters for a study design",
+  description="Provides a list of uuids for the encounters that exisit for a specified study.",
+  response_model=List[Encounter])
+async def get_study_design_encounters(uuid: str, page: int = 0, size: int = 0, filter: str=""):
+  study_design = StudyDesign.find(uuid)
+  print("study_design", study_design)
+  print("tjena")
+  if study_design is None:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+  else:
+    return study_design.study_design_encounters(page=page, size=size, filter=filter)
 
 # @app.post("/v1/studyDesigns/{uuid}/encounters", 
 #   summary="Creates a new encounter within a study design",

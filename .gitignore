@@ -137,6 +137,7 @@ dmypy.json
 !/uploads/placeholder.txt
 test.py
 /tmp/*
+.vscode
 
 # Python test programs, prefix with 'xxx_'
 xxx_*.*
