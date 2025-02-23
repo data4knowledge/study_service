@@ -514,7 +514,7 @@ class StudyDesignBC():
       for record in result:
         results.append(record.data())
 
-      # Result will be empty if it is not on sub-timeline. Get from main-timeline
+      #  NOTE: Result will be empty if it is not on sub-timeline. Get from main-timeline
       if not results:
         # Get bcp when on main-timeline
         query = """
@@ -540,8 +540,39 @@ class StudyDesignBC():
         for record in result:
           results.append(record.data())
 
+      # NOTE: Result will be empty if it is not linked to a timing/encounter or unscheduled. E.g. AE
+      if not results:
+        # Get bcp when on main-timeline
+        query = """
+          match (dp:DataPoint {uri:'%s'})
+          match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
+          match (dp)-[:SOURCE]->(sr:Record)
+          match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
+          with dc0, bc, subj, cd, sr
+          match (dc0)-[:INSTANCES_REL]->(sub_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(x:ScheduleTimeline)
+          // match (sub_sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(timing:Timing)
+          match (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc)
+          match (bcp)-[:IS_A_REL]->(crm:CRMNode)
+          optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
+          // match (dc)-[:INSTANCES_REL]->(main_sai)
+          // match (dc)-[:INSTANCES_REL]->(sub_sai)
+          match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
+          match (dp)-[:SOURCE]->(sr)
+          OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
+          OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+          where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+          WITH distinct subj.identifier as subj_id, "N/A" as visit, "N/A" as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
+          return "sub2" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, generic_name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
+        """ % (dp_uri)
+        # print("get_datapoint main-timeline  query", query)
+        result = session.run(query)
+        for record in result:
+          results.append(record.data())
+
     # for record in results:
     #   record['values'] = list(set(record['values']))
+
+    print("datapoint results", results)
 
     db.close()
     if not results:
