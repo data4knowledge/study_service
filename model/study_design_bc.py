@@ -439,18 +439,17 @@ class StudyDesignBC():
       results = []
       # Get BCs with source 'lab'
       query = """
-        MATCH (st:ScheduleTimeline)<-[]-(sd:StudyDesign {uuid: '%s'})-[]->(e1:Encounter)
-        WHERE NOT (e1)-[:PREVIOUS_REL]->()
-        WITH e1
-        MATCH path=(e1)-[:NEXT_REL *0..]->(e)
-        WITH e, LENGTH(path) as order
-        MATCH (e)<-[:ENCOUNTER_REL]-(sai:ScheduledActivityInstance)
-        MATCH (sai)-[:ACTIVITY_REL]->(act:Activity)
-        MATCH (act)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
+        MATCH (st:ScheduleTimeline)<-[]-(sd:StudyDesign {uuid: '%s'})-[]->(a1:Activity)
+        WHERE NOT (a1)-[:PREVIOUS_REL]->()
+        WITH a1 
+        MATCH path=(a1)-[:NEXT_REL *0..]->(a)
+        WITH a, LENGTH(path) as a_ord
+        MATCH (a)<-[:ACTIVITY_REL]-(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(enc:Encounter)
+        match (a)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
         where d.name <> "LB"
-        with distinct order, e.label as visit, act.label as activity, bc.name as bc_name
-        return order, visit, activity, collect(bc_name) as bcs
-        order by order, activity 
+        with distinct toInteger(split(enc.id,'_')[1]) as order, a_ord, enc.label as visit, a.label as activity, bc.name as bc_name
+        return order, a_ord, visit, activity, collect(bc_name) as bcs
+        order by order, a_ord
       """ % (study_design.uuid)
       print("activity by visit query", query)
       result = session.run(query)
