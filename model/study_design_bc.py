@@ -445,7 +445,7 @@ class StudyDesignBC():
         MATCH path=(a1)-[:NEXT_REL *0..]->(a)
         WITH a, LENGTH(path) as a_ord
         MATCH (a)<-[:ACTIVITY_REL]-(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(enc:Encounter)
-        match (a)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
+        optional match (a)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
         where d.name <> "LB"
         with distinct toInteger(split(enc.id,'_')[1]) as order, a_ord, enc.label as visit, a.label as activity, bc.name as bc_name
         return order, a_ord, visit, activity, collect(bc_name) as bcs
