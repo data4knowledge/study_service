@@ -252,8 +252,12 @@ class StudyDesign(NodeNameLabelDesc):
     db = Neo4jConnection()
     results = []
     with db.session() as session:
-      # Get study from uuid
-      query = """MATCH (studyDesign:StudyDesign {uuid: '%s'})<-[:STUDY_DESIGNS_REL]-(studyVersion:StudyVersion)<-[:VERSIONS_REL]-(study:Study) return studyDesign, studyVersion, study""" % (cls.uuid)
+      # From study design from uuid get study, sponsor (code: C70793 = 	Clinical Study Sponsor)
+      query = """
+        MATCH (studyDesign:StudyDesign {uuid: '%s'})<-[:STUDY_DESIGNS_REL]-(studyVersion:StudyVersion)<-[:VERSIONS_REL]-(study:Study)
+        MATCH (studyDesign)-[:ORGANIZATIONS_REL]->(researchOrganization:ResearchOrganization)-[:ORGANIZATION_TYPE_REL]->(c:Code {code: 'C70793'})
+        return studyDesign, studyVersion, study, researchOrganization
+      """ % (cls.uuid)
       results = {}
       response = session.run(query)
       for record in response.data():
