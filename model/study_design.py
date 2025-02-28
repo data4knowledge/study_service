@@ -255,8 +255,8 @@ class StudyDesign(NodeNameLabelDesc):
       # From study design from uuid get study, sponsor (code: C70793 = 	Clinical Study Sponsor)
       query = """
         MATCH (studyDesign:StudyDesign {uuid: '%s'})<-[:STUDY_DESIGNS_REL]-(studyVersion:StudyVersion)<-[:VERSIONS_REL]-(study:Study)
-        MATCH (studyDesign)-[:ORGANIZATIONS_REL]->(researchOrganization:ResearchOrganization)-[:ORGANIZATION_TYPE_REL]->(c:Code {code: 'C70793'})
-        return studyDesign, studyVersion, study, researchOrganization
+        MATCH (studyVersion)-[:STUDY_IDENTIFIERS_REL]->(studyIdentifier:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sponsor:Organization)-[:ORGANIZATION_TYPE_REL]->(c:Code {code: 'C70793'})
+        return studyDesign, studyVersion, study, sponsor, studyIdentifier
       """ % (cls.uuid)
       results = {}
       response = session.run(query)
@@ -429,9 +429,10 @@ class StudyDesign(NodeNameLabelDesc):
         match (t_from)-[:RELATIVE_TO_FROM_REL]->(rel:Code)
         match (t_from)-[:TYPE_REL]->(type:Code)
         // optional match (sai)-[:RELATIVE_TO_SCHEDULED_INSTANCE_REL]-(t_to:Timing)
-        optional match (t_from)<-[:SCHEDULED_AT_REL]-(e:Encounter)
+        optional match (sai)-[:ENCOUNTER_REL]-(e1:Encounter)
+        optional match (t_from)<-[:SCHEDULED_AT_REL]-(e2:Encounter)
         optional match (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(term:Code)
-        return bc.name as bc_name, bcp.generic_name as bcp_name, dc.uri as uri, t_from.valueLabel as timing_valueLabel, t_from.label as timing_label, e.label as encounter_label, collect(term.pref_label) as terms
+        return bc.name as bc_name, bcp.generic_name as bcp_name, dc.uri as uri, t_from.valueLabel as timing_valueLabel, t_from.label as timing_label, coalesce(e2.label, e1.label,"Unscheduled") as encounter_label, collect(term.pref_label) as terms
       """ % (uri)
       print("dc context query",query)
       result = session.run(query)

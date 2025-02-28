@@ -59,7 +59,7 @@ class Study(NodeNameLabelDesc):
         MATCH (sv)-[:STUDY_PHASE_REL]->(ac:AliasCode)-[:STANDARD_CODE_REL]->(pc)
         RETURN sv, st, stc, si, pc ORDER BY sv.version
       """ % (self.uuid)
-      print(f"QUERY: {query}")
+      # print(f"QUERY: {query}")
       results = {}
       records = session.run(query)
       for record in records:
