@@ -245,6 +245,22 @@ class StudyDesign(NodeNameLabelDesc):
   def activities_by_visit(self, page, size, filter):
     return StudyDesignBC.get_activities_by_visit(self.uuid, page, size, filter)
 
+  def study(self, page, size, filter):
+    return self._study(page, size, filter)
+
+  def _study(cls, page, size, filter):
+    db = Neo4jConnection()
+    results = []
+    with db.session() as session:
+      # Get study from uuid
+      query = """MATCH (studyDesign:StudyDesign {uuid: '%s'})<-[:STUDY_DESIGNS_REL]-(studyVersion:StudyVersion)<-[:VERSIONS_REL]-(study:Study) return studyDesign, studyVersion, study""" % (cls.uuid)
+      results = {}
+      response = session.run(query)
+      for record in response.data():
+        results = record
+    db.close()
+    return results
+
   @staticmethod
   def datapoint_form(datapoint, page, size, filter):
     return StudyForm.datapoint_form(datapoint, page, size, filter)

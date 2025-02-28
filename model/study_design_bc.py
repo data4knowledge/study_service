@@ -451,7 +451,7 @@ class StudyDesignBC():
         return order, a_ord, visit, activity, collect(bc_name) as bcs
         order by order, a_ord
       """ % (study_design.uuid)
-      print("activity by visit query", query)
+      # print("activity by visit query", query)
       result = session.run(query)
       for record in result:
         results.append(record.data())
