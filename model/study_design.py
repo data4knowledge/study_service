@@ -434,7 +434,7 @@ class StudyDesign(NodeNameLabelDesc):
         optional match (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(term:Code)
         return bc.name as bc_name, bcp.generic_name as bcp_name, dc.uri as uri, t_from.valueLabel as timing_valueLabel, t_from.label as timing_label, coalesce(e2.label, e1.label,"Unscheduled") as encounter_label, collect(term.pref_label) as terms
       """ % (uri)
-      print("dc context query",query)
+      # print("dc context query",query)
       result = session.run(query)
       for record in result.data():
         results.append(record)
