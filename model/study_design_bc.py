@@ -19,7 +19,7 @@ class StudyDesignBC():
     bcs = cls._get_bcs(study_design)
     for bc in bcs:
       # print("--debug bc:",bc.name)
-      results[bc.name] = cls._add_property(bc)
+      results[bc.name] = cls._add_property(bc, '--DTC', 'Collection date')
       # application_logger.info(f"Inserted --DTC for '{bc.name}'")   
     return results
 
@@ -579,19 +579,19 @@ class StudyDesignBC():
     return results
     
   @staticmethod
-  def _add_property(bc):
+  def _add_property(bc, code, decode):
     uuids = {'property': str(uuid4()), 'code': str(uuid4()), 'aliasCode': str(uuid4())}
     db = Neo4jConnection()
     with db.session() as session:
       query = """
         MATCH (bc:BiomedicalConcept {uuid: '%s'})
         WITH bc
-        CREATE (c:Code {uuid: $s_uuid1, id: 'tbd', code: 'tbd', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'tbd', instanceType: 'Code'})
+        CREATE (c:Code {uuid: $s_uuid1, id: 'tbd', code: '%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: '%s', instanceType: 'Code'})
         CREATE (ac:AliasCode {uuid: $s_uuid2, id: 'tbd', instanceType: 'AliasCode'})
         CREATE (p:BiomedicalConceptProperty {uuid: $s_uuid3, id: 'tbd', name: '--DTC', label: 'Date Time', isRequired: 'true', isEnabled: 'true', datatype: 'datetime', instanceType: 'BiomedicalConceptProperty'})
         CREATE (bc)-[:PROPERTIES_REL]->(p)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
         RETURN p.uuid as uuid
-      """ % (bc.uuid)
+      """ % (bc.uuid, code, decode)
       result = session.run(query, 
         s_uuid1=str(uuid4()), 
         s_uuid2=str(uuid4()), 
@@ -928,12 +928,12 @@ class StudyDesignBC():
           query = """
             MATCH (bc:BiomedicalConcept {uuid: '%s'})
             WITH bc
-            CREATE (c:Code {uuid: $s_uuid1, id: 'tbd', code: 'tbd', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: 'tbd', instanceType: 'Code'})
+            CREATE (c:Code {uuid: $s_uuid1, id: 'tbd', code: '%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-09-29', decode: '%s', instanceType: 'Code'})
             CREATE (ac:AliasCode {uuid: $s_uuid2, id: 'tbd', instanceType: 'AliasCode'})
             CREATE (p:BiomedicalConceptProperty {uuid: $s_uuid3, id: 'tbd', name: '%s', label: '%s', isRequired: %s, isEnabled: %s, datatype: '%s', instanceType: 'BiomedicalConceptProperty'})
             CREATE (bc)-[:PROPERTIES_REL]->(p)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
             RETURN p.uuid as uuid
-          """ % (bc.uuid, p['name'], p['label'], p['isRequired'], p['isEnabled'], p['datatype'])
+          """ % (bc.uuid, p['name'], p['label'], p['name'], p['label'], p['isRequired'], p['isEnabled'], p['datatype'])
           # print("query",query)
           result = session.run(query, 
             s_uuid1=str(uuid4()), 
