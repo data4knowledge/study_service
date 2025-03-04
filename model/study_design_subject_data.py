@@ -17,11 +17,13 @@ class StudyDesignSubjectData():
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)
       RETURN COUNT(dp) AS count
       """ % (uuid)
+      print("query subject count", query)
       result = session.run(query)
       count = 0
       for record in result:
         count = record['count']
-      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept),(s)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+      # query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept),(s)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
+      query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)-[:FOR_DC_REL]->(dc:DataContract)-[:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
       OPTIONAL MATCH (bc_prop)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(prop:Code)
       RETURN distinct subj.identifier as subject, 
       dp.value as value, 
@@ -34,7 +36,7 @@ class StudyDesignSubjectData():
       dc.uri as contract_uri
       ORDER BY site, subject, bc, item, data_type, property %s
       """ % (uuid, skip_offset_clause)
-      #print(query)
+      print("subject data", query)
       result = session.run(query)
       results = []
       for record in result:

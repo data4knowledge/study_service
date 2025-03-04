@@ -201,7 +201,7 @@ class Domain(BaseNode):
       , coalesce(country1.code, country2.code) as COUNTRY
       order by SITEID, n_order, SUBJID
     """ % (self.uuid)
-    print(query)
+    # print(query)
     return query
 
   def ds_query(self):
