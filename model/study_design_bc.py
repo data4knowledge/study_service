@@ -850,11 +850,10 @@ class StudyDesignBC():
           # print('query', query)
           response = session.run(query)
           result = [x.data() for x in response]
-          if 'done' in result[0]:
+          if len(result) > 0 and 'done' in result[0]:
             application_logger.info(f"BCP {c['bcp_name']}: Added term {c['code']} - {c['decode']}")
           else:
             application_logger.info(f"Info: BCP {c['bcp_name']} failed to create term term {c['code']} -{c['decode']}")
-            print("query",query)
     db.close()
     return
 
