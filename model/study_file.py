@@ -99,34 +99,16 @@ class StudyFile(BaseNode):
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
       ne.dump()
 
-      if self.upload_service.upper().startswith('GIT'):
-        self.set_status("running", "Uploading to github", 15)
-        git = GithubService()
-        file_count = git.file_list(self.dir_path, "*.csv")
-        for index in range(file_count):
-          more = git.next()
-          count = git.progress()
-          percent = 15 + int(50.0 * (float(count) / float(file_count)))
-          self.set_status("running", "Uploading to github", percent)
-        git.load()
-        files = git.upload_file_list(self.uuid)
-      elif self.upload_service.upper().startswith('LOCAL'):
-        self.set_status("running", "Uploading to local", 15)
-        local = LocalService()
-        file_count = local.file_list(self.dir_path, "*.csv")
-        for index in range(file_count):
-          more = local.next()
-          count = local.progress()
-          percent = 15 + int(50.0 * (float(count) / float(file_count)))
-          # self.set_status("running", "Uploading to local", percent)
-        local.load()
-        files = local.upload_file_list(self.uuid)
-      else:
-        self.set_status("running", "Uploading to dropbox", 15)
-        dropbox = DropboxService()
-        file_count = dropbox.file_list(self.dir_path, "*.csv")
-        dropbox.upload()
-        files = dropbox.upload_file_list(self.uuid)
+      self.set_status("running", "Uploading to local", 15)
+      local = LocalService()
+      file_count = local.file_list(self.dir_path, "*.csv")
+      for index in range(file_count):
+        more = local.next()
+        count = local.progress()
+        percent = 15 + int(50.0 * (float(count) / float(file_count)))
+        # self.set_status("running", "Uploading to local", percent)
+      local.load()
+      files = local.upload_file_list(self.uuid)
 
       # application_logger.info(f"Files: {files}") 
       self.set_status("running", "Loading database", 20)
@@ -190,13 +172,11 @@ class StudyFile(BaseNode):
     self.status = status
     application_logger.info(f"Study load, status: {status} {stage}")
     #print(f"Study load, status: {status}")
-    db = Neo4jConnection()
-    with db.session() as session:
+    with Neo4jConnection().session() as session:
       session.execute_write(self._set_status, self.uuid, status, stage, percentage)
 
   def get_status(self):
-    db = Neo4jConnection()
-    with db.session() as session:
+    with Neo4jConnection().session() as session:
       query = "MATCH (n:StudyFile {uuid: '%s'}) RETURN n.status as status, n.percentage as percent, n.stage as stage" % (self.uuid)
       result = session.run(query)
       for record in result:
