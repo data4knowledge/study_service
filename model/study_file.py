@@ -56,32 +56,31 @@ class StudyFile(BaseNode):
     self.percentage = 0
     self.service = "Github"
     self.date_time = datetime.datetime.now().replace(microsecond=0).isoformat()
-    db = Neo4jConnection()
-    with db.session() as session:
+    try:
+      os.mkdir(self.dir_path)
+    except Exception as e:
+      self.error = f"Failed to create directory"
+      self._log(e, f"{traceback.format_exc()}")
+      return False
+    else:
       try:
-        os.mkdir(self.dir_path)
+        with open(self.full_path, 'wb') as f:
+          f.write(contents)
       except Exception as e:
-        self.error = f"Failed to create directory"
+        self.error = f"Failed to save file content"
         self._log(e, f"{traceback.format_exc()}")
         return False
       else:
         try:
-          with open(self.full_path, 'wb') as f:
-            f.write(contents)
+          with Neo4jConnection().session() as session:
+            session.execute_write(self._create, self)
         except Exception as e:
-          self.error = f"Failed to save file content"
+          self.error = f"Failed to save file details"
           self._log(e, f"{traceback.format_exc()}")
           return False
         else:
-          try:
-            session.execute_write(self._create, self)
-          except Exception as e:
-            self.error = f"Failed to save file details"
-            self._log(e, f"{traceback.format_exc()}")
-            return False
-          else:
-            self.set_status("initialised", "Uploaded file", 0)
-            return True
+          self.set_status("initialised", "Uploaded file", 0)
+          return True
 
   def execute(self):
     try:
