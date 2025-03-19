@@ -794,7 +794,7 @@ class StudyDesignBC():
           application_logger.info(f"Created link to CRM from {var}")
         else:
           application_logger.info(f"Info: Failed to create link to CRM for {var}")
-          print("query",query)
+          # print("query",query)
     db.close()
 
   # Names/Labels of BC properties inconsistent

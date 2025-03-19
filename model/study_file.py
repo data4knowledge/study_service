@@ -72,8 +72,10 @@ class StudyFile(BaseNode):
         return False
       else:
         try:
-          with Neo4jConnection().session() as session:
+          db = Neo4jConnection()
+          with db.session() as session:
             session.execute_write(self._create, self)
+          db.close()
         except Exception as e:
           self.error = f"Failed to save file details"
           self._log(e, f"{traceback.format_exc()}")
@@ -172,17 +174,22 @@ class StudyFile(BaseNode):
     self.status = status
     application_logger.info(f"Study load, status: {status} {stage}")
     #print(f"Study load, status: {status}")
-    with Neo4jConnection().session() as session:
+    db = Neo4jConnection()
+    with db.session() as session:
       session.execute_write(self._set_status, self.uuid, status, stage, percentage)
+    db.close()
 
   def get_status(self):
-    with Neo4jConnection().session() as session:
+    db = Neo4jConnection()
+    with db.session() as session:
       query = "MATCH (n:StudyFile {uuid: '%s'}) RETURN n.status as status, n.percentage as percent, n.stage as stage" % (self.uuid)
       result = session.run(query)
+      status = ""
       for record in result:
         #print(f"RECORD: {record}")
-        return {'status': record['status'], 'percentage': record['percent'], 'stage': record['stage'] }
-    return ""
+        status = {'status': record['status'], 'percentage': record['percent'], 'stage': record['stage'] }
+    db.close()
+    return status
     
   def _log(self, e, trace):
     application_logger.error(self.error)
