@@ -99,6 +99,7 @@ class StudyFile(BaseNode):
 
       self.set_status("running", "Converting data to database format", 10)
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
+      study_design_uuid = ne.nodes['StudyDesign'][0]['uuid']
       ne.dump()
 
       self.set_status("running", "Uploading to local", 15)
@@ -117,9 +118,7 @@ class StudyFile(BaseNode):
       aura = AuraService()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
-
-      # Fix DM.RFICDTC to Informed Consent Obtained
-
+      print("self.uuid", self.uuid, study_design_uuid)
 
       # Fix surrogates. Replace CDISC BC's with d4k
       self.set_status("running", "Fix Biomedical Concepts Surrogates", 30)
@@ -159,8 +158,11 @@ class StudyFile(BaseNode):
       self.set_status("running", "Create default configuration", 90)
       ConfigurationNode.create_default_configuration()
 
-      self.set_status("running", "Add properties to CT", 90)
+      self.set_status("running", "Add properties to CT", 93)
       DataFile.add_properties_to_ct()
+
+      self.set_status("running", "Add parent activities if they exist", 95)
+      ConfigurationNode.add_parent_activities(self.full_path, study_design_uuid)
 
       self.set_status("complete", "Finished", 100)
       return True

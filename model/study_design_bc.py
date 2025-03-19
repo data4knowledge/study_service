@@ -59,12 +59,18 @@ class StudyDesignBC():
 
   @classmethod
   def create(cls, name):
+    print("------------------------------------------------------ HÄÄÄÄÄRRR")
     results = {}
     study_design = cls._get_study_design(name)
+    print("------------------------------------------------------ study_design")
     properties = cls._get_properties(study_design)
+    print("------------------------------------------------------ properties")
     crm_nodes = cls._get_crm()
+    print("------------------------------------------------------ crm_nodes")
     crm_map = {}
+    print("------------------------------------------------------ Loopar crm_nodes.items()")
     for uri, node in crm_nodes.items():
+      print("                uri", uri, node)
       vars = node.sdtm.split(',')
       for var in vars:
         if var not in crm_map:
@@ -72,6 +78,7 @@ class StudyDesignBC():
         crm_map[var].append(node)
     #print(f"MAP {crm_map}")
     #print(f"PROPERTIES: {[i.name for i in properties]}")
+    print("------------------------------------------------------ Sådär+?")
     for p in properties:
       nodes = cls._match(p.name, crm_map)
       #print(f"N: {nodes}")
@@ -91,6 +98,7 @@ class StudyDesignBC():
           application_logger.error(f"Failed to link BC property '{p.name}', nodes '{nodes}' detected but no match")
       else:
         application_logger.error(f"Failed to link BC property '{p.name}', no nodes detected")
+    print("------------------------------------------------------ DÄÄÄÄRRR")
     return results
 
   @classmethod
@@ -224,6 +232,7 @@ class StudyDesignBC():
         OPTIONAL MATCH (bcp)-[]->(rc:ResponseCode)-[]->(c:Code) 
         RETURN DISTINCT bcp, rc, c
       """ % (study_design.uuid)
+      print("query", query)
       result = session.run(query)
       p_map = {}
       for record in result:
@@ -843,10 +852,10 @@ class StudyDesignBC():
           query = """
             MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
             MERGE (r:ResponseCode {id:'rcid_%s', instanceType:'ResponseCode', isEnabled: True, uuid: '%s'})
-            MERGE (c:Code {code:'%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-12-15', decode:	'%s', id: 'cid_%s', instanceType: 'Code'})
+            MERGE (c:Code {code:'%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-12-15', decode:	'%s', id: 'cid_%s', instanceType: 'Code', uuid: '%s'})
             MERGE (bcp)-[:RESPONSE_CODES_REL]->(r)-[:CODE_REL]->(c)
             return "done" as done
-          """ % (c['bcp_name'], c['code'], c['code'], c['code'], c['decode'], c['code'])
+          """ % (c['bcp_name'], c['code'], str(uuid4()), c['code'], c['decode'], c['code'], str(uuid4()))
           # print('query', query)
           response = session.run(query)
           result = [x.data() for x in response]
