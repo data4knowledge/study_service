@@ -59,7 +59,7 @@ class ConfigurationNode(BaseNode):
     try:
       xl = pd.read_excel(full_path, sheet_name='mainTimeline')
       parent_activities = {}
-      FIRST_ACTIVITY_ROW = 9
+      FIRST_ACTIVITY_ROW = 8
       parent = None
       child = None
       try:
@@ -71,8 +71,8 @@ class ConfigurationNode(BaseNode):
               parent_activities[parent].append(child)
             else:
               parent_activities[parent] = [child]
-          else:
-            print("Ignoring x['Name']", x['Name'], x['Name'].__class__)
+          # else:
+          #   print("Ignoring x['Name']", x['Name'], x['Name'].__class__)
         db = Neo4jConnection()
         with db.session() as session:
           result = session.execute_write(cls._add_parent_activities, parent_activities, study_design_uuid)
