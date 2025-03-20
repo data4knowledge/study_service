@@ -460,20 +460,20 @@ class StudyDesignBC():
         return order, a_ord, visit, parent, activity, collect(bc_name) as bcs
         order by order, a_ord
       """ % (study_design.uuid)
-      query = """
-        MATCH (st:ScheduleTimeline)<-[]-(sd:StudyDesign {uuid: '%s'})-[]->(a1:Activity)
-        WHERE NOT (a1)-[:PREVIOUS_REL]->()
-        WITH a1 
-        MATCH path=(a1)-[:NEXT_REL *0..]->(a)
-        WITH a, LENGTH(path) as a_ord
-        MATCH (a)<-[:ACTIVITY_REL]-(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(enc:Encounter)
-        match (a)<-[:CHILD_REL]-(p:Activity)
-        where p.name = "Patient-Reported Outcomes (electronic)"
-        optional match (a)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
-        with distinct toInteger(split(enc.id,'_')[1]) as order, a_ord, enc.label as visit, p.name as parent, a.label as activity, bc.name as bc_name
-        return order, a_ord, visit, parent, activity, collect(bc_name) as bcs
-        order by order, a_ord
-      """ % (study_design.uuid)
+      # query = """
+      #   MATCH (st:ScheduleTimeline)<-[]-(sd:StudyDesign {uuid: '%s'})-[]->(a1:Activity)
+      #   WHERE NOT (a1)-[:PREVIOUS_REL]->()
+      #   WITH a1 
+      #   MATCH path=(a1)-[:NEXT_REL *0..]->(a)
+      #   WITH a, LENGTH(path) as a_ord
+      #   MATCH (a)<-[:ACTIVITY_REL]-(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(enc:Encounter)
+      #   match (a)<-[:CHILD_REL]-(p:Activity)
+      #   where p.name = "Patient-Reported Outcomes (electronic)"
+      #   optional match (a)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
+      #   with distinct toInteger(split(enc.id,'_')[1]) as order, a_ord, enc.label as visit, p.name as parent, a.label as activity, bc.name as bc_name
+      #   return order, a_ord, visit, parent, activity, collect(bc_name) as bcs
+      #   order by order, a_ord
+      # """ % (study_design.uuid)
       print("activity by visit query", query)
       result = session.run(query)
       for record in result:
