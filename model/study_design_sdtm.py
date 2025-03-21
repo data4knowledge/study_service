@@ -112,8 +112,8 @@ class StudyDesignSDTM():
         print("DOMAIN:", record['d']['name'])
 
   @classmethod
-  def add_permissible_sdtm_variables(cls, name):
-    study_design = cls._get_study_design(name)
+  def add_permissible_sdtm_variables(cls, sd_uuid):
+    study_design = cls._get_study_design_by_uuid(sd_uuid)
     cls._add_permissible_sdtm_variables(study_design.uuid)
     application_logger.info("Created permissible variables")
 
