@@ -99,6 +99,7 @@ class StudyFile(BaseNode):
 
       self.set_status("running", "Converting data to database format", 10)
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
+      study_design_uuid = ne.nodes['StudyDesign'][0]['uuid']
       ne.dump()
 
       self.set_status("running", "Uploading to local", 15)
