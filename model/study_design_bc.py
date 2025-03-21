@@ -644,7 +644,7 @@ class StudyDesignBC():
           MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept {name:"%s"})-[:PROPERTIES_REL]->(bcp)
           RETURN bcp.uuid as uuid, bcp.name as name, bcp.label as label
       """ % (sd_uuid, copy_bc_name)
-      print("query\n",query)
+      # print("query\n",query)
       # Create the same properties for new bc and add relationships to data contract and scheduled activity instance
       results = session.run(query)
       for bcp in [result.data() for result in results]:
