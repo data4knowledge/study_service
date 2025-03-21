@@ -143,7 +143,7 @@ class StudyDesignBC():
     application_logger.info("Added properties to AE")
 
   @classmethod
-  def fix_links_to_crm(cls, name):
+  def fix_links_to_crm(cls):
     cls._add_missing_links_to_crm()
     application_logger.info("Linked specific variables to CRM")
 
