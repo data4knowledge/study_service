@@ -4,10 +4,10 @@ from d4kms_service import Neo4jConnection
 class StudyDesignDataContract():
 
   @classmethod
-  def create(cls, name, uri_root):
+  def create(cls, sd_uuid, name, uri_root):
     db = Neo4jConnection()
     with db.session() as session:
-      session.execute_write(cls._set_data_contract, name, cls._parse_name(name), uri_root)
+      session.execute_write(cls._set_data_contract, sd_uuid, cls._parse_name(name), uri_root)
 
   @classmethod
   def read(cls, uuid, page, size, filter):
@@ -110,10 +110,10 @@ class StudyDesignDataContract():
     return re.sub('[^0-9a-zA-Z]+', '-', name.lower())
 
   @staticmethod
-  def _set_data_contract(tx, name, parsed_name, uri_root):
+  def _set_data_contract(tx, sd_uuid, parsed_name, uri_root):
     # Main timeline
     query= """
-      MATCH(study:Study{name:'%s'})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
+      MATCH(study:Study)-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign {uuid:'%s'})
       MATCH(sd)-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline) where not (tl)<-[:TIMELINE_REL]-()
       MATCH(tl)-[r4:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)-[r5:ACTIVITY_REL]->(act:Activity)-[r6:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)-[r7:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty) 
       with distinct study, sd, tl, act, act_inst_main, act_inst_main.uuid as act_inst_uuid, bc, bc_prop
@@ -130,12 +130,12 @@ class StudyDesignDataContract():
             MERGE (dc)-[:PROPERTIES_REL]->(bc_prop)
             MERGE (dc)-[:INSTANCES_REL]->(act_inst_main)
             SET study.uri = '%s' + '%s'
-    """ % (name, uri_root, parsed_name, uri_root, parsed_name)
+    """ % (sd_uuid, uri_root, parsed_name, uri_root, parsed_name)
     results = tx.run(query)
 
     # Sub timeline
     query= """
-      MATCH(study:Study{name:'%s'})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
+      MATCH(study:Study)-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign {uuid:'%s'})
       MATCH(sd)-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline)<-[r4:TIMELINE_REL]-(act_main)<-[r5:ACTIVITY_REL]-(act_inst_main:ScheduledActivityInstance)
       MATCH(tl)-[r6:INSTANCES_REL]->(act_inst:ScheduledActivityInstance)-[r7:ACTIVITY_REL]->(act:Activity)-[r8:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)-[r9:PROPERTIES_REL]->(bc_prop:BiomedicalConceptProperty) 
       with study, sd, tl, act, act_inst_main, act_inst_main.uuid+'/'+ act_inst.uuid as act_inst_uuid, act_inst, bc, bc_prop
@@ -154,7 +154,7 @@ class StudyDesignDataContract():
             MERGE (dc)-[:INSTANCES_REL]->(act_inst)
             MERGE (dc)-[:INSTANCES_REL]->(act_inst_main)
             SET study.uri = '%s' + '%s'
-    """ % (name, uri_root, parsed_name, uri_root, parsed_name)
+    """ % (sd_uuid, uri_root, parsed_name, uri_root, parsed_name)
     # print(f"SDC2 QUERY: {query}")
     results = tx.run(query)
     #for row in results:
