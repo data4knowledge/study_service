@@ -160,6 +160,9 @@ class StudyFile(BaseNode):
       self.set_status("running", "Add properties to CT", 90)
       DataFile.add_properties_to_ct(study_design_uuid)
 
+      self.set_status("running", "Add parent activities if they exist", 95)
+      ConfigurationNode.add_parent_activities(self.full_path, study_design_uuid)
+
       self.set_status("complete", "Finished", 100)
       return True
 
