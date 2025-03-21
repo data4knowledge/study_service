@@ -148,10 +148,10 @@ class StudyDesignBC():
     application_logger.info("Linked specific variables to CRM")
 
   @classmethod
-  def fix_bc_name_label(cls, name):
-    cls._fix_bc_name_label()
-    cls._add_missing_terminology()
-    cls._add_brthdtc_link_crm()
+  def fix_bc_name_label(cls, sd_uuid):
+    cls._fix_bc_name_label(sd_uuid)
+    cls._add_missing_terminology(sd_uuid)
+    cls._add_brthdtc_link_crm(sd_uuid)
     application_logger.info("Added alt_sdtm_name and terms")
 
 
@@ -793,7 +793,7 @@ class StudyDesignBC():
           return "done" as done
         """ % (uri,var)
         # print("DS crm query",query)
-        results = db.query(query)
+        results = session.run(query)
         # print("crm query results",results)
         if results:
           application_logger.info(f"Created link to CRM from {var}")
@@ -806,20 +806,21 @@ class StudyDesignBC():
   # NOTE: This is a workaround
   # Introducing alt_sdtm_name to accomodate
   @staticmethod
-  def _fix_bc_name_label():
+  def _fix_bc_name_label(sd_uuid):
     bcp_alt_name = {
       'DSSTDTC': 'RFICDTC'
     }
     db = Neo4jConnection()
     with db.session() as session:
-      for bcp,alt_sdtm_name in bcp_alt_name.items():
+      for bcp, alt_sdtm_name in bcp_alt_name.items():
         query = """
-          MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
+          MATCH (sd:StudyDesign {uuid:'%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'%s'})
+          WHERE bcp.alt_sdtm_name is null
           SET bcp.alt_sdtm_name = '%s'
           return bcp.alt_label
-        """ % (bcp,alt_sdtm_name)
+        """ % (sd_uuid, bcp, alt_sdtm_name)
         # print("alt_sdtm_name query",query)
-        results = db.query(query)
+        results = session.run(query)
         if results:
           application_logger.info(f"Added alt_sdtm_name to {alt_sdtm_name} to bc property {bcp}")
         else:
@@ -831,7 +832,7 @@ class StudyDesignBC():
   # Add missing terminology
   # NOTE: This is a workaround. Sex get's response codes, but not race.
   @staticmethod
-  def _add_missing_terminology():
+  def _add_missing_terminology(sd_uuid):
     codes = [
       {'bcp_name': 'Race', 'code':'C41260', 'decode':	'ASIAN'},
       {'bcp_name': 'Race', 'code':'C16352', 'decode':	'BLACK OR AFRICAN AMERICAN'},
@@ -846,12 +847,12 @@ class StudyDesignBC():
     with db.session() as session:
         for c in codes:
           query = """
-            MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
+            MATCH (sd:StudyDesign {uuid:'%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'%s'})
             MERGE (r:ResponseCode {id:'rcid_%s', instanceType:'ResponseCode', isEnabled: True, uuid: '%s'})
             MERGE (c:Code {code:'%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-12-15', decode:	'%s', id: 'cid_%s', instanceType: 'Code', uuid: '%s'})
             MERGE (bcp)-[:RESPONSE_CODES_REL]->(r)-[:CODE_REL]->(c)
             return "done" as done
-          """ % (c['bcp_name'], c['code'], str(uuid4()), c['code'], c['decode'], c['code'], str(uuid4()))
+          """ % (sd_uuid, c['bcp_name'], c['code'], str(uuid4()), c['code'], c['decode'], c['code'], str(uuid4()))
           # print('query', query)
           response = session.run(query)
           result = [x.data() for x in response]
@@ -865,16 +866,16 @@ class StudyDesignBC():
   # NOTE: This is a workaround
   # NOTE: Adding link to CRM for BRTHDTC. https://crm.d4k.dk/dataset/common/period/period_start/date_time/value (--STDTC)
   @staticmethod
-  def _add_brthdtc_link_crm():
+  def _add_brthdtc_link_crm(sd_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       # Add property BRTHDTC IS_A_REL to CRM. I
-      query = f"""
-          MATCH (bcp:BiomedicalConceptProperty {{name:'BRTHDTC'}})
-          MATCH (crm_add:CRMNode {{uri:'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'}})
+      query = """
+          MATCH (sd:StudyDesign {uuid:'%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'BRTHDTC'})
+          MATCH (crm_add:CRMNode {uri:'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'})
           MERGE (bcp)-[:IS_A_REL]->(crm_add)
           return "done" as result
-      """
+      """ % (sd_uuid)
       # print(query)
       results = session.run(query)
       application_logger.info("Linking BRTHDTC to Start date/time")
@@ -894,7 +895,7 @@ class StudyDesignBC():
         RETURN count(p)
       """ % (sd_uuid, properties)
       # print("Delete Exposure Unblinded properties query",query)
-      results = db.query(query)
+      results = session.run(query)
       print("Delete exposure properties results",results)
       if results:
         application_logger.info(f"Removed {properties}")
