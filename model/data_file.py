@@ -156,8 +156,8 @@ class DataFile(BaseNode):
     return ""
 
   @classmethod
-  def add_properties_to_ct(cls):
-    results = cls._add_properties_to_ct()
+  def add_properties_to_ct(cls, sd_uuid):
+    results = cls._add_properties_to_ct(sd_uuid)
     application_logger.info("Added properties to CT")
     return results
 
@@ -192,15 +192,15 @@ class DataFile(BaseNode):
     return None
 
   @staticmethod
-  def _add_properties_to_ct():
+  def _add_properties_to_ct(sd_uuid):
     ct = CTService()
     db = Neo4jConnection()
     with db.session() as session:
       query = """
-        MATCH (sd:StudyDesign {name: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[]->(bcp:BiomedicalConceptProperty)-[]->(rc:ResponseCode)-[]->(c:Code)
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[]->(bcp:BiomedicalConceptProperty)-[]->(rc:ResponseCode)-[]->(c:Code)
         WHERE c.updated is null
         RETURN DISTINCT c.code as code
-      """ % ("Study Design 1")
+      """ % (sd_uuid)
       # print("query",query)
       results = session.run(query)
       codes_to_update = [it['code'] for it in results.data()]
