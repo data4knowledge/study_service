@@ -123,11 +123,11 @@ class StudyFile(BaseNode):
 
       # Fix surrogates. Replace CDISC BC's with d4k
       self.set_status("running", "Fix Biomedical Concepts Surrogates", 30)
-      result = StudyDesignBC.make_dob_surrogate_as_bc(study_design.name)
-      result = StudyDesignBC.pretty_properties_for_bc(study_design.name)
+      result = StudyDesignBC.make_dob_surrogate_as_bc(study_design_uuid)
+      result = StudyDesignBC.pretty_properties_for_bc(study_design_uuid)
 
       self.set_status("running", "Fix Biomedical Concepts", 40)
-      result = StudyDesignBC.fix(study_design.name)
+      result = StudyDesignBC.fix(study_design_uuid)
 
       self.set_status("running", "Creating data contract", 50)
       name = study.name
@@ -135,32 +135,32 @@ class StudyFile(BaseNode):
       StudyDesignDataContract.create(name, ns['value'])
 
       self.set_status("running", "Adding SDTM domains", 60)
-      result = StudyDesignSDTM.create(study_design.name)
+      result = StudyDesignSDTM.create(study_design_uuid)
 
       # Add permissable SDTM variables
       self.set_status("running", "Add permissible SDTM variables", 70)
-      result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design.name)
+      result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design_uuid)
 
       # Add missing links to CRM
       self.set_status("running", "Link BRTHDTC to CRM", 75)
-      result = StudyDesignBC.fix_links_to_crm(study_design.name)
+      result = StudyDesignBC.fix_links_to_crm(study_design_uuid)
 
       # Add missing BC links to SDTM (Probably superfluous. E.g. DS does not have a link to BC Exposure, but it shows Exposure information if configured)
       # self.set_status("running", "Link BC to SDTM", 89)
       # result = StudyDesignSDTM.add_links_to_sdtm(study_design.name)
 
       self.set_status("running", "Linking Biomedical Concepts", 80)
-      result = StudyDesignBC.create(study_design.name)
+      result = StudyDesignBC.create(study_design_uuid)
 
       # Fix BC name/label
       self.set_status("running", "Fix BC name/label", 85)
-      result = StudyDesignBC.fix_bc_name_label(study_design.name)
+      result = StudyDesignBC.fix_bc_name_label(study_design_uuid)
 
       self.set_status("running", "Create default configuration", 90)
       ConfigurationNode.create_default_configuration()
 
       self.set_status("running", "Add properties to CT", 90)
-      DataFile.add_properties_to_ct()
+      DataFile.add_properties_to_ct(study_design_uuid)
 
       self.set_status("complete", "Finished", 100)
       return True
