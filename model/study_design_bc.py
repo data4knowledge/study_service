@@ -58,9 +58,9 @@ class StudyDesignBC():
     return valid_values
 
   @classmethod
-  def create(cls, name):
+  def create(cls, sd_uuid):
     results = {}
-    study_design = cls._get_study_design(name)
+    study_design = cls._get_study_design_by_uuid(sd_uuid)
     properties = cls._get_properties(study_design)
     crm_nodes = cls._get_crm()
     crm_map = {}
@@ -190,16 +190,7 @@ class StudyDesignBC():
   def _get_study_design_by_uuid(uuid):
     
     from model.study_design import StudyDesign
-    
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (sd:StudyDesign {uuid: '%s'}) return sd
-      """ % (uuid)
-      result = session.run(query)
-      for record in result:
-        return StudyDesign.wrap(record['sd'])
-      return None
+    return StudyDesign.find(uuid)
 
   @staticmethod
   def _get_crm():
