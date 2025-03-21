@@ -119,10 +119,7 @@ class StudyFile(BaseNode):
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
 
-      # Fix DM.RFICDTC to Informed Consent Obtained
-
-
-      # Fix surrogates. Replace CDISC BC's with d4k
+      # NOTE: Fix surrogates. Replace CDISC BC's with d4k
       self.set_status("running", "Fix Biomedical Concepts Surrogates", 30)
       result = StudyDesignBC.make_dob_surrogate_as_bc(study_design_uuid)
       result = StudyDesignBC.pretty_properties_for_bc(study_design_uuid)
@@ -133,18 +130,18 @@ class StudyFile(BaseNode):
       self.set_status("running", "Creating data contract", 50)
       name = study.name
       ns = RAService().namespace_by_name('d4k Study namespace')
-      StudyDesignDataContract.create(name, ns['value'])
+      StudyDesignDataContract.create(study_design_uuid, name, ns['value'])
 
       self.set_status("running", "Adding SDTM domains", 60)
       result = StudyDesignSDTM.create(study_design_uuid)
 
-      # Add permissable SDTM variables
+      # NOTE: Add permissable SDTM variables
       self.set_status("running", "Add permissible SDTM variables", 70)
       result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design_uuid)
 
-      # Add missing links to CRM
+      # @NOTE: Add missing links to CRM
       self.set_status("running", "Link BRTHDTC to CRM", 75)
-      result = StudyDesignBC.fix_links_to_crm(study_design_uuid)
+      result = StudyDesignBC.fix_links_to_crm()
 
       # Add missing BC links to SDTM (Probably superfluous. E.g. DS does not have a link to BC Exposure, but it shows Exposure information if configured)
       # self.set_status("running", "Link BC to SDTM", 89)
@@ -153,7 +150,7 @@ class StudyFile(BaseNode):
       self.set_status("running", "Linking Biomedical Concepts", 80)
       result = StudyDesignBC.create(study_design_uuid)
 
-      # Fix BC name/label
+      # NOTE: Fix BC name/label
       self.set_status("running", "Fix BC name/label", 85)
       result = StudyDesignBC.fix_bc_name_label(study_design_uuid)
 
