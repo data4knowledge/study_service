@@ -13,9 +13,9 @@ from model.crm import CRMNode
 class StudyDesignBC():
 
   @classmethod
-  def fix(cls, name):
+  def fix(cls, sd_uuid):
     results = {}
-    study_design = cls._get_study_design(name)
+    study_design = cls._get_study_design_by_uuid(sd_uuid)
     bcs = cls._get_bcs(study_design)
     for bc in bcs:
       # print("--debug bc:",bc.name)
@@ -135,11 +135,10 @@ class StudyDesignBC():
       application_logger.info("Date of Birth Surrogate not found")
 
   @classmethod
-  def pretty_properties_for_bc(cls, name):
-    cls._remove_properties_from_exposure()
+  def pretty_properties_for_bc(cls, sd_uuid):
+    cls._remove_properties_from_exposure(sd_uuid)
 
-    study_design = cls._get_study_design(name)
-    bcs = cls._get_bcs_by_name(study_design, "Adverse Event Prespecified")
+    bcs = cls._get_bcs_by_name(sd_uuid, "Adverse Event Prespecified")
     cls._add_properties_to_ae(bcs)
     application_logger.info("Added properties to AE")
 
@@ -892,17 +891,17 @@ class StudyDesignBC():
     return
 
   @staticmethod
-  def _remove_properties_from_exposure():
+  def _remove_properties_from_exposure(sd_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       # NOTE: Just for simplifying life
       properties = ["EXREFID","EXLOC","EXFAST","EXDOSTXT","EXDOSRGM","EXDIR","EXLAT"]
       query = """
-        MATCH (bc:BiomedicalConcept {name:'Exposure Unblinded'})-[:PROPERTIES_REL]->(p:BiomedicalConceptProperty)
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept {name:'Exposure Unblinded'})-[:PROPERTIES_REL]->(p:BiomedicalConceptProperty)
         WHERE  p.name in %s
         DETACH DELETE p
         RETURN count(p)
-      """ % (properties)
+      """ % (sd_uuid, properties)
       # print("Delete Exposure Unblinded properties query",query)
       results = db.query(query)
       print("Delete exposure properties results",results)
@@ -912,13 +911,13 @@ class StudyDesignBC():
         application_logger.info(f"Info: Failed to remove {properties}")
 
   @staticmethod
-  def _get_bcs_by_name(study_design, name):
+  def _get_bcs_by_name(sd_uuid, name):
     db = Neo4jConnection()
     with db.session() as session:
       results = []
       query = """
         MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept) WHERE bc.name = '%s' RETURN DISTINCT bc
-      """ % (study_design.uuid, name)
+      """ % (sd_uuid, name)
       result = session.run(query)
       for record in result:
         results.append(BiomedicalConceptSimple.wrap(record['bc']))
