@@ -123,13 +123,16 @@ class StudyDesignBC():
     return result
   
   @classmethod
-  def make_dob_surrogate_as_bc(cls, name):
-    bc_uuid = cls._copy_surrogate()
-    # print("bc_uuid",bc_uuid)
-    bcp_uuids = cls._copy_properties(bc_uuid, 'Date of Birth', 'Race')
-    # print("bcp_uuids",bcp_uuids)
-    cls._copy_bc_relationships_from_bc(bc_uuid, 'Race')
-    application_logger.info("Converted Date of Birth Surrgate to BC")
+  def make_dob_surrogate_as_bc(cls, sd_uuid):
+    bc_uuid = cls._copy_surrogate(sd_uuid)
+    if bc_uuid:
+      # print("bc_uuid",bc_uuid)
+      bcp_uuids = cls._copy_properties(sd_uuid, bc_uuid, 'Date of Birth', 'Race')
+      # print("bcp_uuids",bcp_uuids)
+      cls._copy_bc_relationships_from_bc(sd_uuid, bc_uuid, 'Race')
+      application_logger.info("Converted Date of Birth Surrogate to BC")
+    else:
+      application_logger.info("Date of Birth Surrogate not found")
 
   @classmethod
   def pretty_properties_for_bc(cls, name):
@@ -224,6 +227,7 @@ class StudyDesignBC():
         OPTIONAL MATCH (bcp)-[]->(rc:ResponseCode)-[]->(c:Code) 
         RETURN DISTINCT bcp, rc, c
       """ % (study_design.uuid)
+      # print("query", query)
       result = session.run(query)
       p_map = {}
       for record in result:
@@ -445,10 +449,10 @@ class StudyDesignBC():
         MATCH path=(a1)-[:NEXT_REL *0..]->(a)
         WITH a, LENGTH(path) as a_ord
         MATCH (a)<-[:ACTIVITY_REL]-(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(enc:Encounter)
+        optional MATCH (a)<-[:CHILD_REL]-(p:Activity)       
         optional match (a)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
-        where d.name <> "LB"
-        with distinct toInteger(split(enc.id,'_')[1]) as order, a_ord, enc.label as visit, a.label as activity, bc.name as bc_name
-        return order, a_ord, visit, activity, collect(bc_name) as bcs
+        with distinct toInteger(split(enc.id,'_')[1]) as order, a_ord, enc.label as visit, p.name as parent, a.label as activity, bc.name as bc_name
+        return order, a_ord, visit, parent, activity, collect(bc_name) as bcs
         order by order, a_ord
       """ % (study_design.uuid)
       # print("activity by visit query", query)
@@ -601,14 +605,14 @@ class StudyDesignBC():
         return uuids
 
   @staticmethod
-  def _copy_surrogate():
+  def _copy_surrogate(sd_uuid):
     db = Neo4jConnection()
     bc_uuid = str(uuid4())
 
     with db.session() as session:
       results = []
       query = """
-        MATCH (bcs:BiomedicalConceptSurrogate)
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BC_SURROGATES_REL]->(bcs:BiomedicalConceptSurrogate)
         where bcs.name = "Date of Birth"
         WITH bcs
         MERGE (bc:BiomedicalConcept {uuid:'%s'})
@@ -621,25 +625,27 @@ class StudyDesignBC():
         SET bc.id           = "BiomedicalConcept_9999"
         SET bc.fake_node    = "yes"
         return bc.uuid as uuid
-      """ % (bc_uuid)
+      """ % (sd_uuid, bc_uuid)
+      # print("query", query)
       records = session.run(query)
       for record in records:
         results.append(record.data())
-      if results:
-        return results[0]['uuid']
-      return "Error: Did not create BC"
+    db.close()
+    if results:
+      return results[0]['uuid']
+    return None
 
   @staticmethod
-  def _copy_properties(bc_uuid, new_bc_name, copy_bc_name):
+  def _copy_properties(sd_uuid, bc_uuid, new_bc_name, copy_bc_name):
     db = Neo4jConnection()
     bcp_uuids = []
     with db.session() as session:
       # Get properties for bc to copy
       query = """
-          MATCH (bc:BiomedicalConcept {name:"%s"})-[:PROPERTIES_REL]->(bcp)
+          MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept {name:"%s"})-[:PROPERTIES_REL]->(bcp)
           RETURN bcp.uuid as uuid, bcp.name as name, bcp.label as label
-      """ % (copy_bc_name)
-      # print("query\n",query)
+      """ % (sd_uuid, copy_bc_name)
+      print("query\n",query)
       # Create the same properties for new bc and add relationships to data contract and scheduled activity instance
       results = session.run(query)
       for bcp in [result.data() for result in results]:
@@ -684,56 +690,65 @@ class StudyDesignBC():
     return bcp_uuids
       
   @staticmethod
-  def _copy_bc_relationships_from_bc(bc_uuid, copy_bc_name):
+  def _copy_bc_relationships_from_bc(sd_uuid, bc_uuid, copy_bc_name):
     db = Neo4jConnection()
     with db.session() as session:
-      # Copy relationship to study
+      # Get uuid of BC to copy relationships
       query = """
-          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:BIOMEDICAL_CONCEPTS_REL]-(target:StudyDesign)
-          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
-          MERGE (new_bc)<-[:BIOMEDICAL_CONCEPTS_REL]-(target)
-      """ % (copy_bc_name, bc_uuid)
-      # print(query)
+          MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(copy_bc:BiomedicalConcept {name:"%s"})
+          return copy_bc.uuid as copy_bc_uuid
+      """ % (sd_uuid, copy_bc_name)
       results = session.run(query)
-      # for result in results:
-      #   print("result",result.data())
-      print("Created link to Study Design")
+      copy_bc_uuid = None
+      for result in results.data():
+        copy_bc_uuid = result['copy_bc_uuid']
 
-      # Copy relationship to domain
-      query = """
-          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:USING_BC_REL]-(target:Domain)
-          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
-          MERGE (new_bc)<-[:USING_BC_REL]-(target)
-      """ % (copy_bc_name, bc_uuid)
-      # print(query)
-      results = session.run(query)
-      for result in results:
-        print("result",result.data())
-      print("Created link to Domain")
+      if copy_bc_uuid:
+        # Copy relationship to study
+        query = """
+            MATCH (sd:StudyDesign {uuid: '%s'})
+            MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+            MERGE (new_bc)<-[:BIOMEDICAL_CONCEPTS_REL]-(sd)
+        """ % (sd_uuid, bc_uuid)
+        # print("sd to bc", query)
+        results = session.run(query)
+        # for result in results:
+        #   print("result",result.data())
+        print("Created link to Study Design")
 
-      # Copy relationship to activity
-      query = """
-          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:BIOMEDICAL_CONCEPT_REL]-(target:Activity)
-          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
-          MERGE (new_bc)<-[:BIOMEDICAL_CONCEPT_REL]-(target)
-      """ % (copy_bc_name, bc_uuid)
-      # print(query)
-      results = session.run(query)
-      # for result in results:
-      #   print("result",result.data())
-      print("Created link to Activity")
+        # Copy relationship to domain
+        query = """
+            MATCH (copy_bc:BiomedicalConcept {uuid:"%s"})<-[:USING_BC_REL]-(target:Domain)
+            MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+            MERGE (new_bc)<-[:USING_BC_REL]-(target)
+        """ % (copy_bc_uuid, bc_uuid)
+        # print("rel to domain", query)
+        results = session.run(query)
+        print("Created link to Domain")
 
-      # Adding CODE_REL -> AliasCode
-      query = f"""
-          MATCH (bc:BiomedicalConcept {{uuid:"{bc_uuid}"}})
-          with bc
-          CREATE (ac:AliasCode {{uuid: '{str(uuid4())}', instanceType: 'AliasCode', id: 'AliasCode_BD'}})
-          CREATE (c:Code {{code: 'S000001', codeSystem: 'http://www.example.org', codeSystemVersion: '0.1', decode: 'Date of Birth', id: 'Code_436', instanceType: 'Code', uuid: '{str(uuid4())}'}})
-          CREATE (bc)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
-          return count(*) as count
-      """
-      # print(query)
-      results = session.run(query)
+        # Copy relationship to activity
+        query = """
+            MATCH (copy_bc:BiomedicalConcept {uuid:"%s"})<-[:BIOMEDICAL_CONCEPT_REL]-(target:Activity)
+            MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+            MERGE (new_bc)<-[:BIOMEDICAL_CONCEPT_REL]-(target)
+        """ % (copy_bc_uuid, bc_uuid)
+        # print("rel to activity", query)
+        results = session.run(query)
+        print("Created link to Activity")
+
+        # Adding CODE_REL -> AliasCode
+        query = f"""
+            MATCH (bc:BiomedicalConcept {{uuid:"{bc_uuid}"}})
+            with bc
+            CREATE (ac:AliasCode {{uuid: '{str(uuid4())}', instanceType: 'AliasCode', id: 'AliasCode_BD'}})
+            CREATE (c:Code {{code: 'S000001', codeSystem: 'http://www.example.org', codeSystemVersion: '0.1', decode: 'Date of Birth', id: 'Code_436', instanceType: 'Code', uuid: '{str(uuid4())}'}})
+            CREATE (bc)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
+            return count(*) as count
+        """
+        # print("code_rel", query)
+        results = session.run(query)
+      else:
+        application_logger.info("Did not find BC to copy from:", copy_bc_name)
     db.close()
 
 
@@ -819,7 +834,7 @@ class StudyDesignBC():
           application_logger.info(f"Added alt_sdtm_name to {alt_sdtm_name} to bc property {bcp}")
         else:
           application_logger.info(f"Info: Failed to add alt_sdtm_name to bc property {bcp} ({alt_sdtm_name})")
-          print("query",query)
+          # print("query",query)
     db.close()
     return
 
@@ -843,10 +858,10 @@ class StudyDesignBC():
           query = """
             MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
             MERGE (r:ResponseCode {id:'rcid_%s', instanceType:'ResponseCode', isEnabled: True, uuid: '%s'})
-            MERGE (c:Code {code:'%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-12-15', decode:	'%s', id: 'cid_%s', instanceType: 'Code'})
+            MERGE (c:Code {code:'%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-12-15', decode:	'%s', id: 'cid_%s', instanceType: 'Code', uuid: '%s'})
             MERGE (bcp)-[:RESPONSE_CODES_REL]->(r)-[:CODE_REL]->(c)
             return "done" as done
-          """ % (c['bcp_name'], c['code'], c['code'], c['code'], c['decode'], c['code'])
+          """ % (c['bcp_name'], c['code'], str(uuid4()), c['code'], c['decode'], c['code'], str(uuid4()))
           # print('query', query)
           response = session.run(query)
           result = [x.data() for x in response]
