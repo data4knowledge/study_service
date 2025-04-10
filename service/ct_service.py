@@ -18,3 +18,10 @@ class CTService():
     url = f"{path}?identifier={identifier}&page={page}&size={size}&filter={filter}"
     # print(f"URL: {url}")
     return self.api_get(url)
+
+  def find_all_identifiers(self, identifiers, page=1, size=10, filter=""):
+    params = ['t='+x for x in identifiers]
+    path = f"v1/list_of_terms?" + '&'.join(params)
+    url = f"{path}"
+    print(f"URL: {url}")
+    return self.api_get(url)

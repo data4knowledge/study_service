@@ -210,21 +210,28 @@ class DataFile(BaseNode):
       print("CT codes to fix:", len(codes_to_update))
       items = []
       count = 0
-      for code in codes_to_update:
-        print("Updating code",code)
-        response = ct.find_by_identifier(code)
-        first = response[0] if len(response) > 0 else None
-        if first:
-          items.append({'code': code, 'name': first['child']['name'], 'notation': first['child']['notation'], 'pref_label': first['child']['pref_label']})
-      for item in items:
-        query = """
-          MATCH (c:Code {code: '%s'})
-          SET c.pref_label = '%s'
-          SET c.notation = '%s'
-          SET c.updated = True
-          RETURN count(c) as count
-        """ % (item['code'], item['pref_label'], item['notation'])
-        # print("query",query)
-        results = session.run(query)
-        count = count + int(results.data()[0]['count'])
+      response = ct.find_all_identifiers(codes_to_update)
+      print("response", response)
+      # for item in response:
+      #   print("item", item)
+      # for code in codes_to_update:
+      #   print("Updating code",code)
+      #   response = ct.find_by_identifier(code)
+      #   first = response[0] if len(response) > 0 else None
+      #   if first:
+      #     items.append({'code': code, 'name': first['child']['name'], 'notation': first['child']['notation'], 'pref_label': first['child']['pref_label']})
+
+
+
+      # for item in items:
+      #   query = """
+      #     MATCH (c:Code {code: '%s'})
+      #     SET c.pref_label = '%s'
+      #     SET c.notation = '%s'
+      #     SET c.updated = True
+      #     RETURN count(c) as count
+      #   """ % (item['code'], item['pref_label'], item['notation'])
+      #   # print("query",query)
+      #   results = session.run(query)
+      #   count = count + int(results.data()[0]['count'])
     return {'count': count}
