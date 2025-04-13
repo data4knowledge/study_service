@@ -36,7 +36,7 @@ class StudyDesignSubjectData():
       dc.uri as contract_uri
       ORDER BY site, subject, bc, item, data_type, property %s
       """ % (uuid, skip_offset_clause)
-      print("subject data", query)
+      # print("subject data", query)
       result = session.run(query)
       results = []
       for record in result:
