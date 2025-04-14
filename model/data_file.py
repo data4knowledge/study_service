@@ -128,7 +128,7 @@ class DataFile(BaseNode):
           import_files = import_raw_data(self.dir_path, self.filename, self.sd_uuid, self.study_name)
           url_path = files[0]['file_path'].rsplit("/",1)[0]
           aura.load_identifiers(os.path.join(url_path, import_files['identifiers']), self.sd_uuid)
-          aura.load_datapoints(os.path.join(url_path, import_files['datapoints']), self.sd_uuid)
+          # aura.load_datapoints(os.path.join(url_path, import_files['datapoints']), self.sd_uuid)
         except Exception as e:
           self.error = f"Couldn't load file"
           application_logger.exception(self.error, e)
