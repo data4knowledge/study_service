@@ -637,13 +637,13 @@ async def get_study_design_subjects(uuid: str, page: int=0, size: int=0, filter:
   description="Upload and process a CSV file loading the data into the database", 
   status_code=status.HTTP_201_CREATED,
   response_model=str)
-async def create_study_data_file(request: Request, background_tasks: BackgroundTasks):
+async def create_study_data_file(uuid: str, request: Request, background_tasks: BackgroundTasks):
   form = await request.form()
   filename = form['upload_file'].filename
   data_type = form['dataType']
   contents = await form['upload_file'].read()
   df = DataFile()
-  success = df.create(filename, contents, data_type)
+  success = df.create(uuid, filename, contents, data_type)
   if success:
     background_tasks.add_task(df.execute)
     return df.uuid

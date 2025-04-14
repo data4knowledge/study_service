@@ -98,14 +98,14 @@ class AuraService():
     application_logger.info(f"Loaded Aura, details {file_path}: {count}")
     return True
 
-  def load_identifiers(self, file_path):
+  def load_identifiers(self, file_path, sd_uuid):
     try:
       session = self.driver.session(database=self.database)
       query = f"""
           LOAD CSV WITH HEADERS FROM '{file_path}' AS site_row
-          MATCH (design:StudyDesign {{name:'Study Design 1'}})
-          MERGE (s:Subject {{identifier:site_row['SUBJID']}})
-          MERGE (site:StudySite {{name:site_row['SITEID']}})
+          MATCH (design:StudyDesign {{uuid: '{sd_uuid}'}})
+          MERGE (s:Subject {{identifier:site_row['SUBJID'], study_uri:'{sd_uuid}'}})
+          MERGE (site:StudySite {{name:site_row['SITEID'], study_uri:'{sd_uuid}'}})
           MERGE (s)-[:ENROLLED_AT_SITE_REL]->(site)
           MERGE (site)<-[:MANAGES_SITE]-(researchOrg)
           MERGE (researchOrg)<-[:ORGANIZATIONS_REL]-(design)
@@ -122,16 +122,16 @@ class AuraService():
       application_logger.exception(f"Exception raised while uploading to Aura database", e)
       raise self.UploadFail
 
-  def load_datapoints(self, file_path):
+  def load_datapoints(self, file_path, sd_uuid):
     try:
       session = self.driver.session(database=self.database)
       query = f"""
           LOAD CSV WITH HEADERS FROM '{file_path}' AS data_row
           MATCH (dc:DataContract {{uri:data_row['DC_URI']}})
-          MATCH (design:StudyDesign {{name:'Study Design 1'}})
+          MATCH (design:StudyDesign {{uuid: '{sd_uuid}'}})
           MERGE (d:DataPoint {{uri: data_row['DATAPOINT_URI'], value: data_row['VALUE']}})
           MERGE (record:Record {{key:data_row['RECORD_KEY']}})
-          MERGE (s:Subject {{identifier:data_row['SUBJID']}})
+          MERGE (s:Subject {{identifier:data_row['SUBJID'], study_uri:'{sd_uuid}'}})
           MERGE (dc)<-[:FOR_DC_REL]-(d)
           MERGE (d)-[:FOR_SUBJECT_REL]->(s)
           MERGE (d)-[:SOURCE]->(record)

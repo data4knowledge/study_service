@@ -2,6 +2,7 @@ import os
 import json
 import csv
 from pathlib import Path
+from d4kms_generic import application_logger
 from d4kms_service import Neo4jConnection
 import pandas as pd
 
@@ -9,7 +10,7 @@ def output_csv(path, name, data):
     OUTPUT_FILE = path / name
     if OUTPUT_FILE.exists():
         os.unlink(OUTPUT_FILE)
-    print("Saving to",OUTPUT_FILE)
+    application_logger.info(f"Saving to {OUTPUT_FILE}")
     output_variables = list(data[0].keys())
     with open(OUTPUT_FILE, 'w') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=output_variables)
@@ -27,18 +28,14 @@ def clear_created_nodes():
         print("Removing Subject",results.data())
     db.close()
     
-def get_bc_properties():
-    query = f"""
-        MATCH (bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst:ScheduledActivityInstance)-[:ENCOUNTER_REL]-(enc)
-        return bc.label as BC_LABEL, bcp.name as BCP_NAME, bcp.label as BCP_LABEL, enc.label as ENCOUNTER_LABEL, dc.uri as DC_URI
-    """
+def get_bc_properties(sd_uuid):
     query = """
-        MATCH(study:Study{name:'Study_CDISC PILOT - LZZT'})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
+        MATCH (sd:StudyDesign {uuid: '%s'})
         MATCH(sd)-[r3:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline) where not (tl)<-[:TIMELINE_REL]-()
         MATCH(tl)-[r4:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)-[r5:ACTIVITY_REL]->(act:Activity)-[r6:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)-[r7:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
         MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main)-[:ENCOUNTER_REL]-(enc)
         return distinct bc.label as BC_LABEL, bcp.name as BCP_NAME, bcp.label as BCP_LABEL, enc.label as ENCOUNTER_LABEL, dc.uri as DC_URI
-    """
+    """ % (sd_uuid)
     db = Neo4jConnection()
     with db.session() as session:
         results = session.run(query)
@@ -46,9 +43,9 @@ def get_bc_properties():
     db.close()
     return res
 
-def get_bc_properties_sub_timeline():
+def get_bc_properties_sub_timeline(sd_uuid):
     query = """
-        match (bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
         MATCH (bcp)<-[:PROPERTIES_REL]-(ignore_dc:DataContract)
         match (ignore_dc)-[:INSTANCES_REL]->(enc_msai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(enc:Encounter)
         with distinct bc.name as BC_NAME, bc.label as BC_LABEL, bcp.name as bcp_name, bcp.label as bcp_label, enc.label as ENCOUNTER_LABEL, enc_msai.uuid as enc_msai_uuid
@@ -57,7 +54,7 @@ def get_bc_properties_sub_timeline():
         MATCH (sub_sai)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(t:Timing)
         WITH BC_NAME, BC_LABEL, bcp.name as BCP_NAME, bcp.label as BCP_LABEL, sub_sai.name as sub_sai_name, ENCOUNTER_LABEL, t.value as TIMEPOINT_VALUE, dc.uri as DC_URI
         return BC_NAME, BC_LABEL, BCP_NAME, BCP_LABEL, ENCOUNTER_LABEL, TIMEPOINT_VALUE, DC_URI
-    """
+    """ % (sd_uuid)
     db = Neo4jConnection()
     with db.session() as session:
         results = session.run(query)
@@ -65,15 +62,16 @@ def get_bc_properties_sub_timeline():
     db.close()
     return res
 
-def get_bc_properties_ae():
+def get_bc_properties_ae(sd_uuid):
+    # MATCH (study:Study{name:'Study_CDISC PILOT - LZZT'})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
     query = """
-        MATCH (study:Study{name:'Study_CDISC PILOT - LZZT'})-[r1:VERSIONS_REL]->(StudyVersion)-[r2:STUDY_DESIGNS_REL]->(sd:StudyDesign)
+        MATCH (sd:StudyDesign {uuid: '%s'})
         WITH sd
         match (sd)-[:SCHEDULE_TIMELINES_REL]->(tl:ScheduleTimeline {name:'Adverse Event Timeline'})-[:INSTANCES_REL]->(sai:ScheduledActivityInstance)
         match (sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(dc:DataContract)
         match (dc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)
         return bc.label as BC_LABEL, bcp.name as BCP_NAME, bcp.label as BCP_LABEL, dc.uri as DC_URI,"" as ENCOUNTER_LABEL
-    """
+    """ % (sd_uuid)
     # print("ae query", query)
     db = Neo4jConnection()
     with db.session() as session:
@@ -104,15 +102,15 @@ def get_unique_activities(data):
             unique_activities[key] = activity
     return unique_activities
 
-def create_enrolment_file(raw_data, OUTPUT_PATH):
-    print("\ncreate enrolment file")
+def create_enrolment_file(raw_data, OUTPUT_PATH, study_name):
+    application_logger.info("create enrolment file")
     subject_no = set([r['SUBJID'] for r in raw_data])
 
     # Make it look like the previous load file
     subjects = []
     for subjid in subject_no:
         item = {}
-        item['STUDY_URI'] = "https://study.d4k.dk/study-cdisc-pilot-lzzt"
+        item['STUDY_URI'] = f"https://study.d4k.dk/{study_name.replace(' ', '')}"
         item['SITEID'] = "701"
         item['SUBJID'] = subjid
         subjects.append(item)
@@ -121,14 +119,15 @@ def create_enrolment_file(raw_data, OUTPUT_PATH):
     output_csv(OUTPUT_PATH, filename, subjects)
     return filename
 
-def create_datapoint_file(raw_data, OUTPUT_PATH):
-    print("\ncreate datapoint file")
-    properties = get_bc_properties()
-    properties_ae = get_bc_properties_ae()
+def create_datapoint_file(raw_data, OUTPUT_PATH, sd_uuid, study_name):
+    application_logger.info("create datapoint file")
+    properties = get_bc_properties(sd_uuid)
+    properties_ae = get_bc_properties_ae(sd_uuid)
 
     # NOTE: Not all blood pressure measurements are repeated, so data contracts for SCREENING 1, SCREENING 2, BASELINEWEEK 2, WEEK 4, WEEK 6, WEEK 8
     # All records marked as baseline are STANDING VSREPNUM = 3 -> PT2M. So I'll use that for them
-    properties_sub_timeline = get_bc_properties_sub_timeline()
+    properties_sub_timeline = get_bc_properties_sub_timeline(sd_uuid)
+    application_logger.info(f"data contracts found main: {len(properties)} sub timeline: {len(properties_sub_timeline)} ae: {len(properties_ae)}")
 
     unique_activities = get_unique_activities(raw_data)
     missing = []
@@ -176,14 +175,16 @@ def create_datapoint_file(raw_data, OUTPUT_PATH):
         if not dc:
             missing.append(v)
 
+    datapoints = datapoints[0:3]
+
     filename = "datapoints_msg.csv"
     output_csv(OUTPUT_PATH, filename, datapoints)
     return filename
 
-def import_raw_data(path, filename):
+def import_raw_data(path, filename, sd_uuid, study_name):
     OUTPUT_PATH = Path.cwd() / path
     raw_data_file = Path.cwd() / path / filename
     raw_data = read_raw_data_file(raw_data_file)
-    enrolment_file = create_enrolment_file(raw_data, OUTPUT_PATH)
-    datapoint_file = create_datapoint_file(raw_data, OUTPUT_PATH)
+    enrolment_file = create_enrolment_file(raw_data, OUTPUT_PATH, study_name)
+    datapoint_file = create_datapoint_file(raw_data, OUTPUT_PATH, sd_uuid, study_name)
     return {'identifiers':enrolment_file, 'datapoints': datapoint_file}

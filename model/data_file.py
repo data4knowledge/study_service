@@ -9,10 +9,13 @@ from service.aura_service import AuraService
 from service.local_service import LocalService
 from model.utility.raw_data import import_raw_data
 from service.ct_service import CTService
+from model.study_design import StudyDesign
 
 class DataFile(BaseNode):
   uuid: str = ""
+  sd_uuid: str = ""
   filename: str = ""
+  study_name: str = ""
   full_path: str = ""
   dir_path: str = ""
   status: str = ""
@@ -25,12 +28,16 @@ class DataFile(BaseNode):
     se = ServiceEnvironment()
     self.upload_service = se.get('UPLOAD_SERVICE')
 
-  def create(self, filename, contents, data_type):
+  def create(self, sd_uuid, filename, contents, data_type):
     if not self._check_extension(filename):
       self.error = "Invalid extension, must be '.csv'"
       return False
     self.filename = filename
     self.uuid = str(uuid4())
+    self.sd_uuid = sd_uuid
+    sd = StudyDesign.find(sd_uuid)
+    study = sd.study(0,0,"")
+    self.study_name = study['study']['name']
     self.dir_path = os.path.join("uploads", self.uuid)
     self.full_path = os.path.join("uploads", self.uuid, filename)
     self.data_type = data_type
@@ -117,11 +124,11 @@ class DataFile(BaseNode):
           return False
       elif self.data_type == 'raw_data': 
         try:
-          print("Processing raw data to identifiers and datapoints")
-          import_files = import_raw_data(self.dir_path, self.filename)
+          application_logger.info("Processing raw data to identifiers and datapoints")
+          import_files = import_raw_data(self.dir_path, self.filename, self.sd_uuid, self.study_name)
           url_path = files[0]['file_path'].rsplit("/",1)[0]
-          aura.load_identifiers(os.path.join(url_path, import_files['identifiers']))
-          aura.load_datapoints(os.path.join(url_path, import_files['datapoints']))
+          aura.load_identifiers(os.path.join(url_path, import_files['identifiers']), self.sd_uuid)
+          aura.load_datapoints(os.path.join(url_path, import_files['datapoints']), self.sd_uuid)
         except Exception as e:
           self.error = f"Couldn't load file"
           application_logger.exception(self.error, e)
