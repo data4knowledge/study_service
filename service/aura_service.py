@@ -151,10 +151,9 @@ class AuraService():
       query = f"""
           LOAD CSV WITH HEADERS FROM '{file_path}' AS data_row
           MATCH (dc:DataContract {{uri:data_row['DC_URI']}})
-          MATCH (design:StudyDesign {{uuid: '{sd_uuid}'}})
+          MATCH (design:StudyDesign {{uuid: '{sd_uuid}'}})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(s:Subject {{identifier: data_row['SUBJID']}})
           MERGE (d:DataPoint {{uri: data_row['DATAPOINT_URI'], value: data_row['VALUE']}})
           MERGE (record:Record {{key:data_row['RECORD_KEY']}})
-          MERGE (s:Subject {{identifier:data_row['SUBJID'], study_uri:'{sd_uuid}'}})
           MERGE (dc)<-[:FOR_DC_REL]-(d)
           MERGE (d)-[:FOR_SUBJECT_REL]->(s)
           MERGE (d)-[:SOURCE]->(record)

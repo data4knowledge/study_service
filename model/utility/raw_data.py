@@ -151,6 +151,8 @@ def create_datapoint_file(raw_data, OUTPUT_PATH, sd_uuid, study_name):
             if dc:
                 rows = [r for r in raw_data if r['LABEL'] == v['label'] and r['VARIABLE'] == v['variable']]
 
+        # study_key = uuid4(study_name)
+
         for row in rows:
             item = {}
             item['SUBJID'] = row['SUBJID']
@@ -159,13 +161,13 @@ def create_datapoint_file(raw_data, OUTPUT_PATH, sd_uuid, study_name):
             thing = f"{fixed_label}/{fixed_variable}"
             if 'TIMEPOINT' in row and row['TIMEPOINT']:
                 dp_uri = f"{dc}{row['SUBJID']}/{thing}/{row['ROW_NO']}/{row['TIMEPOINT']}"
-                record_key = f"{fixed_label}/{row['SUBJID']}/{row['ROW_NO']}/{row['TIMEPOINT']}"
+                record_key = f"{study_name}/{fixed_label}/{row['SUBJID']}/{row['ROW_NO']}/{row['TIMEPOINT']}"
             elif 'VISIT' in row and row['VISIT']:
                 dp_uri = f"{dc}{row['SUBJID']}/{thing}/{row['ROW_NO']}"
-                record_key = f"{fixed_label}/{row['SUBJID']}/{row['ROW_NO']}"
+                record_key = f"{study_name}/{fixed_label}/{row['SUBJID']}/{row['ROW_NO']}"
             else:
                 dp_uri = f"{dc}{row['SUBJID']}/{thing}/{row['ROW_NO']}"
-                record_key = f"{fixed_label}/{row['SUBJID']}/{row['ROW_NO']}"
+                record_key = f"{study_name}/{fixed_label}/{row['SUBJID']}/{row['ROW_NO']}"
             item['DATAPOINT_URI'] = dp_uri
             item['VALUE'] = row['VALUE']
             item['DC_URI'] = dc
@@ -174,8 +176,6 @@ def create_datapoint_file(raw_data, OUTPUT_PATH, sd_uuid, study_name):
 
         if not dc:
             missing.append(v)
-
-    datapoints = datapoints[0:3]
 
     filename = "datapoints_msg.csv"
     output_csv(OUTPUT_PATH, filename, datapoints)
