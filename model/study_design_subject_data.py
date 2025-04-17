@@ -17,7 +17,7 @@ class StudyDesignSubjectData():
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)
       RETURN COUNT(dp) AS count
       """ % (uuid)
-      print("query subject count", query)
+      # print("query subject count", query)
       result = session.run(query)
       count = 0
       for record in result:
