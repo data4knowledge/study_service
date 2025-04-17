@@ -168,6 +168,18 @@ async def study_summary(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 
+@app.get("/v1/studies/{uuid}/name", 
+  summary="Get study name",
+  description="Provide the name for a single study",
+  status_code=200,
+  response_model=str)
+async def study_name(uuid: str):
+  study = Study.find(uuid)
+  if study:
+    return study.name
+  else:
+    raise HTTPException(status_code=404, detail="The requested study cannot be found")
+
 @app.post("/v1/studies", 
   summary="Create a new study",
   description="Creates a study. If succesful the uuid of the created resource is returned.",
