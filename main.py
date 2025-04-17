@@ -411,7 +411,18 @@ async def get_study_design(uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 
-# JOHANNES
+@app.get("/v1/studyDesigns/{uuid}/study_name", 
+  summary="Get the study name for a study design",
+  description="Provides the study name for a given study design.",
+  response_model=str)
+async def get_study_design(uuid: str):
+  study_design = StudyDesign.find(uuid)
+  study_name = study_design.study_name()
+  if study_name:
+    return study_name
+  else:
+    raise HTTPException(status_code=404, detail="The requested study design cannot be found")
+
 @app.post("/v1/studyDesigns", 
   summary="Create a new study design",
   description="Creates a study design. If succesful the uuid of the created resource is returned.",

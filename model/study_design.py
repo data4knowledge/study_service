@@ -174,6 +174,17 @@ class StudyDesign(NodeNameLabelDesc):
           self._extract_code(record, 'cc', result, 'characteristics')
     return result
 
+  def study_name(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """MATCH (sd:StudyDesign {uuid: '%s'})<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)<-[:VERSIONS_REL]-(s:Study) RETURN s.name as study_name""" % (self.uuid)
+      # print(f"QUERY: {query}")
+      records = session.run(query)
+      results = [x for x in records.data()]
+    db.close()
+    return results[0]['study_name'] if results else None
+
+
   def design(self):
     db = Neo4jConnection()
     with db.session() as session:
