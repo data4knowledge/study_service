@@ -228,6 +228,18 @@ async def study_version_summary(request: Request, uuid: str):
   else:
     raise HTTPException(status_code=404, detail="The requested study version cannot be found")
 
+@app.get("/v1/studyVersions/{uuid}/study_name", 
+  summary="Get study name from study version",
+  description="Provides study name from study version",
+  response_model=str)
+async def study_version_summary(request: Request, uuid: str):
+  study_version = StudyVersion.find(uuid)
+  study_name = study_version.study_name()
+  if study_name:
+    return study_name
+  else:
+    raise HTTPException(status_code=404, detail="The requested study version cannot be found")
+
 # Protocol Document Versions
 # ==========================
 
