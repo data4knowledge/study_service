@@ -139,8 +139,9 @@ class StudyDesignBC():
     cls._remove_properties_from_exposure(sd_uuid)
 
     bcs = cls._get_bcs_by_name(sd_uuid, "Adverse Event Prespecified")
-    cls._add_properties_to_ae(bcs)
-    application_logger.info("Added properties to AE")
+    if bcs:
+      cls._add_properties_to_ae(bcs)
+      application_logger.info("Added properties to AE")
 
   @classmethod
   def fix_links_to_crm(cls):
