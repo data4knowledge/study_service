@@ -28,6 +28,8 @@ class TrialDesignDomain():
   def trial_arms(cls, sd_uuid):
     try:
       response = cls._trial_arms(sd_uuid)
+      if len(response) == 0:
+        return {'table': []}
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
@@ -43,6 +45,8 @@ class TrialDesignDomain():
   def trial_elements(cls, sd_uuid):
     try:
       response = cls._trial_elements(sd_uuid)
+      if len(response) == 0:
+        return {'table': []}
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
@@ -57,6 +61,8 @@ class TrialDesignDomain():
     try:
       study_id = cls._study_id(sd_uuid)
       response = cls._trial_visits(sd_uuid, study_id)
+      if len(response) == 0:
+        return {'table': []}
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
@@ -76,6 +82,8 @@ class TrialDesignDomain():
         for usdm_tag in usdm_tags:
           reference_text = cls._get_tag_text(usdm_tag)
           item['IETEST'] = item['IETEST'].replace(usdm_tag, reference_text)
+      if len(response) == 0:
+        return {'table': []}
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
