@@ -25,12 +25,12 @@ def _add_missing_links_to_crm_query(uri, var):
 def study_info_query(uuid):
     query = """
     MATCH (sd:StudyDesign {uuid: '%s'})<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-    MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(:Organization {name:'Eli Lilly'})
-    MATCH (sv)-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion)<-[:VERSIONS_REL]->(spd:StudyProtocolDocument)
+    OPTIONAL MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(:Organization {name:'Eli Lilly'})
+    OPTIONAL MATCH (sv)-[:DOCUMENT_VERSION_REL]->(spdv:StudyProtocolDocumentVersion)<-[:VERSIONS_REL]->(spd:StudyProtocolDocument)
     return 
     sd.uuid as uuid,
-    si.studyIdentifier as study_name,
-    sd.description as description,
+    coalesce(si.studyIdentifier,"To be provided") as study_name,
+    coalesce(sd.description, "To be provided") as description,
     sv.rationale as rationale,
     spd.name as protocol_name
     """ % (uuid)
