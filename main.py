@@ -11,7 +11,6 @@ from model.study_version import StudyVersion
 from model.study_design import StudyDesign
 from d4kms_service import Neo4jConnection
 from model.schedule_timeline import ScheduleTimeline
-from model.study_arm import StudyArm
 from model.activity import Activity
 from model.study_protocol_document_version import StudyProtocolDocumentVersion, SPDVBackground
 # from model.study_identifier import StudyIdentifier, StudyIdentifierIn
@@ -188,7 +187,7 @@ async def study_name(uuid: str):
 async def create_study(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
   #print(f"TEMPLATE: {template}")
   result = Study.create(name, description, label, template)
-  if not 'error' in result:
+  if 'error' not  in result:
     sv = StudyVersion.find(result['StudyVersion'])
     background_tasks.add_task(SPDVBackground(sv).add_all_sections, result, template)
     return result['Study']
@@ -232,7 +231,7 @@ async def study_version_summary(request: Request, uuid: str):
   summary="Get study name from study version",
   description="Provides study name from study version",
   response_model=str)
-async def study_version_summary(request: Request, uuid: str):
+async def study_version_name(request: Request, uuid: str):
   study_version = StudyVersion.find(uuid)
   study_name = study_version.study_name()
   if study_name:
@@ -251,7 +250,7 @@ async def get_protocol_document(uuid: str):
   study_version = StudyVersion.find(uuid)
   if study_version:
     result = study_version.protocol_document()
-    if not 'error' in result:
+    if 'error' not  in result:
       return result['uuid']
     else:
       raise HTTPException(status_code=404, detail=result['error'])
@@ -264,7 +263,7 @@ async def get_protocol_document(uuid: str):
   response_model=dict)
 async def get_protocol_section_list(uuid: str):
   result = StudyProtocolDocumentVersion.find(uuid)
-  if not 'error' in result:
+  if 'error' not  in result:
     return result.section_list()
   else:
     raise HTTPException(status_code=404, detail="The requested protocol document version cannot be found")
@@ -275,7 +274,7 @@ async def get_protocol_section_list(uuid: str):
   response_model=dict)
 async def get_document_definition(uuid: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  if not 'error' in doc:
+  if 'error' not  in doc:
     result = doc.document_definition()
     return result
   else:
@@ -287,7 +286,7 @@ async def get_document_definition(uuid: str):
   response_model=dict)
 async def get_section_definition(uuid: str, section_uuid: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  if not 'error' in doc:
+  if 'error' not  in doc:
     result = doc.section_definition(section_uuid)
     return result
   else:
@@ -316,7 +315,7 @@ class TextBody(BaseModel):
   response_model=dict)
 async def post_section(uuid: str, section_uuid: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  if not 'error' in doc:
+  if 'error' not  in doc:
     result = doc.section_write(section_uuid, item.text)
     return result
   else:
@@ -328,12 +327,12 @@ async def post_section(uuid: str, section_uuid: str, item: TextBody):
   response_model=dict)
 async def get_element(uuid: str, name: str):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  if not 'error' in doc:
+  if 'error' not  in doc:
     #doc.set_study_version()
     definition = doc.element(name)
     result = doc.element_read(name)
     #print(f"RESULT: {name}={result}")
-    if not 'error' in result:
+    if 'error' not  in result:
       return {'uuid': uuid, 'definition': definition, 'data': result['result']}
     else:
       raise HTTPException(status_code=500, detail=result['error'])
@@ -347,11 +346,11 @@ async def get_element(uuid: str, name: str):
   response_model=dict)
 async def write_element(uuid: str, name: str, item: TextBody):
   doc = StudyProtocolDocumentVersion.find(uuid)
-  if not 'error' in doc:
+  if 'error' not  in doc:
     definition = doc.element(name)
     result = doc.element_write(name, item.text)
     #print(f"ELEMENT: {name}={result}")
-    if not 'error' in result:
+    if 'error' not  in result:
       return {'uuid': uuid, 'definition': definition, 'data': result['result']}
     else:
       raise HTTPException(status_code=500, detail=result['error'])
@@ -391,7 +390,7 @@ async def list_study_designs(request: Request, page: int = 0, size: int = 0, fil
   summary="Get the study designs for a study version",
   description="Provides the basic data for the study designs for a study version (currently limited to one design only).",
   response_model=dict)
-async def list_study_designs(request: Request, page: int = 0, size: int = 0, filter: str=""):
+async def list_study_designs_with_source(request: Request, page: int = 0, size: int = 0, filter: str=""):
   uuid = request.path_params['uuid']
   results = {}
   results = StudyDesign.list_with_source(uuid, page, size, filter)
@@ -415,7 +414,7 @@ async def get_study_design(uuid: str):
   summary="Get the study name for a study design",
   description="Provides the study name for a given study design.",
   response_model=str)
-async def get_study_design(uuid: str):
+async def get_study_name_from_study_design(uuid: str):
   study_design = StudyDesign.find(uuid)
   study_name = study_design.study_name()
   if study_name:
@@ -431,7 +430,7 @@ async def get_study_design(uuid: str):
 async def create_study_design(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
   result = StudyDesign.create(name, description, label)
   print("result", result)
-  if not 'error' in result:
+  if 'error' not  in result:
     return result
   else:
     raise HTTPException(status_code=409, detail=result['error'])
@@ -485,7 +484,7 @@ async def get_study_design_population(uuid: str):
 #   response_model=Study)
 # async def get_study(uuid: str):
 #   study = Study.find_full(uuid)
-#   if study == None:
+#   if study is None:
 #     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 #   else:
 #     return study
@@ -496,7 +495,7 @@ async def get_study_design_population(uuid: str):
 #   response_model=List[StudyDesign])
 # async def get_study_designs(uuid: str):
 #   study = Study.find(uuid)
-#   if study == None:
+#   if study is None:
 #     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 #   else:
 #     return study.study_designs()
@@ -507,7 +506,7 @@ async def get_study_design_population(uuid: str):
 #   response_model=StudyParameters)
 # async def get_study_parameters(uuid: str):
 #   study = Study.find(uuid)
-#   if study == None:
+#   if study is None:
 #     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 #   else:
 #     return study.study_parameters()
@@ -518,7 +517,7 @@ async def get_study_design_population(uuid: str):
 #   response_model=List[StudyIdentifier])
 # async def get_study_identifiers(uuid: str):
 #   study = Study.find(uuid)
-#   if study == None:
+#   if study is None:
 #     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 #   else:
 #     return study.study_identifiers()
@@ -530,7 +529,7 @@ async def get_study_design_population(uuid: str):
 #   response_model=str)
 # async def create_sponsor_identifiers(uuid: str, params: StudyIdentifierIn):
 #   study = Study.find(uuid)
-#   if study == None:
+#   if study is None:
 #     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 #   else:
 #     return study.add_sponsor_identifier(params.identifier, params.name, params.scheme, params.scheme_identifier)
@@ -542,7 +541,7 @@ async def get_study_design_population(uuid: str):
 #   response_model=str)
 # async def create_sponsor_identifiers(uuid: str, params: StudyIdentifierIn):
 #   study = Study.find(uuid)
-#   if study == None:
+#   if study is None:
 #     raise HTTPException(status_code=404, detail="The requested study cannot be found")
 #   else:
 #     return study.add_ct_dot_gov_identifier(params.identifier)
@@ -553,7 +552,7 @@ async def get_study_design_population(uuid: str):
   response_model=dict)
 async def get_study_design_data_contract(uuid: str, page: int=0, size: int=0, filter: str=""):
   study_design = StudyDesign.find(uuid)
-  if study_design == None:
+  if study_design is None:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
   else:
     return study_design.data_contract(page, size, filter)
@@ -617,7 +616,7 @@ async def get_study_activities_by_visit(uuid: str, page: int=0, size: int=0, fil
   summary="Get the study uuid for a study design",
   description="Get the study uuid for a study design",
   response_model=dict)
-async def get_study_lab_transfer(uuid: str, page: int=0, size: int=0, filter: str=""):
+async def get_uuid_of_study_from_study_design(uuid: str, page: int=0, size: int=0, filter: str=""):
   study_design = StudyDesign.find(uuid)
   if study_design:
     return study_design.study(page, size, filter)
@@ -651,7 +650,7 @@ async def datapoint_form(datapoint: str, page: int=0, size: int=0, filter: str="
   response_model=dict)
 async def get_study_design_soa(uuid: str, page: int=0, size: int=0, filter: str=""):
   study_design = StudyDesign.find(uuid)
-  if study_design == None:
+  if study_design is None:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
   else:
     return study_design.subject_data(page, size, filter)
@@ -662,7 +661,7 @@ async def get_study_design_soa(uuid: str, page: int=0, size: int=0, filter: str=
   response_model=dict)
 async def get_study_design_subjects(uuid: str, page: int=0, size: int=0, filter: str=""):
   study_design = StudyDesign.find(uuid)
-  if study_design == None:
+  if study_design is None:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
   else:
     return study_design.subjects(page, size, filter)
@@ -689,7 +688,7 @@ async def create_study_data_file(uuid: str, request: Request, background_tasks: 
   summary="Add missing content for CT",
   description="Adds CT content not currently included when loading USDM protocol, e.g. pref_label",
   response_model=dict)
-async def get_study_data_file_status(background_tasks: BackgroundTasks):
+async def update_ct(background_tasks: BackgroundTasks):
   response = DataFile.add_properties_to_ct()
   print("response", response)
   if response:
@@ -702,7 +701,7 @@ async def get_study_data_file_status(background_tasks: BackgroundTasks):
   summary="Get study design data file status",
   description="Get the status of the processing for a given study desing data file",
   response_model=dict)
-async def get_study_data_file_status(uuid: str, file_uuid: str):
+async def update_ct_status(uuid: str, file_uuid: str):
   df = DataFile.find(file_uuid)
   if df:
     return df.get_status()
@@ -786,7 +785,7 @@ async def list_soa_timelines(request: Request, page: int = 0, size: int = 0, fil
 async def create_timeline(name: str, background_tasks: BackgroundTasks, description: str="", label: str="", template: str=""):
   result = ScheduleTimeline.create(name, description, label, template)
   print("result", result)
-  if not 'error' in result:
+  if 'error' not  in result:
     return result
   else:
     raise HTTPException(status_code=409, detail=result['error'])
@@ -799,7 +798,7 @@ async def create_timeline(name: str, background_tasks: BackgroundTasks, descript
 async def create_scheduled_activity_instance(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
   result = ScheduledActivityInstance.create(name, description, label)
   print("result", result)
-  if not 'error' in result:
+  if 'error' not  in result:
     return result
   else:
     raise HTTPException(status_code=409, detail=result['error'])
@@ -809,7 +808,7 @@ async def create_scheduled_activity_instance(name: str, background_tasks: Backgr
   summary="Get a timeline",
   description="Provides the details for a given timeline.",
   response_model=list)
-async def get_timeline_soa(uuid: str):
+async def get_timeline(uuid: str):
   timeline = ScheduleTimeline.find(uuid)
   if timeline:
     return timeline
@@ -836,7 +835,7 @@ async def get_timeline_soa(uuid: str):
 #   response_model=List[StudyArm])
 # async def get_study_design_epochs(uuid: str):
 #   study_design = StudyDesign.find(uuid)
-#   if study_design == None:
+#   if study_design is None:
 #     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 #   else:
 #     return study_design.arms()
@@ -849,7 +848,7 @@ async def get_timeline_soa(uuid: str):
   response_model=str)
 async def create_arm(uuid: str, name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
   result = StudyArm.create(name, description, label)
-  if result == None:
+  if result is None:
     raise HTTPException(status_code=409, detail="Trying to create a duplicate arm within the study")
   else:
     return result
@@ -865,7 +864,7 @@ async def create_arm(uuid: str, name: str, background_tasks: BackgroundTasks, de
 async def create_epoch(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
   result = StudyEpoch.create(name, description, label)
   print("result", result)
-  if not 'error' in result:
+  if 'error' not  in result:
     return result
   else:
     raise HTTPException(status_code=409, detail=result['error'])
@@ -881,7 +880,7 @@ async def create_epoch(name: str, background_tasks: BackgroundTasks, description
 async def create_element(name: str, background_tasks: BackgroundTasks, description: str="", label: str=""):
   result = StudyElement.create(name, description, label)
   print("result", result)
-  if not 'error' in result:
+  if 'error' not  in result:
     return result
   else:
     raise HTTPException(status_code=409, detail=result['error'])
@@ -897,7 +896,7 @@ async def create_element(name: str, background_tasks: BackgroundTasks, descripti
 async def create_cell(background_tasks: BackgroundTasks):
   result = StudyCell.create()
   print("result", result)
-  if not 'error' in result:
+  if 'error' not  in result:
     return result
   else:
     raise HTTPException(status_code=409, detail=result['error'])
@@ -910,7 +909,7 @@ async def create_cell(background_tasks: BackgroundTasks):
 #   response_model=List[StudyEpoch])
 # async def get_study_design_epochs(uuid: str):
 #   study_design = StudyDesign.find(uuid)
-#   if study_design == None:
+#   if study_design is None:
 #     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
 #   else:
 #     return study_design.epochs()
@@ -922,7 +921,7 @@ async def create_cell(background_tasks: BackgroundTasks):
 #   response_model=str)
 # async def create_epoch(uuid: str, epoch: StudyEpochIn):
 #   result = StudyEpoch.create(uuid, epoch.name, epoch.description)
-#   if result == None:
+#   if result is None:
 #     raise HTTPException(status_code=409, detail="Trying to create a duplicate epoch within the study")
 #   else:
 #     return result
@@ -935,7 +934,7 @@ async def create_cell(background_tasks: BackgroundTasks):
 #   response_model=StudyEpoch)
 # async def update_epoch(uuid: str, data: StudyEpochIn):
 #   epoch = StudyEpoch.find(uuid)
-#   if epoch == None:
+#   if epoch is None:
 #     raise HTTPException(status_code=404, detail="The requested epoch cannot be found")
 #   else:
 #     return epoch.update(data.name, data.description)
@@ -963,7 +962,7 @@ async def get_study_design_encounters(uuid: str, page: int = 0, size: int = 0, f
 #   response_model=str)
 # async def create_encounter(uuid: str, encounter: EncounterIn):
 #   result = Encounter.create(uuid, encounter.name, encounter.description)
-#   if result == None:
+#   if result is None:
 #     raise HTTPException(status_code=409, detail="Trying to create a duplicate encounter within the study")
 #   else:
 #     return result
@@ -975,7 +974,7 @@ async def get_study_design_encounters(uuid: str, page: int = 0, size: int = 0, f
 #   response_model=str)
 # async def link_epoch_and_encounter(uuid: str, encounter: EncounterLink):
 #   epoch = StudyEpoch.find(uuid)
-#   if epoch == None:
+#   if epoch is None:
 #     raise HTTPException(status_code=404, detail="The requested epoch cannot be found")
 #   else:
 #     return epoch.add_encounter(encounter.uuid)
@@ -986,7 +985,7 @@ async def get_study_design_encounters(uuid: str, page: int = 0, size: int = 0, f
 #   response_model=Encounter)
 # async def find_activity(uuid: str):
 #   activity = Encounter.find(uuid)
-#   if activity == None:
+#   if activity is None:
 #     raise HTTPException(status_code=404, detail="The requested encounter cannot be found")
 #   else:
 #     return activity
@@ -1001,7 +1000,7 @@ async def get_study_design_encounters(uuid: str, page: int = 0, size: int = 0, f
 #   response_model=str)
 # async def create_activity(uuid: str, activity: ActivityIn):
 #   result = Activity.create(uuid, activity.name, activity.description)
-#   if result == None:
+#   if result is None:
 #     raise HTTPException(status_code=409, detail="Trying to create a duplicate activity within the study")
 #   else:
 #     return result
@@ -1057,7 +1056,7 @@ async def find_domain(uuid: str):
 @app.get("/v1/domains/{uuid}/data", 
   summary="Returns an SDTM domain",
   description="Returns the SDTM.")
-async def find_domain(uuid: str):
+async def get_domain_data(uuid: str):
   item = Domain.find(uuid)
   if item:
     return item.data()
@@ -1069,7 +1068,7 @@ async def find_domain(uuid: str):
   description="Returns the SDTM Trial Design domain.")
 async def sdtm_trials_design_domain(uuid: str, domain_name: str, page: int = 0, size: int = 0, filter: str=""):
   study_design = StudyDesign.find(uuid)
-  if study_design == None:
+  if study_design is None:
     raise HTTPException(status_code=404, detail="The requested study design cannot be found")
   else:
     return study_design.sdtm_trial_design_domain(domain_name, page, size, filter)
