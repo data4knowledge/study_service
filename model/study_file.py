@@ -100,6 +100,9 @@ class StudyFile(BaseNode):
       self.set_status("running", "Converting data to database format", 10)
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
       study_design_uuid = ne.nodes['StudyDesign'][0]['uuid']
+      # NOTE: This is just here to for debug Add date_time to study name
+      ne.nodes['Study'][0]['name'] = ne.nodes['Study'][0]['name'] + " " + datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+      print("ne.nodes['study'][0]['name']", ne.nodes['Study'][0]['name'])
       ne.dump()
 
       self.set_status("running", "Uploading to local", 15)
