@@ -101,7 +101,7 @@ class StudyFile(BaseNode):
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
       study_design_uuid = ne.nodes['StudyDesign'][0]['uuid']
       # NOTE: This is just here to for debug Add date_time to study name
-      ne.nodes['Study'][0]['name'] = ne.nodes['Study'][0]['name'] + " " + self.date_time
+      ne.nodes['Study'][0]['name'] = ne.nodes['Study'][0]['name'] + " " + datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
       print("ne.nodes['study'][0]['name']", ne.nodes['Study'][0]['name'])
       ne.dump()
 

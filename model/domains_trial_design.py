@@ -80,7 +80,7 @@ class TrialDesignDomain():
       for item in response:
         usdm_tags = re.findall(r'(<usdm:tag name=.+?/>)', item['IETEST'])
         for usdm_tag in usdm_tags:
-          reference_text = cls._get_tag_text(usdm_tag)
+          reference_text = cls._get_tag_text(sd_uuid, usdm_tag)
           item['IETEST'] = item['IETEST'].replace(usdm_tag, reference_text)
       if len(response) == 0:
         return {'table': []}
@@ -130,7 +130,7 @@ class TrialDesignDomain():
       return {'error': 'Could not create TS dataframe'}
 
   @staticmethod
-  def _get_tag_text(usdm_tag):
+  def _get_tag_text(sd_uuid, usdm_tag):
     db = Neo4jConnection()
     results = re.search(r'"(.+?)"', usdm_tag)
     reference_txt = "(linked text not found)"
@@ -140,8 +140,8 @@ class TrialDesignDomain():
 
         # Get tag node which contains the xml reference
         query = """
-          match (n {tag: '%s'}) return n['reference'] as reference
-        """ % (tag_name)
+          match (sd:StudyDesign {uuid: '%s'})-[:DICTIONARIES_REL]->(:SyntaxTemplateDictionary)-[:PARAMETER_MAPS_REL]->(n {tag: '%s'}) return n['reference'] as reference
+        """ % (sd_uuid, tag_name)
         # print("tag query", query)
         results = session.run(query)
         for result in results.data():
@@ -150,7 +150,7 @@ class TrialDesignDomain():
         # Get reference node from the xml reference
         soup = BeautifulSoup(reference_xml, "html.parser")
         reference = soup.find("usdm:ref")
-        query = """match (n:%s {id:'%s'}) return n.%s as txt""" % (reference.attrs['klass'], reference.attrs['id'], reference.attrs['attribute'])
+        query = """match (:StudyDesign {uuid: "%s"})-[*1..2]->(n:%s {id:'%s'}) return n.%s as txt""" % (sd_uuid, reference.attrs['klass'], reference.attrs['id'], reference.attrs['attribute'])
         # print("reference query", query)
         results = session.run(query)
         for result in results.data():
