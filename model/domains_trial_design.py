@@ -165,9 +165,7 @@ class TrialDesignDomain():
     study_id = 'not found'
     with db.session() as session:
       query = """
-        match (sd:StudyDesign {uuid:'%s'})-[:ARMS_REL]-(a:StudyArm)
-        match (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)
-        match (si)-[:STUDY_IDENTIFIER_SCOPE_REL]-(o:Organization {name:'Eli Lilly'})
+        match (sd:StudyDesign {uuid:'%s'})<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier {id:'StudyIdentifier_1'})
         return  si.studyIdentifier as STUDYID
       """ % (sd_uuid)
       # print("study id query", query)
