@@ -166,12 +166,11 @@ class Domain(BaseNode):
       return result
 
   def dm_query(self):
-    # FIX: REMOVE HARD CODING OF ELI LILLY
     # Removed "or bcp.name = crm.sdtm" from query. Only to get DMDTC which is not needed
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier {id:'StudyIdentifier_1'})
       WITH si, domain
       MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
       MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
@@ -179,14 +178,14 @@ class Domain(BaseNode):
       MATCH (dc)<-[:FOR_DC_REL]-(dp:DataPoint)
       MATCH (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
       MATCH (subj)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
-      OPTIONAL MATCH (site)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country1:Code)
-      OPTIONAL MATCH (site)<-[:MANAGES_REL]-(:ResearchOrganization)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country2:Code)
       MATCH (domain)-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm)
+      WHERE  var.label = bcp.label or bcp.alt_sdtm_name = var.name
       MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
       MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
-      MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
-      WHERE  var.label = bcp.label or bcp.alt_sdtm_name = var.name
-      return
+      OPTIONAL MATCH (site)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country1:Code)
+      OPTIONAL MATCH (site)<-[:MANAGES_REL]-(:ResearchOrganization)-[:LEGAL_ADDRESS_REL]->(:Address)-[:COUNTRY_REL]->(country2:Code)
+      OPTIONAL MATCH (act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
+      return distinct
       si.studyIdentifier as STUDYID
       , domain.name as DOMAIN
       , toInteger(subj.identifier) as n_subject
@@ -197,7 +196,7 @@ class Domain(BaseNode):
       , dp.uri as dp_uri
       , site.name as SITEID
       , e.label as VISIT
-      , epoch.label as EPOCH
+      , coalesce(epoch.label, "NOT SET") as EPOCH
       , coalesce(country1.code, country2.code) as COUNTRY
       order by SITEID, n_order, SUBJID
     """ % (self.uuid)
@@ -206,11 +205,10 @@ class Domain(BaseNode):
 
   def ds_query(self):
     # ISSUE: Term is not the value from CRF. It is the standard decode of the BC
-    # FIX: REMOVE HARD CODING OF ELI LILLY
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier {id:'StudyIdentifier_1'})
       WITH si, domain
       MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
       OPTIONAL MATCH (bc)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)
@@ -242,11 +240,10 @@ class Domain(BaseNode):
     return query
 
   def ae_query(self):
-    # FIX: REMOVE HARD CODING OF ELI LILLY
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier {id:'StudyIdentifier_1'})
       WITH si, domain
       MATCH (domain)-[:USING_BC_REL]-(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
       MATCH (bcp)<-[:PROPERTIES_REL]->(dc:DataContract)
@@ -274,7 +271,7 @@ class Domain(BaseNode):
     query = """
       MATCH (sd:StudyDesign)-[:DOMAIN_REL]->(domain:Domain {uuid:'%s'})
       MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier {id:'StudyIdentifier_1'})
       WITH si, domain
       MATCH (domain)-[:USING_BC_REL]-(bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)
       OPTIONAL MATCH (bc)-[:CODE_REL]->(:AliasCode)-[:STANDARD_CODE_REL]->(c:Code)
@@ -314,7 +311,7 @@ class Domain(BaseNode):
       match(domain:Domain{uuid:'%s'})-[:VARIABLE_REL]->(var:Variable)-[:IS_A_REL]->(crm:CRMNode)<-[:IS_A_REL]-(bc_prop:BiomedicalConceptProperty), (domain)-[:USING_BC_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bc_prop)<-[:PROPERTIES_REL]-(dc:DataContract)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)-[:TYPE_REL]->(tim_ref:Code)
       MATCH(act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter),(act_inst_main)-[:EPOCH_REL]->(epoch:StudyEpoch)
       OPTIONAL MATCH(act_inst_main)<-[:INSTANCES_REL]-(tl:ScheduleTimeline)
-      MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+      MATCH (domain)<-[:DOMAIN_REL]-(sd:StudyDesign)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier {id:'StudyIdentifier_1'})
       MATCH (dc)<-[:FOR_DC_REL]-(d:DataPoint)-[:FOR_SUBJECT_REL]->(s:Subject)-[:ENROLLED_AT_SITE_REL]->(site:StudySite)
       MATCH (bc)-[:CODE_REL]->()-[:STANDARD_CODE_REL]-(code:Code)
       WITH code.decode as test_code, si,domain, collect(epoch.name) as epoch,collect(toInteger(split(e.id,'_')[1])) as e_order,var, bc, dc, d, s, site, collect(e.label) as vis, apoc.map.fromPairs(collect([tl.label,tim.value])) as TP, tim_ref.decode as tim_ref
@@ -610,8 +607,10 @@ class Domain(BaseNode):
       index_brthdtc = [column_names.index('BRTHDTC')][0]
       index_age = [column_names.index('AGE')][0]
       for key,vars in final_results.items():
-        vars[index_age] = self.sdtm_derive_age(vars[index_rficdtc],vars[index_brthdtc])
-        # vars[index_age] = derive_age(vars[index_rficdtc],vars[index_brthdtc])
+        try:
+          vars[index_age] = self.sdtm_derive_age(vars[index_rficdtc],vars[index_brthdtc])
+        except Exception as e:
+          application_logger.exception(f"Could not derive age for subject: {key} {vars[index_rficdtc]} {vars[index_brthdtc]}", e)
 
     df = pd.DataFrame(columns=column_names)
     # print(df.head())
@@ -637,7 +636,7 @@ class Domain(BaseNode):
         WITH *
         MATCH (sd:StudyDesign)-[:BIOMEDICAL_CONCEPTS_REL]->(bc)
         MATCH (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)
-        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)-[:STUDY_IDENTIFIER_SCOPE_REL]->(sis:Organization {name:'Eli Lilly'})
+        MATCH (sv)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier {id:'StudyIdentifier_1'})
         // MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)<-[:RELATIVE_FROM_SCHEDULED_INSTANCE_REL]-(tim:Timing)
         MATCH (dc)-[:INSTANCES_REL]->(act_inst_main:ScheduledActivityInstance)
         MATCH (act_inst_main)-[:ENCOUNTER_REL]->(e:Encounter)
