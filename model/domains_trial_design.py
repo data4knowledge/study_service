@@ -326,25 +326,13 @@ class TrialDesignDomain():
         return 
         '%s' as STUDYID
         , 'TV' as DOMAIN
-        // , toInteger(split(e.id,'_')[1]) as VISITNUM
         , toInteger(split(t.name,'TIM')[1]) as VISITNUM
-        // , e.name as e_name
         , e.label+" - "+t.label as VISIT
-        // , sai.name as sai_name
-        // , sai.label as sai_label
-        // , t.label as t_label
-        // , t.value as t_value
-        // , t.valueLabel as t_valueLabel
-        // , from_rel.decode as from_rel
-        // , type_rel.decode as type_rel
-        // , sai_to.label as rel_to_sai
-        // , t.label as VISITDY
         , '' as ARMCD
         , t.valueLabel+" "+type_rel.decode+" "+sai_to.label as TVSTRL
         , '' as TVENRL
         ORDER BY VISITNUM
       """ % (sd_uuid, study_id)
-      # print("trial visits query", query)
       results = session.run(query)
       data = [x.data() for x in results]
     db.close()
