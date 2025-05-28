@@ -105,6 +105,9 @@ class StudyFile(BaseNode):
       print("ne.nodes['study'][0]['name']", ne.nodes['Study'][0]['name'])
       ne.dump()
 
+      self.set_status("complete", "Finished", 100, study_design_uuid)
+      return True
+
       self.set_status("running", "Uploading to local", 15, study_design_uuid)
       local = LocalService()
       file_count = local.file_list(self.dir_path, "*.csv")
