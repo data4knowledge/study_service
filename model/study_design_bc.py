@@ -287,7 +287,7 @@ class StudyDesignBC():
         optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+        where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
         WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, bcp.datatype as bcp_datatype, dec.question_text as question_text, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
         return "no code" as from, bc_raw_name, bc_name, bcp_datatype, name, generic_name, question_text, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (study_design.uuid)
@@ -362,7 +362,7 @@ class StudyDesignBC():
       #   optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
       #   OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
       #   OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-      #   where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+      #   where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
       #   WITH distinct subj.identifier as subj_id, enc.label as visit, timing.value as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
       #   return "sub" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       # """ % (datapoint)
@@ -499,7 +499,7 @@ class StudyDesignBC():
         optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+        where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
         WITH distinct subj.identifier as subj_id, enc.label as visit, timing.value as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
         return "sub" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, generic_name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (dp_uri)
@@ -525,7 +525,7 @@ class StudyDesignBC():
           optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
           OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
           OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-          where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+          where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
           WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
           return "main" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, generic_name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
         """ % (dp_uri)
@@ -554,7 +554,7 @@ class StudyDesignBC():
           match (dp)-[:SOURCE]->(sr)
           OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
           OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-          where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+          where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
           WITH distinct subj.identifier as subj_id, "N/A" as visit, "N/A" as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
           return "sub2" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, generic_name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
         """ % (dp_uri)
