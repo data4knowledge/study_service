@@ -414,11 +414,11 @@ class StudyDesignBC():
         MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
         MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
         optional MATCH (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(c:Code)
-        with distinct order, e.label as encounter, bc.name as name, {id: sc.code, decode: sc.decode} as coded_name, bcp.generic_name as bcp_name, c.decode as term, dc.uri as dc
-        return order, encounter, name, coded_name, bcp_name, collect(term) as terms, dc
+        with distinct order, e.label as encounter, bc.name as name, bc.cost as cost, {id: sc.code, decode: sc.decode} as coded_name, bcp.generic_name as bcp_name, c.decode as term, dc.uri as dc
+        return order, encounter, name, cost, coded_name, bcp_name, collect(term) as terms, dc
         order by order, name, bcp_name
       """ % (study_design.uuid)
-      # print("lab transfer query", query)
+      print("lab transfer query", query)
       result = session.run(query)
       for record in result:
         results.append(record.data())
