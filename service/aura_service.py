@@ -67,35 +67,35 @@ class AuraService():
 
   def load_nodes(self, label, file_path, header):
     properties = "\n".join([f"set n.{p} = row['{p}']" for p in header if p != "uuid:ID"])
-    session = self.driver.session(database=self.database)
-    query = """
-        LOAD CSV WITH HEADERS FROM '%s' AS row
-        with row
-        MERGE (n:%s {uuid:row['uuid:ID']})
-        %s
-        RETURN count(*) as count
-    """ % (file_path, label, properties)
-    # application_logger.debug(f"QUERY: {query}")
-    results = session.run(query)
-    count = [result.data() for result in results]
-    self.driver.close()
+    with self.driver.session(database=self.database) as session:
+      query = """
+          LOAD CSV WITH HEADERS FROM '%s' AS row
+          with row
+          MERGE (n:%s {uuid:row['uuid:ID']})
+          %s
+          RETURN count(*) as count
+      """ % (file_path, label, properties)
+      application_logger.info(f"QUERY: {query}")
+      results = session.run(query)
+      count = [result.data() for result in results]
+    # self.driver.close()
     application_logger.info(f"Loaded Aura, details {label}: {count}")
     return True
 
   def load_relationships(self, type, file_path):
-    session = self.driver.session(database=self.database)
-    query = """
-        LOAD CSV WITH HEADERS FROM '%s' AS row
-        with row
-        MATCH (n1 {uuid: row[':START_ID']})
-        MATCH (n2 {uuid: row[':END_ID']})
-        MERGE (n1)-[:%s]->(n2)
-        RETURN count(*) as count
-    """ % (file_path, type)
-    # application_logger.debug(f"QUERY: {query}")
-    results = session.run(query)
-    count = [result.data() for result in results]
-    self.driver.close()
+    with self.driver.session(database=self.database) as session:
+      query = """
+          LOAD CSV WITH HEADERS FROM '%s' AS row
+          with row
+          MATCH (n1 {uuid: row[':START_ID']})
+          MATCH (n2 {uuid: row[':END_ID']})
+          MERGE (n1)-[:%s]->(n2)
+          RETURN count(*) as count
+      """ % (file_path, type)
+      # application_logger.debug(f"QUERY: {query}")
+      results = session.run(query)
+      count = [result.data() for result in results]
+    # self.driver.close()
     application_logger.info(f"Loaded Aura, details {file_path}: {count}")
     return True
 
