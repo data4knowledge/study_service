@@ -75,7 +75,7 @@ class AuraService():
           %s
           RETURN count(*) as count
       """ % (file_path, label, properties)
-      application_logger.info(f"QUERY: {query}")
+      # application_logger.info(f"QUERY: {query}")
       results = session.run(query)
       count = [result.data() for result in results]
     # self.driver.close()
