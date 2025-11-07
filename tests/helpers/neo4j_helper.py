@@ -5,9 +5,9 @@ class Neo4jHelper():
   
   def __init__(self):
     self.__db_name = ServiceEnvironment().get('NEO4J_DB_NAME')
-    self.__uri = ServiceEnvironment().get('NEO4J_URL')
-    self.__usr = ServiceEnvironment().get('NEO4J_USER')
-    self.__pwd = ServiceEnvironment().get('NEO4J_PWD')
+    self.__uri = ServiceEnvironment().get('NEO4J_URI')
+    self.__usr = ServiceEnvironment().get('NEO4J_USERNAME')
+    self.__pwd = ServiceEnvironment().get('NEO4J_PASSWORD')
     self.__driver = GraphDatabase.driver(self.__uri, auth=(self.__usr, self.__pwd))
 
   def clear(self):
