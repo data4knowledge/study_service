@@ -55,7 +55,6 @@ class StudyFileNodesAndEdges():
     fields = self.unique_keys(data)
     #fieldnames = ["id:ID"] + fields
     csv_filename = "%s/node-%s-%s.csv" % (self.dir, snakecase(type), file_count)
-    # csv_file = open(csv_filename, mode='w', newline='')
     with open(csv_filename, mode='w', newline='') as csv_file:
       writer = csv.DictWriter(csv_file, fieldnames=fields, quoting=csv.QUOTE_ALL, lineterminator="\n")
       writer.writeheader()
@@ -75,19 +74,19 @@ class StudyFileNodesAndEdges():
     block_count = 0
     file_count = 1
     fieldnames = [ ":START_ID", ":END_ID" ]
-    for row in items:
-      if block_count == 0:
-        csv_filename = "%s/rel-%s-%s.csv" % (self.dir, type.lower(), file_count)
-        csv_file = open(csv_filename, mode='w', newline='')
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames, quoting=csv.QUOTE_ALL, lineterminator="\n")
-        writer.writeheader()
-        file_count += 1
-      #new_row = { ":START_ID": self.uuid_to_id[row["from"]], ":END_ID": self.uuid_to_id[row["to"]] }
-      new_row = { ":START_ID": row["from"], ":END_ID": row["to"] }
-      writer.writerow(new_row)
-      block_count += 1
-      if block_count >= block_size:
-        block_count = 0
+    csv_filename = "%s/rel-%s-%s.csv" % (self.dir, type.lower(), file_count)
+    with open(csv_filename, mode='w', newline='') as csv_file:
+      writer = csv.DictWriter(csv_file, fieldnames=fieldnames, quoting=csv.QUOTE_ALL, lineterminator="\n")
+      writer.writeheader()
+      for row in items:
+        if block_count == 0:
+          file_count += 1
+        #new_row = { ":START_ID": self.uuid_to_id[row["from"]], ":END_ID": self.uuid_to_id[row["to"]] }
+        new_row = { ":START_ID": row["from"], ":END_ID": row["to"] }
+        writer.writerow(new_row)
+        block_count += 1
+        if block_count >= block_size:
+          block_count = 0
 
   def unique_keys(self, arr):
     keys = list(set(val for dic in arr for val in dic.keys()))
