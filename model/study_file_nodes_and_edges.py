@@ -54,21 +54,22 @@ class StudyFileNodesAndEdges():
     file_count = 1
     fields = self.unique_keys(data)
     #fieldnames = ["id:ID"] + fields
-    for row in data:
-      self.fill_missing(type, fields, row)
-      if block_count == 0:
-        csv_filename = "%s/node-%s-%s.csv" % (self.dir, snakecase(type), file_count)
-        csv_file = open(csv_filename, mode='w', newline='')
-        writer = csv.DictWriter(csv_file, fieldnames=fields, quoting=csv.QUOTE_ALL, lineterminator="\n")
-        writer.writeheader()
-        file_count += 1
-      #row["id:ID"] = self.id
-      #self.uuid_to_id[row["uuid"]] = self.id
-      #self.id += 1
-      writer.writerow(row)
-      block_count += 1
-      if block_count >= block_size:
-        block_count = 0
+    csv_filename = "%s/node-%s-%s.csv" % (self.dir, snakecase(type), file_count)
+    # csv_file = open(csv_filename, mode='w', newline='')
+    with open(csv_filename, mode='w', newline='') as csv_file:
+      writer = csv.DictWriter(csv_file, fieldnames=fields, quoting=csv.QUOTE_ALL, lineterminator="\n")
+      writer.writeheader()
+      for row in data:
+        self.fill_missing(type, fields, row)
+        if block_count == 0:
+          file_count += 1
+        #row["id:ID"] = self.id
+        #self.uuid_to_id[row["uuid"]] = self.id
+        #self.id += 1
+        writer.writerow(row)
+        block_count += 1
+        if block_count >= block_size:
+          block_count = 0
 
   def dump_edges(self, type, items, block_size=100000):
     block_count = 0
