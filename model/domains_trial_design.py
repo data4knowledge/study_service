@@ -189,7 +189,7 @@ class TrialDesignDomain():
         match (sc)-[:EPOCH_REL]->(epoch:StudyEpoch)
         match (sc)-[:ELEMENT_REL]->(el:StudyElement)
         match (el)-[:TRANSITION_START_RULE_REL]->(trs:TransitionRule)
-        match (si)-[:STUDY_IDENTIFIER_SCOPE_REL]-(o:Organization {name:'Eli Lilly'})
+        match (si)-[:STUDY_IDENTIFIER_SCOPE_REL]->(o:Organization)-[:ORGANIZATION_TYPE_REL]->(ot:Code {decode: "Clinical Study Sponsor"})
         optional match (el)-[:TRANSITION_END_RULE_REL]->(tr_branch:TransitionRule)
         with
           si.studyIdentifier as STUDYID
@@ -215,7 +215,7 @@ class TrialDesignDomain():
           ,TABRANCH
           ,EPOCH
       """ % (sd_uuid)
-      # print("trial arms query", query)
+      print("trial arms query", query)
       results = session.run(query)
       first_data = [x.data() for x in results]
       last_arm = None
@@ -277,7 +277,7 @@ class TrialDesignDomain():
           ,TEDUR
         order by ETCD
       """ % (sd_uuid)
-      # print("trial arms query", query)
+      print("trial elements query", query)
       results = session.run(query)
       data = [x.data() for x in results]
     db.close()
@@ -302,7 +302,7 @@ class TrialDesignDomain():
           ,sv.versionIdentifier as TIVERSION
         order by IETESTCD
       """ % (sd_uuid, study_id)
-      # print("trial arms query", query)
+      print("trial inclusion query", query)
       results = session.run(query)
       data = [x.data() for x in results]
     db.close()
@@ -333,6 +333,7 @@ class TrialDesignDomain():
         , '' as TVENRL
         ORDER BY VISITNUM
       """ % (sd_uuid, study_id)
+      print("trial visits query", query)
       results = session.run(query)
       data = [x.data() for x in results]
     db.close()
