@@ -1,0 +1,29 @@
+# fly.toml app configuration file generated for d4k-sdw-staging on 2024-10-06T15:59:57+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'd4k-sdw-staging'
+primary_region = 'ams'
+kill_signal = 'SIGINT'
+kill_timeout = '5s'
+
+[build]
+  image = 'data4knowledge/study-servcie:0.16.1'
+
+[[mounts]]
+  source = 'sdw_data_staging'
+  destination = '/mnt/sdw_data_staging'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
