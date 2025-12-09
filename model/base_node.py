@@ -95,7 +95,8 @@ class BaseNode(Node):
     db = Neo4jConnection()
     with db.session() as session:
       query = """
-        MATCH (a {uuid: '%s'}), (b {uuid: '%s'})
+        MATCH (a {uuid: '%s'})
+        MATCH (b {uuid: '%s'})
         MERGE (a)-[:%s]->(b)
         RETURN a
       """ % (self.uuid, to.uuid, relationship)
