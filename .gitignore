@@ -141,3 +141,4 @@ test.py
 
 # Python test programs, prefix with 'xxx_'
 xxx_*.*
+launch.json
