@@ -41,6 +41,11 @@ app = FastAPI(
 
 # FOR DEBUGGING
 se = ServiceEnvironment()
+# Set neo4j log level
+import logging
+neo4j_log = logging.getLogger("neo4j")
+neo4j_log.setLevel(40)
+print("neo4j_log.level", neo4j_log.level)
 
 @app.get("/", 
   summary="Get system and version",
