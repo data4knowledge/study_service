@@ -11,7 +11,7 @@ from model.biomedical_concept import BiomedicalConceptSimple
 class StudyDesignSDTM():
 
   @classmethod
-  def create(cls, name):
+  def create(cls, sd_uuid):
     domains = {'DM': ['Age', 'Sex', 'Race', 'Ethnic','Informed Consent Obtained','Date of Birth']} # Need to fix that DM BCs have no SDTM representation yet.
     bc_service = BCService()
     sdtm_service = SDTMService()
@@ -19,7 +19,7 @@ class StudyDesignSDTM():
     #print(f"BCS: {sdtm_bcs}")
     crm_nodes = cls._get_crm()
     #print(f"CRM: {crm_nodes}")
-    study_design = cls._get_study_design(name)
+    study_design = cls._get_study_design_by_uuid(sd_uuid)
     #print(f"SD: {study_design.uuid}")
     results = cls._get_bcs(study_design)
     #print(f"BCs: {results}")
@@ -112,8 +112,8 @@ class StudyDesignSDTM():
         print("DOMAIN:", record['d']['name'])
 
   @classmethod
-  def add_permissible_sdtm_variables(cls, name):
-    study_design = cls._get_study_design(name)
+  def add_permissible_sdtm_variables(cls, sd_uuid):
+    study_design = cls._get_study_design_by_uuid(sd_uuid)
     cls._add_permissible_sdtm_variables(study_design.uuid)
     application_logger.info("Created permissible variables")
 
@@ -142,6 +142,12 @@ class StudyDesignSDTM():
       for record in result:
         return StudyDesign.wrap(record['sd'])
       return None
+
+  @staticmethod
+  def _get_study_design_by_uuid(sd_uuid):
+
+    from model.study_design import StudyDesign
+    return StudyDesign.find(sd_uuid)
 
   @staticmethod
   def _find_domain(study_design_uuid, domain):

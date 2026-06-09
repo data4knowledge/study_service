@@ -78,6 +78,16 @@ class StudyVersion(NodeId):
     print(f"RESULTS: {list(results.values())}")
     return list(results.values())[0]
 
+  def study_name(self):
+    db = Neo4jConnection()
+    with db.session() as session:
+      query = """MATCH (sv:StudyVersion {uuid: '%s'})<-[:VERSIONS_REL]-(s:Study) RETURN s.name as study_name""" % (self.uuid)
+      # print(f"QUERY: {query}")
+      records = session.run(query)
+      results = [x for x in records.data()]
+    db.close()
+    return results[0]['study_name'] if results else None
+
   # @classmethod
   # def find_from_study_protocol_document_version(cls, uuid):
   #   db = Neo4jConnection()

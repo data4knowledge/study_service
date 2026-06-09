@@ -13,9 +13,9 @@ from model.crm import CRMNode
 class StudyDesignBC():
 
   @classmethod
-  def fix(cls, name):
+  def fix(cls, sd_uuid):
     results = {}
-    study_design = cls._get_study_design(name)
+    study_design = cls._get_study_design_by_uuid(sd_uuid)
     bcs = cls._get_bcs(study_design)
     for bc in bcs:
       # print("--debug bc:",bc.name)
@@ -58,9 +58,9 @@ class StudyDesignBC():
     return valid_values
 
   @classmethod
-  def create(cls, name):
+  def create(cls, sd_uuid):
     results = {}
-    study_design = cls._get_study_design(name)
+    study_design = cls._get_study_design_by_uuid(sd_uuid)
     properties = cls._get_properties(study_design)
     crm_nodes = cls._get_crm()
     crm_map = {}
@@ -123,33 +123,36 @@ class StudyDesignBC():
     return result
   
   @classmethod
-  def make_dob_surrogate_as_bc(cls, name):
-    bc_uuid = cls._copy_surrogate()
-    # print("bc_uuid",bc_uuid)
-    bcp_uuids = cls._copy_properties(bc_uuid, 'Date of Birth', 'Race')
-    # print("bcp_uuids",bcp_uuids)
-    cls._copy_bc_relationships_from_bc(bc_uuid, 'Race')
-    application_logger.info("Converted Date of Birth Surrgate to BC")
+  def make_dob_surrogate_as_bc(cls, sd_uuid):
+    bc_uuid = cls._copy_surrogate(sd_uuid)
+    if bc_uuid:
+      # print("bc_uuid",bc_uuid)
+      bcp_uuids = cls._copy_properties(sd_uuid, bc_uuid, 'Date of Birth', 'Race')
+      # print("bcp_uuids",bcp_uuids)
+      cls._copy_bc_relationships_from_bc(sd_uuid, bc_uuid, 'Race')
+      application_logger.info("Converted Date of Birth Surrogate to BC")
+    else:
+      application_logger.info("Date of Birth Surrogate not found")
 
   @classmethod
-  def pretty_properties_for_bc(cls, name):
-    cls._remove_properties_from_exposure()
+  def pretty_properties_for_bc(cls, sd_uuid):
+    cls._remove_properties_from_exposure(sd_uuid)
 
-    study_design = cls._get_study_design(name)
-    bcs = cls._get_bcs_by_name(study_design, "Adverse Event Prespecified")
-    cls._add_properties_to_ae(bcs)
-    application_logger.info("Added properties to AE")
+    bcs = cls._get_bcs_by_name(sd_uuid, "Adverse Event Prespecified")
+    if bcs:
+      cls._add_properties_to_ae(bcs)
+      application_logger.info("Added properties to AE")
 
   @classmethod
-  def fix_links_to_crm(cls, name):
+  def fix_links_to_crm(cls):
     cls._add_missing_links_to_crm()
     application_logger.info("Linked specific variables to CRM")
 
   @classmethod
-  def fix_bc_name_label(cls, name):
-    cls._fix_bc_name_label()
-    cls._add_missing_terminology()
-    cls._add_brthdtc_link_crm()
+  def fix_bc_name_label(cls, sd_uuid):
+    cls._fix_bc_name_label(sd_uuid)
+    cls._add_missing_terminology(sd_uuid)
+    cls._add_brthdtc_link_crm(sd_uuid)
     application_logger.info("Added alt_sdtm_name and terms")
 
 
@@ -188,16 +191,7 @@ class StudyDesignBC():
   def _get_study_design_by_uuid(uuid):
     
     from model.study_design import StudyDesign
-    
-    db = Neo4jConnection()
-    with db.session() as session:
-      query = """
-        MATCH (sd:StudyDesign {uuid: '%s'}) return sd
-      """ % (uuid)
-      result = session.run(query)
-      for record in result:
-        return StudyDesign.wrap(record['sd'])
-      return None
+    return StudyDesign.find(uuid)
 
   @staticmethod
   def _get_crm():
@@ -224,6 +218,7 @@ class StudyDesignBC():
         OPTIONAL MATCH (bcp)-[]->(rc:ResponseCode)-[]->(c:Code) 
         RETURN DISTINCT bcp, rc, c
       """ % (study_design.uuid)
+      # print("query", query)
       result = session.run(query)
       p_map = {}
       for record in result:
@@ -292,7 +287,7 @@ class StudyDesignBC():
         optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+        where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
         WITH distinct bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, bcp.datatype as bcp_datatype, dec.question_text as question_text, crm.datatype as data_type, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
         return "no code" as from, bc_raw_name, bc_name, bcp_datatype, name, generic_name, question_text, data_type, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (study_design.uuid)
@@ -367,7 +362,7 @@ class StudyDesignBC():
       #   optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
       #   OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
       #   OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-      #   where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+      #   where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
       #   WITH distinct subj.identifier as subj_id, enc.label as visit, timing.value as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
       #   return "sub" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       # """ % (datapoint)
@@ -419,11 +414,13 @@ class StudyDesignBC():
         MATCH (bcp)-[:IS_A_REL]-(crm:CRMNode)
         MATCH (bcp)<-[:PROPERTIES_REL]-(dc:DataContract)
         optional MATCH (bcp)-[:RESPONSE_CODES_REL]->(:ResponseCode)-[:CODE_REL]->(c:Code)
-        with distinct order, e.label as encounter, bc.name as name, bcp.cost as cost, {id: sc.code, decode: sc.decode} as coded_name, bcp.generic_name as bcp_name, c.decode as term, dc.uri as dc
+        # version 1
+        # with distinct order, e.label as encounter, bc.name as name, bcp.cost as cost, {id: sc.code, decode: sc.decode} as coded_name, bcp.generic_name as bcp_name, c.decode as term, dc.uri as dc
+        with distinct order, e.label as encounter, bc.name as name, bc.cost as cost, {id: sc.code, decode: sc.decode} as coded_name, bcp.generic_name as bcp_name, c.decode as term, dc.uri as dc
         return order, encounter, name, cost, coded_name, bcp_name, collect(term) as terms, dc
         order by order, name, bcp_name
       """ % (study_design.uuid)
-      # print("lab transfer query", query)
+      print("lab transfer query", query)
       result = session.run(query)
       for record in result:
         results.append(record.data())
@@ -445,10 +442,10 @@ class StudyDesignBC():
         MATCH path=(a1)-[:NEXT_REL *0..]->(a)
         WITH a, LENGTH(path) as a_ord
         MATCH (a)<-[:ACTIVITY_REL]-(sai:ScheduledActivityInstance)-[:ENCOUNTER_REL]->(enc:Encounter)
+        optional MATCH (a)<-[:CHILD_REL]-(p:Activity)       
         optional match (a)-[:BIOMEDICAL_CONCEPT_REL]->(bc:BiomedicalConcept)<-[:USING_BC_REL]-(d:Domain)
-        where d.name <> "LB"
-        with distinct toInteger(split(enc.id,'_')[1]) as order, a_ord, enc.label as visit, a.label as activity, bc.name as bc_name
-        return order, a_ord, visit, activity, collect(bc_name) as bcs
+        with distinct toInteger(split(enc.id,'_')[1]) as order, a_ord, enc.label as visit, p.name as parent, a.label as activity, bc.name as bc_name
+        return order, a_ord, visit, parent, activity, collect(bc_name) as bcs
         order by order, a_ord
       """ % (study_design.uuid)
       # print("activity by visit query", query)
@@ -504,7 +501,7 @@ class StudyDesignBC():
         optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
         OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
         OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-        where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+        where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
         WITH distinct subj.identifier as subj_id, enc.label as visit, timing.value as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
         return "sub" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, generic_name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
       """ % (dp_uri)
@@ -530,7 +527,7 @@ class StudyDesignBC():
           optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
           OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
           OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-          where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+          where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
           WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
           return "main" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, generic_name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
         """ % (dp_uri)
@@ -559,7 +556,7 @@ class StudyDesignBC():
           match (dp)-[:SOURCE]->(sr)
           OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
           OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
-          where bcp.name = var.name or bcp.label = var.label or bcp.alt_sdtm_name = var.name
+          where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
           WITH distinct subj.identifier as subj_id, "N/A" as visit, "N/A" as tpt, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
           return "sub2" as from, subj_id, visit, tpt, question_text, bc_raw_name, bc_name, name, generic_name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
         """ % (dp_uri)
@@ -601,14 +598,14 @@ class StudyDesignBC():
         return uuids
 
   @staticmethod
-  def _copy_surrogate():
+  def _copy_surrogate(sd_uuid):
     db = Neo4jConnection()
     bc_uuid = str(uuid4())
 
     with db.session() as session:
       results = []
       query = """
-        MATCH (bcs:BiomedicalConceptSurrogate)
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BC_SURROGATES_REL]->(bcs:BiomedicalConceptSurrogate)
         where bcs.name = "Date of Birth"
         WITH bcs
         MERGE (bc:BiomedicalConcept {uuid:'%s'})
@@ -621,24 +618,26 @@ class StudyDesignBC():
         SET bc.id           = "BiomedicalConcept_9999"
         SET bc.fake_node    = "yes"
         return bc.uuid as uuid
-      """ % (bc_uuid)
+      """ % (sd_uuid, bc_uuid)
+      # print("query", query)
       records = session.run(query)
       for record in records:
         results.append(record.data())
-      if results:
-        return results[0]['uuid']
-      return "Error: Did not create BC"
+    db.close()
+    if results:
+      return results[0]['uuid']
+    return None
 
   @staticmethod
-  def _copy_properties(bc_uuid, new_bc_name, copy_bc_name):
+  def _copy_properties(sd_uuid, bc_uuid, new_bc_name, copy_bc_name):
     db = Neo4jConnection()
     bcp_uuids = []
     with db.session() as session:
       # Get properties for bc to copy
       query = """
-          MATCH (bc:BiomedicalConcept {name:"%s"})-[:PROPERTIES_REL]->(bcp)
+          MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept {name:"%s"})-[:PROPERTIES_REL]->(bcp)
           RETURN bcp.uuid as uuid, bcp.name as name, bcp.label as label
-      """ % (copy_bc_name)
+      """ % (sd_uuid, copy_bc_name)
       # print("query\n",query)
       # Create the same properties for new bc and add relationships to data contract and scheduled activity instance
       results = session.run(query)
@@ -684,56 +683,65 @@ class StudyDesignBC():
     return bcp_uuids
       
   @staticmethod
-  def _copy_bc_relationships_from_bc(bc_uuid, copy_bc_name):
+  def _copy_bc_relationships_from_bc(sd_uuid, bc_uuid, copy_bc_name):
     db = Neo4jConnection()
     with db.session() as session:
-      # Copy relationship to study
+      # Get uuid of BC to copy relationships
       query = """
-          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:BIOMEDICAL_CONCEPTS_REL]-(target:StudyDesign)
-          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
-          MERGE (new_bc)<-[:BIOMEDICAL_CONCEPTS_REL]-(target)
-      """ % (copy_bc_name, bc_uuid)
-      # print(query)
+          MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(copy_bc:BiomedicalConcept {name:"%s"})
+          return copy_bc.uuid as copy_bc_uuid
+      """ % (sd_uuid, copy_bc_name)
       results = session.run(query)
-      # for result in results:
-      #   print("result",result.data())
-      print("Created link to Study Design")
+      copy_bc_uuid = None
+      for result in results.data():
+        copy_bc_uuid = result['copy_bc_uuid']
 
-      # Copy relationship to domain
-      query = """
-          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:USING_BC_REL]-(target:Domain)
-          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
-          MERGE (new_bc)<-[:USING_BC_REL]-(target)
-      """ % (copy_bc_name, bc_uuid)
-      # print(query)
-      results = session.run(query)
-      for result in results:
-        print("result",result.data())
-      print("Created link to Domain")
+      if copy_bc_uuid:
+        # Copy relationship to study
+        query = """
+            MATCH (sd:StudyDesign {uuid: '%s'})
+            MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+            MERGE (new_bc)<-[:BIOMEDICAL_CONCEPTS_REL]-(sd)
+        """ % (sd_uuid, bc_uuid)
+        # print("sd to bc", query)
+        results = session.run(query)
+        # for result in results:
+        #   print("result",result.data())
+        print("Created link to Study Design")
 
-      # Copy relationship to activity
-      query = """
-          MATCH (copy_bc:BiomedicalConcept {name:"%s"})<-[:BIOMEDICAL_CONCEPT_REL]-(target:Activity)
-          MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
-          MERGE (new_bc)<-[:BIOMEDICAL_CONCEPT_REL]-(target)
-      """ % (copy_bc_name, bc_uuid)
-      # print(query)
-      results = session.run(query)
-      # for result in results:
-      #   print("result",result.data())
-      print("Created link to Activity")
+        # Copy relationship to domain
+        query = """
+            MATCH (copy_bc:BiomedicalConcept {uuid:"%s"})<-[:USING_BC_REL]-(target:Domain)
+            MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+            MERGE (new_bc)<-[:USING_BC_REL]-(target)
+        """ % (copy_bc_uuid, bc_uuid)
+        # print("rel to domain", query)
+        results = session.run(query)
+        print("Created link to Domain")
 
-      # Adding CODE_REL -> AliasCode
-      query = f"""
-          MATCH (bc:BiomedicalConcept {{uuid:"{bc_uuid}"}})
-          with bc
-          CREATE (ac:AliasCode {{uuid: '{str(uuid4())}', instanceType: 'AliasCode', id: 'AliasCode_BD'}})
-          CREATE (c:Code {{code: 'S000001', codeSystem: 'http://www.example.org', codeSystemVersion: '0.1', decode: 'Date of Birth', id: 'Code_436', instanceType: 'Code', uuid: '{str(uuid4())}'}})
-          CREATE (bc)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
-          return count(*) as count
-      """
-      # print(query)
-      results = session.run(query)
+        # Copy relationship to activity
+        query = """
+            MATCH (copy_bc:BiomedicalConcept {uuid:"%s"})<-[:BIOMEDICAL_CONCEPT_REL]-(target:Activity)
+            MATCH (new_bc:BiomedicalConcept {uuid:"%s"})
+            MERGE (new_bc)<-[:BIOMEDICAL_CONCEPT_REL]-(target)
+        """ % (copy_bc_uuid, bc_uuid)
+        # print("rel to activity", query)
+        results = session.run(query)
+        print("Created link to Activity")
+
+        # Adding CODE_REL -> AliasCode
+        query = f"""
+            MATCH (bc:BiomedicalConcept {{uuid:"{bc_uuid}"}})
+            with bc
+            CREATE (ac:AliasCode {{uuid: '{str(uuid4())}', instanceType: 'AliasCode', id: 'AliasCode_BD'}})
+            CREATE (c:Code {{code: 'S000001', codeSystem: 'http://www.example.org', codeSystemVersion: '0.1', decode: 'Date of Birth', id: 'Code_436', instanceType: 'Code', uuid: '{str(uuid4())}'}})
+            CREATE (bc)-[:CODE_REL]->(ac)-[:STANDARD_CODE_REL]->(c)
+            return count(*) as count
+        """
+        # print("code_rel", query)
+        results = session.run(query)
+      else:
+        application_logger.info("Did not find BC to copy from:", copy_bc_name)
     db.close()
 
 
@@ -788,45 +796,46 @@ class StudyDesignBC():
           return "done" as done
         """ % (uri,var)
         # print("DS crm query",query)
-        results = db.query(query)
+        results = session.run(query)
         # print("crm query results",results)
         if results:
           application_logger.info(f"Created link to CRM from {var}")
         else:
           application_logger.info(f"Info: Failed to create link to CRM for {var}")
-          print("query",query)
+          # print("query",query)
     db.close()
 
   # Names/Labels of BC properties inconsistent
   # NOTE: This is a workaround
   # Introducing alt_sdtm_name to accomodate
   @staticmethod
-  def _fix_bc_name_label():
+  def _fix_bc_name_label(sd_uuid):
     bcp_alt_name = {
       'DSSTDTC': 'RFICDTC'
     }
     db = Neo4jConnection()
     with db.session() as session:
-      for bcp,alt_sdtm_name in bcp_alt_name.items():
+      for bcp, alt_sdtm_name in bcp_alt_name.items():
         query = """
-          MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
+          MATCH (sd:StudyDesign {uuid:'%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'%s'})
+          WHERE bcp.alt_sdtm_name is null
           SET bcp.alt_sdtm_name = '%s'
           return bcp.alt_label
-        """ % (bcp,alt_sdtm_name)
+        """ % (sd_uuid, bcp, alt_sdtm_name)
         # print("alt_sdtm_name query",query)
-        results = db.query(query)
+        results = session.run(query)
         if results:
           application_logger.info(f"Added alt_sdtm_name to {alt_sdtm_name} to bc property {bcp}")
         else:
           application_logger.info(f"Info: Failed to add alt_sdtm_name to bc property {bcp} ({alt_sdtm_name})")
-          print("query",query)
+          # print("query",query)
     db.close()
     return
 
   # Add missing terminology
   # NOTE: This is a workaround. Sex get's response codes, but not race.
   @staticmethod
-  def _add_missing_terminology():
+  def _add_missing_terminology(sd_uuid):
     codes = [
       {'bcp_name': 'Race', 'code':'C41260', 'decode':	'ASIAN'},
       {'bcp_name': 'Race', 'code':'C16352', 'decode':	'BLACK OR AFRICAN AMERICAN'},
@@ -841,36 +850,35 @@ class StudyDesignBC():
     with db.session() as session:
         for c in codes:
           query = """
-            MATCH (bcp:BiomedicalConceptProperty {name:'%s'})
+            MATCH (sd:StudyDesign {uuid:'%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'%s'})
             MERGE (r:ResponseCode {id:'rcid_%s', instanceType:'ResponseCode', isEnabled: True, uuid: '%s'})
-            MERGE (c:Code {code:'%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-12-15', decode:	'%s', id: 'cid_%s', instanceType: 'Code'})
+            MERGE (c:Code {code:'%s', codeSystem: 'http://www.cdisc.org', codeSystemVersion: '2023-12-15', decode:	'%s', id: 'cid_%s', instanceType: 'Code', uuid: '%s'})
             MERGE (bcp)-[:RESPONSE_CODES_REL]->(r)-[:CODE_REL]->(c)
             return "done" as done
-          """ % (c['bcp_name'], c['code'], c['code'], c['code'], c['decode'], c['code'])
+          """ % (sd_uuid, c['bcp_name'], c['code'], str(uuid4()), c['code'], c['decode'], c['code'], str(uuid4()))
           # print('query', query)
           response = session.run(query)
           result = [x.data() for x in response]
-          if 'done' in result[0]:
+          if len(result) > 0 and 'done' in result[0]:
             application_logger.info(f"BCP {c['bcp_name']}: Added term {c['code']} - {c['decode']}")
           else:
             application_logger.info(f"Info: BCP {c['bcp_name']} failed to create term term {c['code']} -{c['decode']}")
-            print("query",query)
     db.close()
     return
 
   # NOTE: This is a workaround
   # NOTE: Adding link to CRM for BRTHDTC. https://crm.d4k.dk/dataset/common/period/period_start/date_time/value (--STDTC)
   @staticmethod
-  def _add_brthdtc_link_crm():
+  def _add_brthdtc_link_crm(sd_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       # Add property BRTHDTC IS_A_REL to CRM. I
-      query = f"""
-          MATCH (bcp:BiomedicalConceptProperty {{name:'BRTHDTC'}})
-          MATCH (crm_add:CRMNode {{uri:'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'}})
+      query = """
+          MATCH (sd:StudyDesign {uuid:'%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty {name:'BRTHDTC'})
+          MATCH (crm_add:CRMNode {uri:'https://crm.d4k.dk/dataset/common/period/period_start/date_time/value'})
           MERGE (bcp)-[:IS_A_REL]->(crm_add)
           return "done" as result
-      """
+      """ % (sd_uuid)
       # print(query)
       results = session.run(query)
       application_logger.info("Linking BRTHDTC to Start date/time")
@@ -878,19 +886,19 @@ class StudyDesignBC():
     return
 
   @staticmethod
-  def _remove_properties_from_exposure():
+  def _remove_properties_from_exposure(sd_uuid):
     db = Neo4jConnection()
     with db.session() as session:
       # NOTE: Just for simplifying life
       properties = ["EXREFID","EXLOC","EXFAST","EXDOSTXT","EXDOSRGM","EXDIR","EXLAT"]
       query = """
-        MATCH (bc:BiomedicalConcept {name:'Exposure Unblinded'})-[:PROPERTIES_REL]->(p:BiomedicalConceptProperty)
+        MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept {name:'Exposure Unblinded'})-[:PROPERTIES_REL]->(p:BiomedicalConceptProperty)
         WHERE  p.name in %s
         DETACH DELETE p
         RETURN count(p)
-      """ % (properties)
+      """ % (sd_uuid, properties)
       # print("Delete Exposure Unblinded properties query",query)
-      results = db.query(query)
+      results = session.run(query)
       print("Delete exposure properties results",results)
       if results:
         application_logger.info(f"Removed {properties}")
@@ -898,13 +906,13 @@ class StudyDesignBC():
         application_logger.info(f"Info: Failed to remove {properties}")
 
   @staticmethod
-  def _get_bcs_by_name(study_design, name):
+  def _get_bcs_by_name(sd_uuid, name):
     db = Neo4jConnection()
     with db.session() as session:
       results = []
       query = """
         MATCH (sd:StudyDesign {uuid: '%s'})-[:BIOMEDICAL_CONCEPTS_REL]->(bc:BiomedicalConcept) WHERE bc.name = '%s' RETURN DISTINCT bc
-      """ % (study_design.uuid, name)
+      """ % (sd_uuid, name)
       result = session.run(query)
       for record in result:
         results.append(BiomedicalConceptSimple.wrap(record['bc']))

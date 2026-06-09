@@ -56,37 +56,38 @@ class StudyFile(BaseNode):
     self.percentage = 0
     self.service = "Github"
     self.date_time = datetime.datetime.now().replace(microsecond=0).isoformat()
-    db = Neo4jConnection()
-    with db.session() as session:
+    try:
+      os.mkdir(self.dir_path)
+    except Exception as e:
+      self.error = f"Failed to create directory"
+      self._log(e, f"{traceback.format_exc()}")
+      return False
+    else:
       try:
-        os.mkdir(self.dir_path)
+        with open(self.full_path, 'wb') as f:
+          f.write(contents)
       except Exception as e:
-        self.error = f"Failed to create directory"
+        self.error = f"Failed to save file content"
         self._log(e, f"{traceback.format_exc()}")
         return False
       else:
         try:
-          with open(self.full_path, 'wb') as f:
-            f.write(contents)
+          db = Neo4jConnection()
+          with db.session() as session:
+            session.execute_write(self._create, self)
+          db.close()
         except Exception as e:
-          self.error = f"Failed to save file content"
+          self.error = f"Failed to save file details"
           self._log(e, f"{traceback.format_exc()}")
           return False
         else:
-          try:
-            session.execute_write(self._create, self)
-          except Exception as e:
-            self.error = f"Failed to save file details"
-            self._log(e, f"{traceback.format_exc()}")
-            return False
-          else:
-            self.set_status("initialised", "Uploaded file", 0)
-            return True
+          self.set_status("initialised", "Uploaded file", 0, None)
+          return True
 
   def execute(self):
     try:
 
-      self.set_status("running", "Processing excel file", 0)
+      self.set_status("running", "Processing excel file", 0, None)
       usdm = USDMDb()
       errors = usdm.from_excel(self.full_path)
       study = usdm.wrapper().study
@@ -96,90 +97,76 @@ class StudyFile(BaseNode):
       with open(f"{filename}", 'w') as f:
         f.write(yaml.dump(nodes_and_edges))
 
-      self.set_status("running", "Converting data to database format", 10)
+      self.set_status("running", "Converting data to database format", 10, None)
       ne = StudyFileNodesAndEdges(self.dir_path, nodes_and_edges)
+      study_design_uuid = ne.nodes['StudyDesign'][0]['uuid']
+      # NOTE: This is just here to for debug Add date_time to study name
+      ne.nodes['Study'][0]['name'] = ne.nodes['Study'][0]['name'] + " " + datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+      print("ne.nodes['study'][0]['name']", ne.nodes['Study'][0]['name'])
       ne.dump()
 
-      if self.upload_service.upper().startswith('GIT'):
-        self.set_status("running", "Uploading to github", 15)
-        git = GithubService()
-        file_count = git.file_list(self.dir_path, "*.csv")
-        for index in range(file_count):
-          more = git.next()
-          count = git.progress()
-          percent = 15 + int(50.0 * (float(count) / float(file_count)))
-          self.set_status("running", "Uploading to github", percent)
-        git.load()
-        files = git.upload_file_list(self.uuid)
-      elif self.upload_service.upper().startswith('LOCAL'):
-        self.set_status("running", "Uploading to local", 15)
-        local = LocalService()
-        file_count = local.file_list(self.dir_path, "*.csv")
-        for index in range(file_count):
-          more = local.next()
-          count = local.progress()
-          percent = 15 + int(50.0 * (float(count) / float(file_count)))
-          # self.set_status("running", "Uploading to local", percent)
-        local.load()
-        files = local.upload_file_list(self.uuid)
-      else:
-        self.set_status("running", "Uploading to dropbox", 15)
-        dropbox = DropboxService()
-        file_count = dropbox.file_list(self.dir_path, "*.csv")
-        dropbox.upload()
-        files = dropbox.upload_file_list(self.uuid)
+      self.set_status("running", "Uploading to local", 15, study_design_uuid)
+      local = LocalService()
+      file_count = local.file_list(self.dir_path, "*.csv")
+      for index in range(file_count):
+        more = local.next()
+        count = local.progress()
+        percent = 15 + int(50.0 * (float(count) / float(file_count)))
+        # self.set_status("running", "Uploading to local", percent)
+      local.load()
+      files = local.upload_file_list(self.uuid)
 
       # application_logger.info(f"Files: {files}") 
-      self.set_status("running", "Loading database", 20)
+      self.set_status("running", "Loading database", 20, study_design_uuid)
       aura = AuraService()
       application_logger.debug(f"Aura load: {self.uuid} {files[0]}")
       aura.load(self.uuid, files)
 
-      # Fix DM.RFICDTC to Informed Consent Obtained
+      # NOTE: Fix surrogates. Replace CDISC BC's with d4k
+      self.set_status("running", "Fix Biomedical Concepts Surrogates", 30, study_design_uuid)
+      result = StudyDesignBC.make_dob_surrogate_as_bc(study_design_uuid)
+      result = StudyDesignBC.pretty_properties_for_bc(study_design_uuid)
 
+      self.set_status("running", "Fix Biomedical Concepts", 40, study_design_uuid)
+      result = StudyDesignBC.fix(study_design_uuid)
 
-      # Fix surrogates. Replace CDISC BC's with d4k
-      self.set_status("running", "Fix Biomedical Concepts Surrogates", 30)
-      result = StudyDesignBC.make_dob_surrogate_as_bc(study_design.name)
-      result = StudyDesignBC.pretty_properties_for_bc(study_design.name)
-
-      self.set_status("running", "Fix Biomedical Concepts", 40)
-      result = StudyDesignBC.fix(study_design.name)
-
-      self.set_status("running", "Creating data contract", 50)
+      self.set_status("running", "Creating data contract", 50, study_design_uuid)
       name = study.name
       ns = RAService().namespace_by_name('d4k Study namespace')
-      StudyDesignDataContract.create(name, ns['value'])
+      StudyDesignDataContract.create(study_design_uuid, name, ns['value'])
 
-      self.set_status("running", "Adding SDTM domains", 60)
-      result = StudyDesignSDTM.create(study_design.name)
+      self.set_status("running", "Adding SDTM domains", 60, study_design_uuid)
+      result = StudyDesignSDTM.create(study_design_uuid)
 
-      # Add permissable SDTM variables
-      self.set_status("running", "Add permissible SDTM variables", 70)
-      result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design.name)
+      # NOTE: Add permissable SDTM variables
+      self.set_status("running", "Add permissible SDTM variables", 70, study_design_uuid)
+      result = StudyDesignSDTM.add_permissible_sdtm_variables(study_design_uuid)
 
-      # Add missing links to CRM
-      self.set_status("running", "Link BRTHDTC to CRM", 75)
-      result = StudyDesignBC.fix_links_to_crm(study_design.name)
+      # @NOTE: Add missing links to CRM
+      self.set_status("running", "Link BRTHDTC to CRM", 75, study_design_uuid)
+      result = StudyDesignBC.fix_links_to_crm()
 
       # Add missing BC links to SDTM (Probably superfluous. E.g. DS does not have a link to BC Exposure, but it shows Exposure information if configured)
       # self.set_status("running", "Link BC to SDTM", 89)
       # result = StudyDesignSDTM.add_links_to_sdtm(study_design.name)
 
-      self.set_status("running", "Linking Biomedical Concepts", 80)
-      result = StudyDesignBC.create(study_design.name)
+      self.set_status("running", "Linking Biomedical Concepts", 80, study_design_uuid)
+      result = StudyDesignBC.create(study_design_uuid)
 
-      # Fix BC name/label
-      self.set_status("running", "Fix BC name/label", 85)
-      result = StudyDesignBC.fix_bc_name_label(study_design.name)
+      # NOTE: Fix BC name/label
+      self.set_status("running", "Fix BC name/label", 85, study_design_uuid)
+      result = StudyDesignBC.fix_bc_name_label(study_design_uuid)
 
-      self.set_status("running", "Create default configuration", 90)
+      self.set_status("running", "Create default configuration", 90, study_design_uuid)
       ConfigurationNode.create_default_configuration()
 
-      self.set_status("running", "Add properties to CT", 90)
-      DataFile.add_properties_to_ct()
+      self.set_status("running", "Add properties to CT", 90, study_design_uuid)
+      DataFile.add_properties_to_ct(study_design_uuid)
 
-      self.set_status("complete", "Finished", 100)
+      self.set_status("running", "Add parent activities if they exist", 95, study_design_uuid)
+      ConfigurationNode.add_parent_activities(self.full_path, study_design_uuid)
+
+      self.set_status("complete", "Finished", 100, study_design_uuid)
       return True
 
     except Exception as e:
@@ -187,23 +174,26 @@ class StudyFile(BaseNode):
       self._log(e, f"{traceback.format_exc()}")
       return False
 
-  def set_status(self, status, stage, percentage):
+  def set_status(self, status, stage, percentage, study_design_uuid):
     self.status = status
     application_logger.info(f"Study load, status: {status} {stage}")
     #print(f"Study load, status: {status}")
     db = Neo4jConnection()
     with db.session() as session:
-      session.execute_write(self._set_status, self.uuid, status, stage, percentage)
+      session.execute_write(self._set_status, self.uuid, status, stage, percentage, study_design_uuid)
+    db.close()
 
   def get_status(self):
     db = Neo4jConnection()
     with db.session() as session:
-      query = "MATCH (n:StudyFile {uuid: '%s'}) RETURN n.status as status, n.percentage as percent, n.stage as stage" % (self.uuid)
+      query = "MATCH (n:StudyFile {uuid: '%s'}) RETURN n.status as status, n.percentage as percent, n.stage as stage, n.study_design_uuid as study_design_uuid" % (self.uuid)
       result = session.run(query)
+      status = ""
       for record in result:
         #print(f"RECORD: {record}")
-        return {'status': record['status'], 'percentage': record['percent'], 'stage': record['stage'] }
-    return ""
+        status = {'status': record['status'], 'percentage': record['percent'], 'stage': record['stage'], 'study_design_uuid': record['study_design_uuid'] }
+    db.close()
+    return status
     
   def _log(self, e, trace):
     application_logger.error(self.error)
@@ -233,13 +223,13 @@ class StudyFile(BaseNode):
     return None
 
   @staticmethod
-  def _set_status(tx, uuid, status, stage, percentage):
+  def _set_status(tx, uuid, status, stage, percentage, study_design_uuid):
     query = """
       MATCH (sf:StudyFile {uuid: $uuid})
-      SET sf.status = $status, sf.stage = $stage, sf.percentage = $percentage
+      SET sf.status = $status, sf.stage = $stage, sf.percentage = $percentage, sf.study_design_uuid = $study_design_uuid
       RETURN sf
     """
-    results = tx.run(query, uuid=uuid, status=status, stage=stage, percentage=percentage)
+    results = tx.run(query, uuid=uuid, status=status, stage=stage, percentage=percentage, study_design_uuid=study_design_uuid)
     for row in results:
       return StudyFile.wrap(row['sf'])
     return None

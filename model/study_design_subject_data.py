@@ -17,7 +17,7 @@ class StudyDesignSubjectData():
       query = """MATCH (sd:StudyDesign {uuid: '%s'})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(subj:Subject)<-[:FOR_SUBJECT_REL]-(dp:DataPoint)
       RETURN COUNT(dp) AS count
       """ % (uuid)
-      print("query subject count", query)
+      # print("query subject count", query)
       result = session.run(query)
       count = 0
       for record in result:
@@ -36,7 +36,7 @@ class StudyDesignSubjectData():
       dc.uri as contract_uri
       ORDER BY site, subject, bc, item, data_type, property %s
       """ % (uuid, skip_offset_clause)
-      print("subject data", query)
+      # print("subject data", query)
       result = session.run(query)
       results = []
       for record in result:

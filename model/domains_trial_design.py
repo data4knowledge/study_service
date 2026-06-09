@@ -28,6 +28,8 @@ class TrialDesignDomain():
   def trial_arms(cls, sd_uuid):
     try:
       response = cls._trial_arms(sd_uuid)
+      if len(response) == 0:
+        return {'table': []}
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
@@ -43,6 +45,8 @@ class TrialDesignDomain():
   def trial_elements(cls, sd_uuid):
     try:
       response = cls._trial_elements(sd_uuid)
+      if len(response) == 0:
+        return {'table': []}
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
@@ -57,6 +61,8 @@ class TrialDesignDomain():
     try:
       study_id = cls._study_id(sd_uuid)
       response = cls._trial_visits(sd_uuid, study_id)
+      if len(response) == 0:
+        return {'table': []}
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
@@ -74,8 +80,10 @@ class TrialDesignDomain():
       for item in response:
         usdm_tags = re.findall(r'(<usdm:tag name=.+?/>)', item['IETEST'])
         for usdm_tag in usdm_tags:
-          reference_text = cls._get_tag_text(usdm_tag)
+          reference_text = cls._get_tag_text(sd_uuid, usdm_tag)
           item['IETEST'] = item['IETEST'].replace(usdm_tag, reference_text)
+      if len(response) == 0:
+        return {'table': []}
       df = pd.DataFrame(columns=response[0].keys())
       for item in response:
         df.loc[str(len(df.index))] = item
@@ -122,7 +130,7 @@ class TrialDesignDomain():
       return {'error': 'Could not create TS dataframe'}
 
   @staticmethod
-  def _get_tag_text(usdm_tag):
+  def _get_tag_text(sd_uuid, usdm_tag):
     db = Neo4jConnection()
     results = re.search(r'"(.+?)"', usdm_tag)
     reference_txt = "(linked text not found)"
@@ -132,8 +140,8 @@ class TrialDesignDomain():
 
         # Get tag node which contains the xml reference
         query = """
-          match (n {tag: '%s'}) return n['reference'] as reference
-        """ % (tag_name)
+          match (sd:StudyDesign {uuid: '%s'})-[:DICTIONARIES_REL]->(:SyntaxTemplateDictionary)-[:PARAMETER_MAPS_REL]->(n {tag: '%s'}) return n['reference'] as reference
+        """ % (sd_uuid, tag_name)
         # print("tag query", query)
         results = session.run(query)
         for result in results.data():
@@ -142,7 +150,7 @@ class TrialDesignDomain():
         # Get reference node from the xml reference
         soup = BeautifulSoup(reference_xml, "html.parser")
         reference = soup.find("usdm:ref")
-        query = """match (n:%s {id:'%s'}) return n.%s as txt""" % (reference.attrs['klass'], reference.attrs['id'], reference.attrs['attribute'])
+        query = """match (:StudyDesign {uuid: "%s"})-[*1..2]->(n:%s {id:'%s'}) return n.%s as txt""" % (sd_uuid, reference.attrs['klass'], reference.attrs['id'], reference.attrs['attribute'])
         # print("reference query", query)
         results = session.run(query)
         for result in results.data():
@@ -157,9 +165,7 @@ class TrialDesignDomain():
     study_id = 'not found'
     with db.session() as session:
       query = """
-        match (sd:StudyDesign {uuid:'%s'})-[:ARMS_REL]-(a:StudyArm)
-        match (sd)<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier)
-        match (si)-[:STUDY_IDENTIFIER_SCOPE_REL]-(o:Organization {name:'Eli Lilly'})
+        match (sd:StudyDesign {uuid:'%s'})<-[:STUDY_DESIGNS_REL]-(sv:StudyVersion)-[:STUDY_IDENTIFIERS_REL]->(si:StudyIdentifier {id:'StudyIdentifier_1'})
         return  si.studyIdentifier as STUDYID
       """ % (sd_uuid)
       # print("study id query", query)
@@ -320,25 +326,13 @@ class TrialDesignDomain():
         return 
         '%s' as STUDYID
         , 'TV' as DOMAIN
-        // , toInteger(split(e.id,'_')[1]) as VISITNUM
         , toInteger(split(t.name,'TIM')[1]) as VISITNUM
-        // , e.name as e_name
         , e.label+" - "+t.label as VISIT
-        // , sai.name as sai_name
-        // , sai.label as sai_label
-        // , t.label as t_label
-        // , t.value as t_value
-        // , t.valueLabel as t_valueLabel
-        // , from_rel.decode as from_rel
-        // , type_rel.decode as type_rel
-        // , sai_to.label as rel_to_sai
-        // , t.label as VISITDY
         , '' as ARMCD
         , t.valueLabel+" "+type_rel.decode+" "+sai_to.label as TVSTRL
         , '' as TVENRL
         ORDER BY VISITNUM
       """ % (sd_uuid, study_id)
-      # print("trial visits query", query)
       results = session.run(query)
       data = [x.data() for x in results]
     db.close()

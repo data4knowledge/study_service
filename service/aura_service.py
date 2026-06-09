@@ -2,6 +2,7 @@ from neo4j import GraphDatabase
 from stringcase import pascalcase
 from d4kms_generic import ServiceEnvironment
 from d4kms_generic import application_logger
+from model.utility.raw_data import read_raw_data_file
 
 import os
 import csv
@@ -98,40 +99,61 @@ class AuraService():
     application_logger.info(f"Loaded Aura, details {file_path}: {count}")
     return True
 
-  def load_identifiers(self, file_path):
+  def load_identifiers(self, file_path, sd_uuid):
     try:
-      session = self.driver.session(database=self.database)
-      query = f"""
-          LOAD CSV WITH HEADERS FROM '{file_path}' AS site_row
-          MATCH (design:StudyDesign {{name:'Study Design 1'}})
-          MERGE (s:Subject {{identifier:site_row['SUBJID']}})
-          MERGE (site:StudySite {{name:site_row['SITEID']}})
-          MERGE (s)-[:ENROLLED_AT_SITE_REL]->(site)
-          MERGE (site)<-[:MANAGES_SITE]-(researchOrg)
-          MERGE (researchOrg)<-[:ORGANIZATIONS_REL]-(design)
-          RETURN count(*) as count
-      """
-      # application_logger.debug(f"QUERY: {query}")
-      result = session.run(query)
-      for record in result:
-        return_value = {'subjects': record['count']}
-      self.driver.close()
+      raw_data = read_raw_data_file(file_path)
+      load_subjects = [x['SUBJID'] for x in raw_data]
+      print("load_subjects", load_subjects)
+      load_site_ids = list(set([str(x['SITEID']) for x in raw_data]))
+      with self.driver.session(database=self.database) as session:
+        # Check if site exists, if not, create it
+        query = f"""
+            MATCH (design:StudyDesign {{uuid: '{sd_uuid}'}})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)
+            WHERE site.name in {load_site_ids}
+            RETURN distinct site.name as site_name
+        """
+        # print("query", query)
+        result = session.run(query)
+        existing_sites = [x['site_name'] for x in result.data()]
+        new_sites = [x for x in load_site_ids if x not in existing_sites]
+        print("new_sites", new_sites)
+        for site_id in new_sites:
+          query = f"""
+              MATCH (design:StudyDesign {{uuid: '{sd_uuid}'}})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)
+              CREATE (site:StudySite {{name: '{site_id}'}})
+              CREATE (resOrg)-[:MANAGES_REL]->(site)
+              RETURN site.name as name
+          """
+          # print("query", query)
+          result = session.run(query)
+          application_logger.info(f"Added site: {result.data()}")
+
+        # Check if subject exists, if not, create it
+        query = f"""
+            LOAD CSV WITH HEADERS FROM '{file_path}' AS site_row
+            MATCH (design:StudyDesign {{uuid: '{sd_uuid}'}})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite {{name:site_row['SITEID']}})
+            MERGE (s:Subject {{identifier:site_row['SUBJID']}})-[:ENROLLED_AT_SITE_REL]->(site)
+            RETURN count(*) as count
+        """
+        application_logger.debug(f"QUERY: {query}")
+        result = session.run(query)
+        for record in result:
+          return_value = {'subjects': record['count']}
       application_logger.info(f"Loaded Aura, details: {return_value}")
       return True
     except Exception as e:
       application_logger.exception(f"Exception raised while uploading to Aura database", e)
       raise self.UploadFail
 
-  def load_datapoints(self, file_path):
+  def load_datapoints(self, file_path, sd_uuid):
     try:
       session = self.driver.session(database=self.database)
       query = f"""
           LOAD CSV WITH HEADERS FROM '{file_path}' AS data_row
           MATCH (dc:DataContract {{uri:data_row['DC_URI']}})
-          MATCH (design:StudyDesign {{name:'Study Design 1'}})
+          MATCH (design:StudyDesign {{uuid: '{sd_uuid}'}})-[:ORGANIZATIONS_REL]->(resOrg:ResearchOrganization)-[:MANAGES_REL]->(site:StudySite)<-[:ENROLLED_AT_SITE_REL]-(s:Subject {{identifier: data_row['SUBJID']}})
           MERGE (d:DataPoint {{uri: data_row['DATAPOINT_URI'], value: data_row['VALUE']}})
           MERGE (record:Record {{key:data_row['RECORD_KEY']}})
-          MERGE (s:Subject {{identifier:data_row['SUBJID']}})
           MERGE (dc)<-[:FOR_DC_REL]-(d)
           MERGE (d)-[:FOR_SUBJECT_REL]->(s)
           MERGE (d)-[:SOURCE]->(record)
