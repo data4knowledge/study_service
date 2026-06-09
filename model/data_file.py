@@ -218,7 +218,7 @@ class DataFile(BaseNode):
       items = []
       count = 0
       for code in codes_to_update:
-        print("Updating code",code)
+        # print("Updating code",code)
         response = ct.find_by_identifier(code)
         first = response[0] if len(response) > 0 else None
         if first:

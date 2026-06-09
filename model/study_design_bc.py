@@ -85,12 +85,17 @@ class StudyDesignBC():
             node = next((i for i in nodes if i.datatype == 'quantity'), None)
         if node:
           p.relationship(nodes[0], 'IS_A_REL')                
-          application_logger.info(f"Linked BC property '{p.name}' -> '{node.uri}'")   
+          # For workshop
+          # application_logger.info(f"Linked BC property '{p.name}' -> '{node.uri}'")   
           results[p.name] = node.uri
         else:
-          application_logger.error(f"Failed to link BC property '{p.name}', nodes '{nodes}' detected but no match")
+          # For workshop
+          pass
+          # application_logger.error(f"Failed to link BC property '{p.name}', nodes '{nodes}' detected but no match")
       else:
-        application_logger.error(f"Failed to link BC property '{p.name}', no nodes detected")
+        # For workshop
+        pass
+        # application_logger.error(f"Failed to link BC property '{p.name}', no nodes detected")
     return results
 
   @classmethod
@@ -514,17 +519,17 @@ class StudyDesignBC():
         query = """
           match (dp:DataPoint {uri:'%s'})
           match (dp)-[:FOR_SUBJECT_REL]->(subj:Subject)
-          match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[:STANDARD_CODE_REL]->(cd:Code)
-          with dc0, bc, subj, cd
-          match (dc0)-[:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
-          match (main_sai)-[:ENCOUNTER_REL]-(enc:Encounter)
-          match (bc)-[:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(dc)
-          match (bcp)-[:IS_A_REL]->(crm:CRMNode)
-          optional match (bcp)-[:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
-          match (dc)-[:INSTANCES_REL]->(main_sai)
-          optional match (dc)<-[:FOR_DC_REL]-(dp:DataPoint)-[:FOR_SUBJECT_REL]->(subj)
-          OPTIONAL MATCH (d:Domain)-[:USING_BC_REL]->(bc)
-          OPTIONAL MATCH (crm)<-[:IS_A_REL]-(var:Variable)<-[:VARIABLE_REL]-(d)
+          match (dp)-[:FOR_DC_REL]->(dc0:DataContract)-[:PROPERTIES_REL]->(bcp0:BiomedicalConceptProperty)<-[:PROPERTIES_REL]-(bc:BiomedicalConcept)-[:CODE_REL]-(:AliasCode)-[r99:STANDARD_CODE_REL]->(cd:Code)
+          with dc0, bc, subj, cd, r99
+          match (dc0)-[r1:INSTANCES_REL]->(main_sai:ScheduledActivityInstance)<-[r2:INSTANCES_REL]-(:ScheduleTimeline {mainTimeline: 'True'})
+          match (main_sai)-[r3:ENCOUNTER_REL]-(enc:Encounter)
+          match (bc)-[r4:PROPERTIES_REL]->(bcp:BiomedicalConceptProperty)<-[r5:PROPERTIES_REL]-(dc)
+          match (bcp)-[r6:IS_A_REL]->(crm:CRMNode)
+          optional match (bcp)-[r7:DATA_ENTRY_CONFIG]-(dec:DataEntryConfig)
+          match (dc)-[r8:INSTANCES_REL]->(main_sai)
+          optional match (dc)<-[r9:FOR_DC_REL]-(dp:DataPoint)-[r10:FOR_SUBJECT_REL]->(subj)
+          OPTIONAL MATCH (d:Domain)-[r11:USING_BC_REL]->(bc)
+          OPTIONAL MATCH (crm)<-[r12:IS_A_REL]-(var:Variable)<-[r13:VARIABLE_REL]-(d)
           where bcp.name = var.name or substring(bcp.name,3) = substring(var.name,3) or bcp.label = var.label or bcp.alt_sdtm_name = var.name
           WITH distinct subj.identifier as subj_id, enc.label as visit, dec.question_text as question_text, bc.name as bc_raw_name, cd.decode as bc_name, bcp.name as name, bcp.generic_name as generic_name, crm.datatype as data_type, dp.value as value, dp.uri as dp_uri, d.name as domain, d.label as domain_label, var.name as variable, "" as code, "" as pref_label, "" as notation
           return "main" as from, subj_id, visit, question_text, bc_raw_name, bc_name, name, generic_name, data_type, collect({value:value, uri:dp_uri}) as dp_values, collect({domain:domain,label:domain_label,variable:variable}) as sdtm, [] as terms
@@ -797,9 +802,13 @@ class StudyDesignBC():
         results = session.run(query)
         # print("crm query results",results)
         if results:
-          application_logger.info(f"Created link to CRM from {var}")
+          # For workshop
+          pass
+          # application_logger.info(f"Created link to CRM from {var}")
         else:
-          application_logger.info(f"Info: Failed to create link to CRM for {var}")
+          # For workshop
+          pass
+          # application_logger.info(f"Info: Failed to create link to CRM for {var}")
           # print("query",query)
     db.close()
 

@@ -51,7 +51,8 @@ class AuraService():
       for file_item in relationships:
         status = self.load_relationships(file_item["type"], file_item["file_path"])
 
-      application_logger.info(f"Loaded Aura, details: nodes and relationships")
+      # For workshop
+      # application_logger.info(f"Loaded Aura, details: nodes and relationships")
       return_value = "nodes and relationships"
       return return_value
     except Exception as e:
@@ -79,7 +80,8 @@ class AuraService():
       results = session.run(query)
       count = [result.data() for result in results]
     # self.driver.close()
-    application_logger.info(f"Loaded Aura, details {label}: {count}")
+    # For workshop
+    # application_logger.info(f"Loaded Aura, details {label}: {count}")
     return True
 
   def load_relationships(self, type, file_path):
@@ -96,7 +98,8 @@ class AuraService():
       results = session.run(query)
       count = [result.data() for result in results]
     # self.driver.close()
-    application_logger.info(f"Loaded Aura, details {file_path}: {count}")
+    # For workshop
+    # application_logger.info(f"Loaded Aura, details {file_path}: {count}")
     return True
 
   def load_identifiers(self, file_path, sd_uuid):
@@ -139,7 +142,8 @@ class AuraService():
         result = session.run(query)
         for record in result:
           return_value = {'subjects': record['count']}
-      application_logger.info(f"Loaded Aura, details: {return_value}")
+      # For workshop
+      # application_logger.info(f"Loaded Aura, details: {return_value}")
       return True
     except Exception as e:
       application_logger.exception(f"Exception raised while uploading to Aura database", e)
@@ -164,7 +168,8 @@ class AuraService():
       for record in result:
         return_value = {'datapoints': record['count']}
       self.driver.close()
-      application_logger.info(f"Loaded Aura, details: {return_value}")
+      # For workshop
+      # application_logger.info(f"Loaded Aura, details: {return_value}")
       return True
     except Exception as e:
       application_logger.exception(f"Exception raised while uploading to Aura database", e)

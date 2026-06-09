@@ -64,13 +64,15 @@ class StudyDesignSDTM():
             if ref['uri_reference'] in crm_nodes:
               c = crm_nodes[ref['uri_reference']]
               v.relationship(c, 'IS_A_REL')                
+              # For workshop
               application_logger.info(f"Created CRM reference for variable '{v.name}' -> '{ref}'")
         for name in bcs:
           bc_set = cls._get_bcs_by_name(study_design, name)
           #print(f"BC SET: For {name} = {bc_set}")
           for bc in bc_set:
             d.relationship(bc, 'USING_BC_REL')                
-            application_logger.info(f"Linked domain '{d.name}' -> '{bc.name}', '{bc.uuid}'")   
+            # For workshop
+            # application_logger.info(f"Linked domain '{d.name}' -> '{bc.name}', '{bc.uuid}'")   
     return {'results': domains}
   
   @classmethod
